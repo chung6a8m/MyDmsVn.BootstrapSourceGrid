@@ -1,0 +1,6 @@
+[submodule "vendor/Bootstrap5WinFormUI"]
+	path = vendor/Bootstrap5WinFormUI
+	url = https://github.com/chung6a8m/MyDmsVn.Bootstrap5WinFormUI.git
+[submodule "vendor/sourcegrid"]
+	path = vendor/sourcegrid
+	url = https://github.com/chung6a8m/sourcegrid.git
