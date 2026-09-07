@@ -1,0 +1,164 @@
+# Compatibility contract
+
+## 1. Supported targets
+
+The product targets:
+
+```xml
+<TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
+<UseWindowsForms>true</UseWindowsForms>
+```
+
+Both targets are first-class. A shared implementation is preferred.
+
+## 2. Platform
+
+`MyDmsVn.BootstrapSourceGrid` is Windows-only because both the integration and vendors use Windows Forms.
+
+Do not introduce cross-platform assumptions, browser-based rendering, or platform-neutral abstractions that add complexity without a product requirement.
+
+## 3. Language/runtime API compatibility
+
+Code compiled for both TFMs must avoid runtime APIs unavailable on .NET Framework 4.8 unless isolated behind a compatibility helper or target-specific conditional.
+
+Examples of risky categories:
+
+- newer BCL helpers absent from .NET Framework 4.8;
+- newer WinForms-only overrides/events not present in the .NET Framework surface;
+- nullable/runtime annotations that alter generated metadata unexpectedly;
+- APIs that require newer Windows SDK/runtime behavior.
+
+Prefer a single compatible implementation. Use `#if` only for an actual API/platform difference.
+
+## 4. SourceGrid API compatibility
+
+`BootstrapSourceGrid` must remain substitutable for common `SourceGrid.Grid` use.
+
+The integration must not silently redefine:
+
+- `Redim` behavior;
+- cell indexers;
+- rows/columns semantics;
+- positions/ranges/spans;
+- selection and active position;
+- editor activation/commit/cancel;
+- keyboard navigation;
+- controller dispatch;
+- clipboard behavior;
+- scrolling;
+- SourceGrid events.
+
+Styling changes must be regression-tested around these behaviors when the changed code can influence them.
+
+## 5. Consumer customization compatibility
+
+Consumer customizations take precedence over integration defaults when they are explicit.
+
+Examples:
+
+- consumer-assigned `Font` wins over automatic Bootstrap body font;
+- consumer-assigned SourceGrid View should not be overwritten by a later theme change unless it was created/owned by the integration;
+- consumer editor/controller replacement remains valid;
+- consumer row heights/column widths are SourceGrid/application-owned and must not be blindly rescaled by Bootstrap code.
+
+## 6. Theme compatibility
+
+The integration follows `BootstrapThemeManager.CurrentTheme` and `ThemeChanged`.
+
+Supported theme behavior includes:
+
+- light theme;
+- dark theme;
+- custom theme objects compatible with the pinned Bootstrap framework API;
+- runtime theme changes after cells, selection, and editors already exist.
+
+A theme change must not clear or reconstruct application data.
+
+## 7. Font compatibility
+
+Default font comes from `CurrentTheme.Typography.Body`.
+
+Ownership contract:
+
+- integration-created font: integration owns/disposes;
+- consumer-assigned font: consumer owns; integration must not dispose;
+- theme changes update the font only while the control remains in theme-font mode.
+
+## 8. DPI compatibility
+
+BootstrapSourceGrid must work at common Windows scale factors including 100%, 125%, 150%, and 200%.
+
+Rules:
+
+- use `DpiScaler` for metrics introduced by this integration;
+- avoid scaling SourceGrid-owned row/column dimensions a second time;
+- invalidate/recalculate Bootstrap-owned visual metrics after relevant DPI changes;
+- verify selection borders, padding, header content, editor bounds, and text clipping at multiple DPIs.
+
+Where .NET Framework and .NET 8 expose different DPI lifecycle APIs, isolate the difference rather than duplicating entire control implementations.
+
+## 9. Designer compatibility
+
+The control must be safe in the WinForms Designer for both legacy and modern target workflows.
+
+Designer requirements:
+
+- constructor works without application bootstrap;
+- no modal UI;
+- no background timers/services required for construction;
+- no assumption that handle/site/parent is already created;
+- public serializable properties have stable defaults;
+- repeated create/dispose cycles do not leak theme subscriptions/GDI resources;
+- vendor submodule/project references resolve for the design-time build.
+
+Designer validation is manual because successful compilation alone does not prove Designer functionality.
+
+## 10. Binary/source dependency compatibility
+
+During bootstrap, exact vendor commits are consumed through pinned Git submodules and `ProjectReference`.
+
+Do not mix a project reference to one vendor version with a package reference to another copy/version of the same assembly.
+
+When switching to packages, validate assembly identity, public APIs, and transitive dependencies for both TFMs.
+
+## 11. Serialization and application state
+
+MVP introduces no custom persistence format. SourceGrid/application state remains application-owned.
+
+If future Bootstrap-specific properties are Designer-serialized, their defaults must be stable and compatible across both TFMs.
+
+## 12. Accessibility compatibility
+
+Do not remove or weaken accessibility behavior supplied by SourceGrid/WinForms. Integration-specific accessibility properties must be additive and must not change keyboard navigation semantics.
+
+## 13. Performance compatibility
+
+Theme integration must not materially degrade normal SourceGrid painting/scrolling.
+
+Forbidden patterns include:
+
+- rebuilding all grid data on theme change;
+- allocating theme/GDI objects per cell on every paint when reusable objects are possible;
+- calling full-form invalidation for a grid-only visual change;
+- attaching duplicate theme handlers per cell.
+
+## 14. Compatibility validation matrix
+
+Before MVP release, verify at least:
+
+| Area | net48 | net8.0-windows |
+|---|---|---|
+| Restore/build | Required | Required |
+| Unit tests | Required | Required |
+| STA control tests | Required | Required |
+| Light/dark theme | Required | Required |
+| Runtime theme switch | Required | Required |
+| Keyboard/editing | Required | Required |
+| Selection/focus | Required | Required |
+| Spans | Required | Required |
+| Scrolling | Required | Required |
+| 100%/150%/200% DPI smoke | Required | Required |
+| Designer smoke | Required | Required |
+| Demo app | Required | Required |
+
+A documented environment limitation may prevent one manual matrix cell from being exercised in CI, but it does not remove the release requirement.
