@@ -12,12 +12,15 @@ Before changing product code, read these files in order:
 4. `docs/DECISIONS.md`
 5. `docs/PRD.md`
 6. `docs/ARCHITECTURE.md`
-7. `docs/UPSTREAM.md`
-8. `docs/COMPATIBILITY.md`
-9. `docs/TESTING.md`
-10. `docs/DEVELOPMENT_PLAN.md`
-11. The active implementation plan under `docs/plans/`
-12. Relevant upstream implementation/tests at the pinned vendor commits
+7. `docs/UPSTREAM_API_SEAMS.md`
+8. `docs/UPSTREAM.md`
+9. `docs/COMPATIBILITY.md`
+10. `docs/TESTING.md`
+11. `docs/DEVELOPMENT_PLAN.md`
+12. The active implementation plan under `docs/plans/`
+13. Relevant upstream implementation/tests at the pinned vendor commits
+
+Read `docs/PENDING_DECISIONS.md` before release/packaging work. Do not silently resolve a pending project-owner decision.
 
 Do not start implementation from an isolated code snippet without reading the active plan and the upstream APIs it touches.
 
@@ -73,6 +76,8 @@ SourceGrid is the grid engine and retains ownership of:
 The integration must preserve SourceGrid's public programming model. Do not add wrappers such as `BootstrapRow`, `BootstrapColumn`, or `BootstrapCell` just to rename existing SourceGrid abstractions.
 
 Prefer extension by inheritance, Views, styles, adapters, and documented public hooks. Avoid overriding broad painting/interaction behavior when a narrower SourceGrid extension point exists.
+
+A verified SourceGrid seam matters here: normal `grid[row, column] = cell` assignment reaches a private `InsertCell`, so do not pretend a subclass can intercept every assignment through `SetCell`. The approved MVP plan lazily substitutes only known default View singletons through virtual `GetCell(...)`, preserving unknown/custom consumer Views. See `docs/UPSTREAM_API_SEAMS.md` and Stage 2 plan before changing this mechanism.
 
 ## 5. Bootstrap framework reuse rules
 
@@ -152,14 +157,15 @@ Unattended tests must fail deterministically and must never wait for a human or 
 For each task in an implementation plan:
 
 1. Inspect the exact upstream APIs and nearby tests first.
-2. Add a failing test for observable behavior where practical.
-3. Run the focused test and verify the intended failure.
-4. Implement the minimum change.
-5. Run focused tests.
-6. Build both TFMs when the task can affect both.
-7. Run the relevant integration/GUI checks.
-8. Update docs when behavior or public API changes.
-9. Commit a coherent change.
+2. Check `docs/UPSTREAM_API_SEAMS.md`; if the needed seam is absent or appears stale, verify it against the pinned vendor source before implementation.
+3. Add a failing test for observable behavior where practical.
+4. Run the focused test and verify the intended failure.
+5. Implement the minimum change.
+6. Run focused tests.
+7. Build both TFMs when the task can affect both.
+8. Run the relevant integration/GUI checks.
+9. Update docs when behavior, a verified seam, or public API changes.
+10. Commit a coherent change.
 
 Do not jump to a later stage while the current stage's gate is failing.
 
@@ -202,4 +208,5 @@ A task is done only when:
 - designer/runtime lifecycle considerations were checked;
 - theme/DPI/resource ownership is correct;
 - public API and docs are synchronized;
+- verified upstream seam documentation is synchronized when a seam changes;
 - no forbidden vendor dependency or unnecessary upstream patch was introduced.
