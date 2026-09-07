@@ -7,10 +7,10 @@ namespace MyDmsVn.BootstrapSourceGrid.Tests;
 [Apartment(ApartmentState.STA)]
 public sealed class FoundationTests
 {
-    [OneTimeSetUp]
-    public void OneTimeSetUp()
+    [Test]
+    public void AssemblyWinFormsGuardRunsBeforeFixtureTests()
     {
-        WinFormsTestGuard.Configure();
+        Assert.That(WinFormsTestGuard.IsConfigured, Is.True);
     }
 
     [Test]
