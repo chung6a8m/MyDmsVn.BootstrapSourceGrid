@@ -19,6 +19,7 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     private bool _useThemeFont = true;
     private Font? _themeFont;
     private BootstrapSourceGridThemeSnapshot _themeSnapshot;
+    private BootstrapSourceGridDpiMetrics _dpiMetrics;
     private readonly BootstrapSourceGridStyleApplicator _styleApplicator;
     private readonly BootstrapSourceGridSelectionStyle _selectionStyle;
 
@@ -30,9 +31,10 @@ public class BootstrapSourceGrid : SourceGrid.Grid
         Name = nameof(BootstrapSourceGrid);
         var theme = BootstrapThemeManager.CurrentTheme;
         _themeSnapshot = BootstrapSourceGridThemeAdapter.CreateSnapshot(theme);
+        _dpiMetrics = BootstrapSourceGridDpiMetrics.FromTheme(theme, CurrentDpi);
         _styleApplicator = new BootstrapSourceGridStyleApplicator(
             _themeSnapshot,
-            BootstrapSourceGridDpiMetrics.FromTheme(theme, CurrentDpi));
+            _dpiMetrics);
         _selectionStyle = new BootstrapSourceGridSelectionStyle();
         _initialized = true;
         BootstrapThemeManager.ThemeChanged += OnThemeChanged;
@@ -42,6 +44,12 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     }
 
     internal BootstrapSourceGridThemeSnapshot CurrentThemeSnapshot => _themeSnapshot;
+
+    internal BootstrapSourceGridDpiMetrics CurrentDpiMetrics => _dpiMetrics;
+
+    internal int CurrentDpi => IsHandleCreated && DeviceDpi > 0
+        ? DeviceDpi
+        : MyDmsVn.Bootstrap5WinFormUI.Rendering.DpiScaler.DefaultDpi;
 
     /// <inheritdoc />
     public override SourceGrid.Cells.ICellVirtual GetCell(int row, int column)
@@ -87,6 +95,13 @@ public class BootstrapSourceGrid : SourceGrid.Grid
         }
 
         Invalidate();
+    }
+
+    /// <inheritdoc />
+    protected override void OnDpiChangedAfterParent(EventArgs e)
+    {
+        base.OnDpiChangedAfterParent(e);
+        RefreshDpiMetrics(CurrentDpi);
     }
 
     /// <inheritdoc />
@@ -150,14 +165,31 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     internal virtual void ApplyBootstrapTheme()
     {
         var theme = BootstrapThemeManager.CurrentTheme;
-        var dpiMetrics = BootstrapSourceGridDpiMetrics.FromTheme(theme, CurrentDpi);
+        _dpiMetrics = BootstrapSourceGridDpiMetrics.FromTheme(theme, CurrentDpi);
         BackColor = _themeSnapshot.CellBackColor;
         ForeColor = _themeSnapshot.CellForeColor;
-        _styleApplicator.ApplyTheme(_themeSnapshot, dpiMetrics);
+        _styleApplicator.ApplyTheme(_themeSnapshot, _dpiMetrics);
         _selectionStyle.ApplyTheme(
             (SourceGrid.Selection.SelectionBase)Selection,
             _themeSnapshot,
-            dpiMetrics);
+            _dpiMetrics);
+    }
+
+    internal void RefreshDpiMetrics(int dpi)
+    {
+        var effectiveDpi = dpi > 0
+            ? dpi
+            : MyDmsVn.Bootstrap5WinFormUI.Rendering.DpiScaler.DefaultDpi;
+        _dpiMetrics = BootstrapSourceGridDpiMetrics.FromTheme(
+            BootstrapThemeManager.CurrentTheme,
+            effectiveDpi);
+        _styleApplicator.ApplyTheme(_themeSnapshot, _dpiMetrics);
+        _selectionStyle.ApplyTheme(
+            (SourceGrid.Selection.SelectionBase)Selection,
+            _themeSnapshot,
+            _dpiMetrics);
+        PerformLayout();
+        Invalidate();
     }
 
     private void ApplySelectionTheme(
@@ -169,10 +201,6 @@ public class BootstrapSourceGrid : SourceGrid.Grid
             _themeSnapshot,
             BootstrapSourceGridDpiMetrics.FromTheme(theme, CurrentDpi));
     }
-
-    private int CurrentDpi => DeviceDpi > 0
-        ? DeviceDpi
-        : MyDmsVn.Bootstrap5WinFormUI.Rendering.DpiScaler.DefaultDpi;
 
     private void ApplyThemeFont(BootstrapFontToken token)
     {
