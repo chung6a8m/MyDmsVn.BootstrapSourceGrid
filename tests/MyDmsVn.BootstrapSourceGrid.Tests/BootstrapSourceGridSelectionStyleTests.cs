@@ -136,7 +136,7 @@ public sealed class BootstrapSourceGridSelectionStyleTests
     }
 
     [Test]
-    public void ThemeChangeStylesSelectionRecreatedBySourceGridSelectionMode()
+    public void SelectionModeChangeImmediatelyStylesRecreatedSelection()
     {
         var original = BootstrapThemeManager.CurrentTheme;
         var light = BootstrapTheme.CreateDefault(BootstrapThemeMode.Light);
@@ -148,12 +148,19 @@ public sealed class BootstrapSourceGridSelectionStyleTests
             using (var grid = new BootstrapSourceGridControl())
             {
                 var originalSelection = grid.Selection;
+                var decoratorCount = grid.Decorators.Count;
                 grid.SelectionMode = SourceGrid.GridSelectionMode.Row;
                 Assert.That(grid.Selection, Is.Not.SameAs(originalSelection));
+                Assert.That(grid.Decorators.Count, Is.EqualTo(decoratorCount));
+
+                var selection = SelectionOf(grid);
+                Assert.That(
+                    selection.BackColor,
+                    Is.EqualTo(Color.FromArgb(75, light.Colors.Primary)));
+                Assert.That(selection.Border.Top.Color, Is.EqualTo(light.Colors.Focus));
 
                 BootstrapThemeManager.CurrentTheme = dark;
 
-                var selection = SelectionOf(grid);
                 Assert.That(
                     selection.BackColor,
                     Is.EqualTo(Color.FromArgb(75, dark.Colors.Primary)));

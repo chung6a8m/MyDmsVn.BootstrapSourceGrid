@@ -281,6 +281,13 @@ Changing `Grid.SelectionMode` recreates the SourceGrid selection object. Visual
 ownership tracking must therefore reset for the new selection instance so its
 fresh defaults are not mistaken for consumer overrides.
 
+`CreateSelectionObject()` returns before the `Selection` setter calls
+`BindToGrid(...)`. Selection visual setters invalidate through their bound grid,
+so an override that applies initial visuals inside the factory must temporarily
+bind the new selection and unbind it before returning. The normal SourceGrid
+setter then performs the authoritative bind without leaving a duplicate
+selection decorator.
+
 SourceGrid's default selection background uses a translucent highlight with alpha `75`.
 
 The integration can theme these properties without replacing the selection engine.

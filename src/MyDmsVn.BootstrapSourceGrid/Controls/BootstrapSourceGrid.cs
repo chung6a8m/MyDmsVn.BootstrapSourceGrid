@@ -52,6 +52,26 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     }
 
     /// <inheritdoc />
+    protected override SourceGrid.Selection.SelectionBase CreateSelectionObject()
+    {
+        var selection = base.CreateSelectionObject();
+        if (_initialized)
+        {
+            selection.BindToGrid(this);
+            try
+            {
+                ApplySelectionTheme(selection, BootstrapThemeManager.CurrentTheme);
+            }
+            finally
+            {
+                selection.UnBindToGrid();
+            }
+        }
+
+        return selection;
+    }
+
+    /// <inheritdoc />
     protected override void OnFontChanged(EventArgs e)
     {
         base.OnFontChanged(e);
@@ -138,6 +158,16 @@ public class BootstrapSourceGrid : SourceGrid.Grid
             (SourceGrid.Selection.SelectionBase)Selection,
             _themeSnapshot,
             dpiMetrics);
+    }
+
+    private void ApplySelectionTheme(
+        SourceGrid.Selection.SelectionBase selection,
+        BootstrapTheme theme)
+    {
+        _selectionStyle.ApplyTheme(
+            selection,
+            _themeSnapshot,
+            BootstrapSourceGridDpiMetrics.FromTheme(theme, CurrentDpi));
     }
 
     private int CurrentDpi => DeviceDpi > 0
