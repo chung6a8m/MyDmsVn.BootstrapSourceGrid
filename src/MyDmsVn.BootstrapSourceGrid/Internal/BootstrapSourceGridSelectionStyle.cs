@@ -15,12 +15,22 @@ internal sealed class BootstrapSourceGridSelectionStyle
     private Color _lastBackColor;
     private Color _lastFocusBackColor;
     private RectangleBorder _lastBorder;
+    private SourceGrid.Selection.SelectionBase? _selection;
 
     internal void ApplyTheme(
         SourceGrid.Selection.SelectionBase selection,
         BootstrapSourceGridThemeSnapshot snapshot,
         BootstrapSourceGridDpiMetrics dpiMetrics)
     {
+        if (!ReferenceEquals(selection, _selection))
+        {
+            _selection = selection;
+            _hasApplied = false;
+            _ownsBackColor = true;
+            _ownsFocusBackColor = true;
+            _ownsBorder = true;
+        }
+
         var nextBackColor = Color.FromArgb(SelectionOverlayAlpha, snapshot.SelectionBackColor);
         var nextFocusBackColor = Color.Transparent;
         var nextBorder = new RectangleBorder(

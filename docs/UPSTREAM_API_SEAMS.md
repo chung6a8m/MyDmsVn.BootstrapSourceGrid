@@ -277,6 +277,10 @@ protected SourceGrid selection factory returns `SelectionBase` implementations,
 so integration code must access the visual properties through that concrete base
 contract rather than assuming they are members of `IGridSelection`.
 
+Changing `Grid.SelectionMode` recreates the SourceGrid selection object. Visual
+ownership tracking must therefore reset for the new selection instance so its
+fresh defaults are not mistaken for consumer overrides.
+
 SourceGrid's default selection background uses a translucent highlight with alpha `75`.
 
 The integration can theme these properties without replacing the selection engine.

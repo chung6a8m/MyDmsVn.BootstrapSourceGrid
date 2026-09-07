@@ -136,6 +136,37 @@ public sealed class BootstrapSourceGridSelectionStyleTests
     }
 
     [Test]
+    public void ThemeChangeStylesSelectionRecreatedBySourceGridSelectionMode()
+    {
+        var original = BootstrapThemeManager.CurrentTheme;
+        var light = BootstrapTheme.CreateDefault(BootstrapThemeMode.Light);
+        var dark = BootstrapTheme.CreateDefault(BootstrapThemeMode.Dark);
+
+        try
+        {
+            BootstrapThemeManager.CurrentTheme = light;
+            using (var grid = new BootstrapSourceGridControl())
+            {
+                var originalSelection = grid.Selection;
+                grid.SelectionMode = SourceGrid.GridSelectionMode.Row;
+                Assert.That(grid.Selection, Is.Not.SameAs(originalSelection));
+
+                BootstrapThemeManager.CurrentTheme = dark;
+
+                var selection = SelectionOf(grid);
+                Assert.That(
+                    selection.BackColor,
+                    Is.EqualTo(Color.FromArgb(75, dark.Colors.Primary)));
+                Assert.That(selection.Border.Top.Color, Is.EqualTo(dark.Colors.Focus));
+            }
+        }
+        finally
+        {
+            BootstrapThemeManager.CurrentTheme = original;
+        }
+    }
+
+    [Test]
     public void ThemeChangePreservesActivePositionAndSelectedRanges()
     {
         var original = BootstrapThemeManager.CurrentTheme;
