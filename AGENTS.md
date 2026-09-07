@@ -20,7 +20,7 @@ Before changing product code, read these files in order:
 12. The active implementation plan under `docs/plans/`
 13. Relevant upstream implementation/tests at the pinned vendor commits
 
-Read `docs/PENDING_DECISIONS.md` before release/packaging work. Do not silently resolve a pending project-owner decision.
+Read `docs/PENDING_DECISIONS.md` before release/packaging work. The initial license and dependency-strategy choices are already resolved there; do not reopen them unless the user explicitly requests a change.
 
 Do not start implementation from an isolated code snippet without reading the active plan and the upstream APIs it touches.
 
@@ -35,12 +35,15 @@ Do not change these without explicit user approval:
 - Direct base type: `SourceGrid.Grid`
 - Target frameworks: `net48;net8.0-windows`
 - UI technology: native Windows Forms
+- Repository/package license: MIT
 - Bootstrap vendor baseline: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@95077df0c8bad8593143c2190606d2f444bfc653`
 - SourceGrid vendor baseline: `chung6a8m/sourcegrid@f4e457b43582bf01892f50bdc74aa480531e5944`
+- Development dependency strategy: pinned Git submodules + `ProjectReference` (temporary 2B)
+- Public NuGet dependency strategy: exact verified vendor NuGet packages via `PackageReference` (2A)
 - Initial scrollbar policy: retain SourceGrid/native scrollbar behavior
 - Initial editor policy: style/harden existing editors; do not replace the full SourceGrid editor model
 
-## 3. Dependency direction
+## 3. Dependency direction and release dependency policy
 
 Required dependency graph:
 
@@ -57,6 +60,10 @@ SourceGrid -> MyDmsVn.Bootstrap5WinFormUI
 MyDmsVn.Bootstrap5WinFormUI -> SourceGrid
 Either vendor -> MyDmsVn.BootstrapSourceGrid
 ```
+
+Development/pre-release builds use exact vendor submodules and project references. Public NuGet release must switch to resolvable exact-version vendor packages that are verified against the tested source baselines (or explicitly approved upgraded baselines) on both TFMs.
+
+Do not publish `MyDmsVn.BootstrapSourceGrid` while either vendor package identity/version/feed/source correspondence is unresolved. Do not embed/copy vendor assemblies or source into the integration package merely to avoid a missing dependency. Never reference both a project and package copy of the same vendor assembly in one effective build graph.
 
 Do not modify a vendor solely to make the integration easier unless the active plan explicitly identifies a proven blocker and the change is first isolated in the appropriate vendor repository.
 
@@ -164,7 +171,7 @@ For each task in an implementation plan:
 6. Run focused tests.
 7. Build both TFMs when the task can affect both.
 8. Run the relevant integration/GUI checks.
-9. Update docs when behavior, a verified seam, or public API changes.
+9. Update docs when behavior, a verified seam, public API, license metadata, or dependency packaging changes.
 10. Commit a coherent change.
 
 Do not jump to a later stage while the current stage's gate is failing.
@@ -210,3 +217,10 @@ A task is done only when:
 - public API and docs are synchronized;
 - verified upstream seam documentation is synchronized when a seam changes;
 - no forbidden vendor dependency or unnecessary upstream patch was introduced.
+
+For release/packaging tasks additionally require:
+
+- MIT package metadata matches D-016;
+- vendor license/notice obligations are verified;
+- public package dependencies satisfy D-017;
+- a clean consumer can restore without vendor source checkout.
