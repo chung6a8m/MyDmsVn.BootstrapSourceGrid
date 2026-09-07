@@ -147,7 +147,7 @@ using System.Runtime.Versioning;
 - [ ] **Step 4: Create solution and add product project**
 
 ```powershell
-dotnet new sln -n MyDmsVn.BootstrapSourceGrid
+dotnet new sln --format sln -n MyDmsVn.BootstrapSourceGrid
 dotnet sln MyDmsVn.BootstrapSourceGrid.sln add src/MyDmsVn.BootstrapSourceGrid/MyDmsVn.BootstrapSourceGrid.csproj
 ```
 
