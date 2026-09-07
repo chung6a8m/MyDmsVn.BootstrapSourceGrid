@@ -30,6 +30,8 @@ Examples of risky categories:
 
 Prefer a single compatible implementation. Use `#if` only for an actual API/platform difference.
 
+Integration-owned projects that enable nullable reference types set `LangVersion` to `12.0` for both target frameworks. This is required because the `net48` compiler default is C# 7.3, and it matches the language version proven by the pinned Bootstrap5WinFormUI baseline. Keep this setting scoped to integration-owned projects; do not alter vendor project files.
+
 ## 4. SourceGrid API compatibility
 
 `BootstrapSourceGrid` must remain substitutable for common `SourceGrid.Grid` use.
