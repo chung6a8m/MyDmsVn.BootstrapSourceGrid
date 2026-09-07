@@ -41,6 +41,7 @@ The integration assembly/package remains separate from the Bootstrap framework:
 - Package: `MyDmsVn.BootstrapSourceGrid`
 - Base namespace for the public control: `MyDmsVn.Bootstrap5WinFormUI.Controls`
 - Target frameworks: `net48;net8.0-windows`
+- License: MIT
 
 ## Pinned architectural baselines
 
@@ -49,7 +50,17 @@ The first implementation is designed against these exact upstream snapshots:
 - Bootstrap framework: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@95077df0c8bad8593143c2190606d2f444bfc653`
 - SourceGrid: `chung6a8m/sourcegrid@f4e457b43582bf01892f50bdc74aa480531e5944`
 
-See `docs/UPSTREAM.md` for upgrade rules and `docs/UPSTREAM_API_SEAMS.md` for the exact vendor APIs/extension seams already verified against those commits.
+See `docs/UPSTREAM.md` for upgrade/distribution rules and `docs/UPSTREAM_API_SEAMS.md` for the exact vendor APIs/extension seams already verified against those commits.
+
+## Dependency and distribution policy
+
+Development/pre-release uses the exact vendor source baselines as pinned Git submodules plus `ProjectReference`. This is the approved temporary strategy while the integration is being built and verified.
+
+Public NuGet publication uses a different, already-approved release contract: `MyDmsVn.BootstrapSourceGrid` must depend on resolvable exact-version vendor NuGet packages that have been verified as equivalent to the tested source baselines, or to explicitly approved upgraded baselines.
+
+A public package must not be published until both vendor dependencies have verified package identity/version/feed, support for `net48` and `net8.0-windows`, source correspondence, API/behavior equivalence, acceptable transitive dependencies, and license/notice obligations. Vendor assemblies/source must not be silently embedded into this package merely to bypass dependency resolution.
+
+See decisions D-016 and D-017 in `docs/DECISIONS.md`.
 
 ## Non-negotiable boundaries
 
@@ -73,11 +84,11 @@ Start here:
 - `docs/ARCHITECTURE.md` — component boundaries and integration design.
 - `docs/DECISIONS.md` — approved architectural decisions.
 - `docs/UPSTREAM_API_SEAMS.md` — vendor integration seams verified against pinned commits.
-- `docs/UPSTREAM.md` — pinned vendor baselines and upgrade policy.
+- `docs/UPSTREAM.md` — pinned vendor baselines, dependency distribution, and upgrade policy.
 - `docs/COMPATIBILITY.md` — target-framework and API compatibility rules.
 - `docs/TESTING.md` — automated/manual WinForms verification strategy.
 - `docs/DEVELOPMENT_PLAN.md` — stage roadmap and release gates.
-- `docs/PENDING_DECISIONS.md` — numbered owner decisions that agents may not silently make.
+- `docs/PENDING_DECISIONS.md` — owner-decision audit trail and future decision register.
 - `docs/plans/` — task-level implementation plans.
 
 ## Implementation plans
@@ -118,3 +129,9 @@ grid.Selection.EnableMultiSelection = true;
 ```
 
 The surrounding SourceGrid programming model should remain intact while the grid adopts Bootstrap5WinFormUI visual semantics and runtime theme behavior.
+
+## License
+
+This repository's integration source is licensed under the MIT License. See `LICENSE`.
+
+The MIT license does not replace or waive license/notice obligations of the two vendor dependencies; those must be verified for the final public package dependency graph before release.
