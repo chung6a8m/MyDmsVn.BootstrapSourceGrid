@@ -1,96 +1,91 @@
 # Pending Project-Owner Decisions
 
-This document contains decisions that should not be silently made by coding agents. They do not block normal MVP implementation unless the relevant stage says otherwise.
+This document tracks project-owner decisions that coding agents must not make silently. As of 2026-09-07, the initial license and NuGet dependency-strategy decisions are resolved.
 
-When the project owner decides an item, move the durable outcome into `DECISIONS.md`/`UPSTREAM.md`/release metadata and mark the item resolved here.
+Durable decisions live in `DECISIONS.md` and `UPSTREAM.md`. This file remains as an audit trail and a place for future owner-only decisions.
 
 ## 1. Repository and NuGet package license
 
-**Status:** Pending — blocks public package publication, does not block implementation.
+**Status:** Resolved — selected **1A (MIT)** on 2026-09-07.
 
-The repository currently integrates two independent vendor repositories without copying their source into the integration assembly. A license for this repository/package still needs explicit owner approval, and vendor redistribution/dependency obligations must be verified before public release.
+### Approved outcome
 
-### Options
+- The repository's own integration source uses the MIT license.
+- Root `LICENSE` is present.
+- Future NuGet metadata must set `PackageLicenseExpression` to `MIT`.
+- Vendor redistribution/dependency license obligations must still be verified before public release.
 
-**1A — MIT**
-
-Simple permissive license, commonly suitable for a reusable .NET UI library.
-
-**1B — Apache-2.0**
-
-Permissive license with an explicit patent grant and somewhat more notice requirements.
-
-**1C — Other / private-only**
-
-Choose another license or keep the repository/package non-publicly distributed.
-
-### Recommendation
-
-**Recommend 1A (MIT)** for the integration's own source **if** vendor-license verification confirms the planned dependency/distribution model is compatible. Do not infer vendor license compatibility from this recommendation.
-
-### Required follow-up after approval
+### Remaining release verification
 
 ```text
-[ ] add root LICENSE
-[ ] add package license metadata
-[ ] verify both vendor licenses/notices
-[ ] update docs/RELEASE.md and PACKAGE_README if needed
+[x] add root LICENSE
+[ ] add PackageLicenseExpression=MIT when product package metadata is implemented
+[ ] verify Bootstrap5WinFormUI vendor license/notices
+[ ] verify SourceGrid vendor license/notices
+[ ] reflect verified notices/obligations in release/package docs if required
 ```
+
+Canonical decision: `DECISIONS.md` D-016.
 
 ---
 
 ## 2. Public NuGet dependency strategy
 
-**Status:** Pending — blocks public package publication, does not block implementation/local builds.
+**Status:** Resolved — selected **2A with 2B temporary during development** on 2026-09-07.
 
-Development is already standardized on exact Git submodules + `ProjectReference`:
+### Approved outcome
+
+Development and pre-release continue to use exact Git submodules plus `ProjectReference`:
 
 ```text
 vendor/Bootstrap5WinFormUI @ 95077df...
 vendor/sourcegrid          @ f4e457b...
 ```
 
-That is reproducible for source builds, but a public `MyDmsVn.BootstrapSourceGrid` NuGet package also needs dependencies that consumers can resolve from an approved feed.
+Public NuGet publication must use strategy **2A**: the `MyDmsVn.BootstrapSourceGrid` package depends on resolvable exact-version vendor NuGet packages that are verified as equivalent to the tested source baselines, or to explicitly approved upgraded baselines.
 
-### Options
+Temporary strategy **2B** remains valid only for source builds/development while matching vendor packages are unavailable or unverified.
 
-**2A — Publish/consume matching vendor NuGet packages, then make BootstrapSourceGrid depend on exact versions**
+### Public-release requirements
 
-Preferred long-term public distribution model. Each package should correspond to the verified pinned source baseline or an explicitly upgraded equivalent.
-
-**2B — MVP remains source/submodule distribution only; postpone public NuGet**
-
-Safest short-term choice if either vendor package is unavailable or cannot be tied confidently to the pinned commit.
-
-**2C — Publish coordinated vendor packages to a controlled/internal feed, then publish BootstrapSourceGrid against those exact versions**
-
-Appropriate for controlled enterprise/internal distribution.
-
-**Not recommended:** silently embedding/copying vendor assemblies or source into `MyDmsVn.BootstrapSourceGrid.nupkg` merely to make dependencies disappear.
-
-### Recommendation
-
-Use **2B during implementation**, which is already the repository bootstrap model. Move to **2A for public NuGet release** once exact-equivalent vendor package versions are verified/published. This avoids coupling MVP implementation progress to release-feed work while retaining a clean eventual package dependency graph.
-
-### Required follow-up after approval
+For each vendor package verify and record:
 
 ```text
-[ ] verify exact vendor PackageId/version/feed/source correspondence
-[ ] verify both TFMs from package references
-[ ] update UPSTREAM.md
-[ ] test a clean consumer restore
-[ ] inspect generated nupkg dependency groups
+PackageId
+package version
+feed
+supported TFMs
+source/commit correspondence
+public API/behavior equivalence
+transitive dependencies
+license/notice obligations
 ```
+
+Then:
+
+```text
+[ ] switch release validation from ProjectReference to approved PackageReference dependencies
+[ ] verify both net48 and net8.0-windows
+[ ] update UPSTREAM.md with exact package versions/feeds/source equivalence
+[ ] test a clean consumer restore with no vendor source checkout
+[ ] inspect generated nupkg dependency groups
+[ ] verify project and package copies of the same vendor assembly are never referenced together
+```
+
+Forbidden workaround:
+
+```text
+silently embedding/copying vendor assemblies or source into MyDmsVn.BootstrapSourceGrid.nupkg
+```
+
+Canonical decision: `DECISIONS.md` D-017.
 
 ---
 
-## How to answer
+## Current owner-decision status
 
-The project owner can answer compactly, for example:
+No unresolved owner decision currently blocks MVP implementation.
 
-```text
-1A
-2A (2B until matching packages are available)
-```
+Public NuGet publication is still gated by **verification and implementation work** for the approved D-016/D-017 decisions, but not by an undecided policy choice.
 
-or provide a different choice/rationale for either numbered item.
+Add future owner-only decisions below using the next numbered item.
