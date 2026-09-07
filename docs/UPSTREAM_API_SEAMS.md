@@ -271,6 +271,23 @@ Grid.Selection.FocusBackColor
 Grid.Selection.Border
 ```
 
+`GridVirtual.Selection` is publicly typed as `IGridSelection`, while these three
+visual properties are declared by `SourceGrid.Selection.SelectionBase`. The
+protected SourceGrid selection factory returns `SelectionBase` implementations,
+so integration code must access the visual properties through that concrete base
+contract rather than assuming they are members of `IGridSelection`.
+
+Changing `Grid.SelectionMode` recreates the SourceGrid selection object. Visual
+ownership tracking must therefore reset for the new selection instance so its
+fresh defaults are not mistaken for consumer overrides.
+
+`CreateSelectionObject()` returns before the `Selection` setter calls
+`BindToGrid(...)`. Selection visual setters invalidate through their bound grid,
+so an override that applies initial visuals inside the factory must temporarily
+bind the new selection and unbind it before returning. The normal SourceGrid
+setter then performs the authoritative bind without leaving a duplicate
+selection decorator.
+
 SourceGrid's default selection background uses a translucent highlight with alpha `75`.
 
 The integration can theme these properties without replacing the selection engine.
@@ -344,6 +361,7 @@ Whenever either vendor baseline changes, verify all of the following before acce
 [ ] ViewBase style properties/shareability
 [ ] header visual-element contracts
 [ ] Selection visual properties/decorator behavior
+[ ] Grid.Selection interface type and SelectionBase visual-property contract
 [ ] EditorBase.UseCellViewProperties behavior
 [ ] EditorControlBase appearance propagation
 [ ] CustomScrollControl ownership

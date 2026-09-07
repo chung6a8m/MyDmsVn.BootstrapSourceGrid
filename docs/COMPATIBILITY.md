@@ -76,6 +76,12 @@ Supported theme behavior includes:
 
 A theme change must not clear or reconstruct application data.
 
+For the Stage 2 default ordinary-cell View, disabling the grid switches text to
+the Bootstrap disabled color without changing the cell editor or editability
+model. The integration does not infer a distinct read-only state merely from
+`Cell.Editor == null`, because SourceGrid also uses editor-less cells for normal
+display-only content and exposes no separate read-only View state at this seam.
+
 ## 7. Font compatibility
 
 Default font comes from `CurrentTheme.Typography.Body`.
