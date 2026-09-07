@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using MyDmsVn.Bootstrap5WinFormUI.Theme;
+using MyDmsVn.BootstrapSourceGrid.Internal;
 using MyDmsVn.BootstrapSourceGrid.Theming;
 
 namespace MyDmsVn.Bootstrap5WinFormUI.Controls;
@@ -18,6 +19,7 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     private bool _useThemeFont = true;
     private Font? _themeFont;
     private BootstrapSourceGridThemeSnapshot _themeSnapshot;
+    private readonly BootstrapSourceGridStyleApplicator _styleApplicator;
 
     /// <summary>
     /// Initializes a new Bootstrap-themed SourceGrid.
@@ -25,8 +27,11 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     public BootstrapSourceGrid()
     {
         Name = nameof(BootstrapSourceGrid);
-        _themeSnapshot = BootstrapSourceGridThemeAdapter.CreateSnapshot(
-            BootstrapThemeManager.CurrentTheme);
+        var theme = BootstrapThemeManager.CurrentTheme;
+        _themeSnapshot = BootstrapSourceGridThemeAdapter.CreateSnapshot(theme);
+        _styleApplicator = new BootstrapSourceGridStyleApplicator(
+            _themeSnapshot,
+            BootstrapSourceGridDpiMetrics.FromTheme(theme, CurrentDpi));
         _initialized = true;
         BootstrapThemeManager.ThemeChanged += OnThemeChanged;
         _themeSubscribed = true;
@@ -35,6 +40,14 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     }
 
     internal BootstrapSourceGridThemeSnapshot CurrentThemeSnapshot => _themeSnapshot;
+
+    /// <inheritdoc />
+    public override SourceGrid.Cells.ICellVirtual GetCell(int row, int column)
+    {
+        var cell = base.GetCell(row, column);
+        _styleApplicator.ApplyDefaultView(cell);
+        return cell;
+    }
 
     /// <inheritdoc />
     protected override void OnFontChanged(EventArgs e)
@@ -116,7 +129,16 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     {
         BackColor = _themeSnapshot.CellBackColor;
         ForeColor = _themeSnapshot.CellForeColor;
+        _styleApplicator.ApplyTheme(
+            _themeSnapshot,
+            BootstrapSourceGridDpiMetrics.FromTheme(
+                BootstrapThemeManager.CurrentTheme,
+                CurrentDpi));
     }
+
+    private int CurrentDpi => DeviceDpi > 0
+        ? DeviceDpi
+        : MyDmsVn.Bootstrap5WinFormUI.Rendering.DpiScaler.DefaultDpi;
 
     private void ApplyThemeFont(BootstrapFontToken token)
     {
