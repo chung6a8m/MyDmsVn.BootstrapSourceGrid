@@ -20,6 +20,7 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     private Font? _themeFont;
     private BootstrapSourceGridThemeSnapshot _themeSnapshot;
     private readonly BootstrapSourceGridStyleApplicator _styleApplicator;
+    private readonly BootstrapSourceGridSelectionStyle _selectionStyle;
 
     /// <summary>
     /// Initializes a new Bootstrap-themed SourceGrid.
@@ -32,6 +33,7 @@ public class BootstrapSourceGrid : SourceGrid.Grid
         _styleApplicator = new BootstrapSourceGridStyleApplicator(
             _themeSnapshot,
             BootstrapSourceGridDpiMetrics.FromTheme(theme, CurrentDpi));
+        _selectionStyle = new BootstrapSourceGridSelectionStyle();
         _initialized = true;
         BootstrapThemeManager.ThemeChanged += OnThemeChanged;
         _themeSubscribed = true;
@@ -127,13 +129,15 @@ public class BootstrapSourceGrid : SourceGrid.Grid
 
     internal virtual void ApplyBootstrapTheme()
     {
+        var theme = BootstrapThemeManager.CurrentTheme;
+        var dpiMetrics = BootstrapSourceGridDpiMetrics.FromTheme(theme, CurrentDpi);
         BackColor = _themeSnapshot.CellBackColor;
         ForeColor = _themeSnapshot.CellForeColor;
-        _styleApplicator.ApplyTheme(
+        _styleApplicator.ApplyTheme(_themeSnapshot, dpiMetrics);
+        _selectionStyle.ApplyTheme(
+            (SourceGrid.Selection.SelectionBase)Selection,
             _themeSnapshot,
-            BootstrapSourceGridDpiMetrics.FromTheme(
-                BootstrapThemeManager.CurrentTheme,
-                CurrentDpi));
+            dpiMetrics);
     }
 
     private int CurrentDpi => DeviceDpi > 0

@@ -271,6 +271,12 @@ Grid.Selection.FocusBackColor
 Grid.Selection.Border
 ```
 
+`GridVirtual.Selection` is publicly typed as `IGridSelection`, while these three
+visual properties are declared by `SourceGrid.Selection.SelectionBase`. The
+protected SourceGrid selection factory returns `SelectionBase` implementations,
+so integration code must access the visual properties through that concrete base
+contract rather than assuming they are members of `IGridSelection`.
+
 SourceGrid's default selection background uses a translucent highlight with alpha `75`.
 
 The integration can theme these properties without replacing the selection engine.
@@ -344,6 +350,7 @@ Whenever either vendor baseline changes, verify all of the following before acce
 [ ] ViewBase style properties/shareability
 [ ] header visual-element contracts
 [ ] Selection visual properties/decorator behavior
+[ ] Grid.Selection interface type and SelectionBase visual-property contract
 [ ] EditorBase.UseCellViewProperties behavior
 [ ] EditorControlBase appearance propagation
 [ ] CustomScrollControl ownership
