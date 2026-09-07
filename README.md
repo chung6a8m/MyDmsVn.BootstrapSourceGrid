@@ -49,7 +49,7 @@ The first implementation is designed against these exact upstream snapshots:
 - Bootstrap framework: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@95077df0c8bad8593143c2190606d2f444bfc653`
 - SourceGrid: `chung6a8m/sourcegrid@f4e457b43582bf01892f50bdc74aa480531e5944`
 
-See `docs/UPSTREAM.md` for upgrade rules.
+See `docs/UPSTREAM.md` for upgrade rules and `docs/UPSTREAM_API_SEAMS.md` for the exact vendor APIs/extension seams already verified against those commits.
 
 ## Non-negotiable boundaries
 
@@ -67,15 +67,34 @@ Start here:
 
 - `AGENTS.md` — mandatory operating rules for coding agents.
 - `AI_CONTEXT.md` — compact project model for AI assistants.
+- `CONTRIBUTING.md` — contributor workflow and validation discipline.
 - `docs/README.md` — documentation map and source-of-truth order.
 - `docs/PRD.md` — product requirements and definition of MVP.
 - `docs/ARCHITECTURE.md` — component boundaries and integration design.
 - `docs/DECISIONS.md` — approved architectural decisions.
+- `docs/UPSTREAM_API_SEAMS.md` — vendor integration seams verified against pinned commits.
 - `docs/UPSTREAM.md` — pinned vendor baselines and upgrade policy.
 - `docs/COMPATIBILITY.md` — target-framework and API compatibility rules.
 - `docs/TESTING.md` — automated/manual WinForms verification strategy.
 - `docs/DEVELOPMENT_PLAN.md` — stage roadmap and release gates.
+- `docs/PENDING_DECISIONS.md` — numbered owner decisions that agents may not silently make.
 - `docs/plans/` — task-level implementation plans.
+
+## Implementation plans
+
+The initial plan set is intentionally staged:
+
+```text
+20260907-001  Master roadmap
+20260907-002  Foundation and vendor pinning
+20260907-003  Control shell and theme adapter
+20260907-004  Cell/header/selection theming
+20260907-005  Runtime theme/DPI/Designer hardening
+20260907-006  Editor and interaction hardening
+20260907-007  Demo, packaging, and release
+```
+
+Each stage has its own acceptance criteria, dual-target test gate, and vendor-cleanliness check.
 
 ## Development principles
 
