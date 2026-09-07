@@ -78,6 +78,36 @@ public sealed class BootstrapSourceGridCellViewTests
     }
 
     [Test]
+    public void SharedCellView_PreparesDisabledForegroundWithoutChangingCellBehavior()
+    {
+        var original = BootstrapThemeManager.CurrentTheme;
+        var theme = BootstrapTheme.CreateDefault(BootstrapThemeMode.Light);
+
+        try
+        {
+            BootstrapThemeManager.CurrentTheme = theme;
+            using (var grid = new BootstrapSourceGridControl())
+            {
+                grid.Redim(1, 1);
+                var cell = new SourceGrid.Cells.Cell("disabled", typeof(string));
+                grid[0, 0] = cell;
+                var editor = cell.Editor;
+                var view = (SourceGrid.Cells.Views.Cell)grid.GetCell(0, 0).View;
+                grid.Enabled = false;
+
+                view.Measure(new SourceGrid.CellContext(grid, new SourceGrid.Position(0, 0)), Size.Empty);
+
+                Assert.That(view.ForeColor, Is.EqualTo(theme.Colors.Disabled));
+                Assert.That(cell.Editor, Is.SameAs(editor));
+            }
+        }
+        finally
+        {
+            BootstrapThemeManager.CurrentTheme = original;
+        }
+    }
+
+    [Test]
     public void IndexerGetBeforeGetCell_DoesNotRequireBootstrapWrapperType()
     {
         using (var grid = new BootstrapSourceGridControl())

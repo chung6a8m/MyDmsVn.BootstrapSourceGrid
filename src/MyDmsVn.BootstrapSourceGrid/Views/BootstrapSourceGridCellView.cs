@@ -39,7 +39,9 @@ internal sealed class BootstrapSourceGridCellView : SourceGrid.Cells.Views.Cell
         BackColor = (context.Position.Row & 1) == 0
             ? snapshot.CellBackColor
             : snapshot.AlternateCellBackColor;
-        ForeColor = snapshot.CellForeColor;
+        ForeColor = context.Grid.Enabled
+            ? snapshot.CellForeColor
+            : snapshot.DisabledColor;
         Border = _border;
         Padding = _padding;
 
