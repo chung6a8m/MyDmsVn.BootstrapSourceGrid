@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using MyDmsVn.Bootstrap5WinFormUI.Theme;
+using MyDmsVn.BootstrapSourceGrid.Theming;
 
 namespace MyDmsVn.Bootstrap5WinFormUI.Controls;
 
@@ -16,6 +17,7 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     private bool _themeSubscribed;
     private bool _useThemeFont = true;
     private Font? _themeFont;
+    private BootstrapSourceGridThemeSnapshot _themeSnapshot;
 
     /// <summary>
     /// Initializes a new Bootstrap-themed SourceGrid.
@@ -23,11 +25,16 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     public BootstrapSourceGrid()
     {
         Name = nameof(BootstrapSourceGrid);
+        _themeSnapshot = BootstrapSourceGridThemeAdapter.CreateSnapshot(
+            BootstrapThemeManager.CurrentTheme);
         _initialized = true;
         BootstrapThemeManager.ThemeChanged += OnThemeChanged;
         _themeSubscribed = true;
-        ApplyThemeFont();
+        ApplyThemeFont(_themeSnapshot.BodyFont);
+        ApplyBootstrapTheme();
     }
+
+    internal BootstrapSourceGridThemeSnapshot CurrentThemeSnapshot => _themeSnapshot;
 
     /// <inheritdoc />
     protected override void OnFontChanged(EventArgs e)
@@ -66,15 +73,29 @@ public class BootstrapSourceGrid : SourceGrid.Grid
 
     private void OnThemeChanged(object? sender, BootstrapThemeChangedEventArgs e)
     {
-        if (!IsDisposed && _useThemeFont)
+        if (IsDisposed)
         {
-            ApplyThemeFont();
+            return;
         }
+
+        _themeSnapshot = BootstrapSourceGridThemeAdapter.CreateSnapshot(e.NewTheme);
+        if (_useThemeFont)
+        {
+            ApplyThemeFont(_themeSnapshot.BodyFont);
+        }
+
+        ApplyBootstrapTheme();
+        Invalidate();
     }
 
-    private void ApplyThemeFont()
+    internal virtual void ApplyBootstrapTheme()
     {
-        var token = BootstrapThemeManager.CurrentTheme.Typography.Body;
+        BackColor = _themeSnapshot.CellBackColor;
+        ForeColor = _themeSnapshot.CellForeColor;
+    }
+
+    private void ApplyThemeFont(BootstrapFontToken token)
+    {
         if (ThemeFontMatches(token))
         {
             return;
