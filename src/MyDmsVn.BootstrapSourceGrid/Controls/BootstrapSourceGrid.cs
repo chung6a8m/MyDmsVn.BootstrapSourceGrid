@@ -47,6 +47,10 @@ public class BootstrapSourceGrid : SourceGrid.Grid
 
     internal BootstrapSourceGridDpiMetrics CurrentDpiMetrics => _dpiMetrics;
 
+    internal bool IsThemeSubscribed => _themeSubscribed;
+
+    internal Font? OwnedThemeFont => _themeFont;
+
     internal int CurrentDpi => IsHandleCreated && DeviceDpi > 0
         ? DeviceDpi
         : MyDmsVn.Bootstrap5WinFormUI.Rendering.DpiScaler.DefaultDpi;
