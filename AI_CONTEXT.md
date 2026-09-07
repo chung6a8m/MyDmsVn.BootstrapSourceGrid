@@ -58,6 +58,8 @@ Bootstrap5WinFormUI provides `BootstrapThemeManager`, `BootstrapTheme`, colors, 
 
 SourceGrid 5.0 supports `net48` and `net8.0-windows` and treats its large historical public API as a compatibility constraint. Its cell model separates Model, View, Editor, and Controller concerns; Views are the preferred styling integration point.
 
+Exact upstream seams verified against these commits are recorded in `docs/UPSTREAM_API_SEAMS.md`. Do not substitute remembered SourceGrid/Bootstrap APIs for that verified record.
+
 ## Initial dependency strategy
 
 During repository bootstrap, vendor source is consumed as pinned Git submodules and referenced with `ProjectReference`:
@@ -92,6 +94,37 @@ This provides commit-level reproducibility without copying or rewriting vendor s
 - integration-specific accessibility/designer behavior;
 - integration tests and demo.
 
+## Verified SourceGrid styling seam
+
+A critical implementation fact at the pinned SourceGrid commit:
+
+```csharp
+grid[row, column] = cell;
+```
+
+reaches a private SourceGrid `InsertCell(...)`. A subclass cannot reliably intercept all normal assignment through `SetCell(...)`.
+
+The approved MVP no-patch strategy is therefore:
+
+```text
+override virtual GetCell(row, column)
+    -> call base.GetCell
+    -> if View is exactly a known SourceGrid default singleton, replace it with an integration-owned shared View
+    -> if View is already integration-owned, keep it
+    -> otherwise treat it as consumer-owned and leave it untouched
+    -> return the same SourceGrid cell
+```
+
+Known default identities include:
+
+```text
+SourceGrid.Cells.Views.Cell.Default
+SourceGrid.Cells.Views.ColumnHeader.Default
+SourceGrid.Cells.Views.RowHeader.Default
+```
+
+Do not hide/redeclare the SourceGrid indexer merely to intercept assignment, and do not patch SourceGrid unless this verified seam stops satisfying a concrete requirement.
+
 ## Styling strategy
 
 Prefer this flow:
@@ -102,14 +135,38 @@ BootstrapThemeManager.CurrentTheme
        v
 BootstrapSourceGridThemeAdapter
        |
-       +--> cell View/style
-       +--> column header View/style
-       +--> row header View/style
+       +--> shared cell View/style
+       +--> shared column header View/style
+       +--> shared row header View/style
        +--> selection/focus visual state
-       `--> editor appearance bridge where safe
+       `--> active-editor appearance refresh where safe
 ```
 
+Ordinary alternating-row styling can use `CellContext.Position.Row` inside a shared View rather than allocating one View per row.
+
+Column/row header integration should preserve the SourceGrid header View type behavior while substituting programmable non-OS-themed DevAge background visual elements where required for Bootstrap colors.
+
 Do not perform broad `OnPaint` replacement when SourceGrid Views/VisualModels can express the requirement.
+
+## Selection ownership
+
+SourceGrid selection rendering already consumes:
+
+```text
+Selection.BackColor
+Selection.FocusBackColor
+Selection.Border
+```
+
+Theme updates may change these visual properties but must never reset selection, active position, or ranges simply to repaint.
+
+If application code changes a selection visual property after BootstrapSourceGrid applied it, treat that property as consumer-owned and stop overwriting it on later theme changes.
+
+## Editor integration
+
+SourceGrid `EditorBase.UseCellViewProperties` defaults to `true`, and `EditorControlBase.OnStartingEdit` already copies the cell View's foreground/background/font into the editor control.
+
+Therefore MVP does not replace SourceGrid editors. The integration only needs a narrow active-editor refresh when a runtime theme change occurs during editing. If `UseCellViewProperties == false`, respect that SourceGrid-native opt-out and do not restyle the editor.
 
 ## Runtime theme lifecycle
 
@@ -117,14 +174,29 @@ Follow Bootstrap5WinFormUI conventions:
 
 1. Construct safely with default/current theme even before handle creation.
 2. Subscribe to `BootstrapThemeManager.ThemeChanged` while alive.
-3. Re-apply Bootstrap-owned visual objects on theme change.
-4. Preserve grid data, selection, and SourceGrid behavioral state.
-5. Repaint/invalidate.
-6. Unsubscribe and dispose owned GDI resources in `Dispose(bool)`.
+3. Re-apply Bootstrap-owned shared visual objects on theme change.
+4. Preserve grid data, spans, selection, SourceGrid behavioral state, and consumer Views.
+5. Refresh an active editor only when SourceGrid's View-property ownership says it is safe.
+6. Repaint/invalidate without rebuilding grid data.
+7. Unsubscribe and dispose owned GDI resources in `Dispose(bool)`.
 
 ## Font ownership
 
 Default behavior should use the Bootstrap body typography token. If the integration creates a `Font`, it owns and disposes that `Font`. If application code assigns `Font`, switch to consumer-font mode and never dispose the consumer's instance.
+
+Keep integration cell/header View `Font` unset/null where SourceGrid can inherit `grid.Font`, so this single control-level ownership contract remains authoritative.
+
+## DPI ownership
+
+Initial integration-owned metric mapping:
+
+```text
+Cell padding      <- CurrentTheme.Metrics.SpacingXS
+Cell border width <- CurrentTheme.Metrics.BorderWidth
+Focus border      <- CurrentTheme.Metrics.FocusBorderWidth
+```
+
+Scale those through `DpiScaler`. Do not rescale SourceGrid/application row heights, column widths, scrollbar dimensions, or other dimensions that the integration does not own.
 
 ## Initial scope
 
@@ -157,6 +229,10 @@ Pure mapping/style logic should be tested without handles. Control and editor be
 
 Manual/demo gates cover designer loading, runtime light/dark switching, DPI changes, selection/focus, keyboard editing, scrolling, spans, and representative SourceGrid samples.
 
+## Pending owner decisions
+
+`docs/PENDING_DECISIONS.md` contains choices agents must not make silently. At the initial planning state these are release-related and do not block ordinary MVP implementation.
+
 ## Source-of-truth order
 
 When information conflicts, use this precedence:
@@ -165,12 +241,13 @@ When information conflicts, use this precedence:
 2. `docs/DECISIONS.md`
 3. `docs/PRD.md`
 4. `docs/ARCHITECTURE.md`
-5. `docs/UPSTREAM.md`
-6. `docs/COMPATIBILITY.md`
-7. `docs/TESTING.md`
-8. `docs/DEVELOPMENT_PLAN.md`
-9. Active file under `docs/plans/`
-10. Vendor source/tests at the pinned commits
-11. Historical discussion/feasibility notes
+5. `docs/UPSTREAM_API_SEAMS.md` for exact pinned-vendor API facts
+6. `docs/UPSTREAM.md`
+7. `docs/COMPATIBILITY.md`
+8. `docs/TESTING.md`
+9. `docs/DEVELOPMENT_PLAN.md`
+10. Active file under `docs/plans/`
+11. Vendor source/tests at the pinned commits
+12. Historical discussion/feasibility notes
 
 Read `AGENTS.md` before implementation work.
