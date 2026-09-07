@@ -139,6 +139,43 @@ public sealed class BootstrapSourceGridRuntimeViewThemeTests
         }
     }
 
+    [Test]
+    public void CustomThemeTokensFlowIntoCellsHeadersAndSelection()
+    {
+        var original = BootstrapThemeManager.CurrentTheme;
+        var custom = CreateCustomTheme();
+
+        try
+        {
+            BootstrapThemeManager.CurrentTheme = custom;
+            using (var grid = new BootstrapSourceGridControl())
+            {
+                grid.Redim(2, 2);
+                grid[0, 0] = new SourceGrid.Cells.ColumnHeader("Header");
+                grid[1, 1] = new SourceGrid.Cells.Cell("Cell");
+                var headerView = (SourceGrid.Cells.Views.ColumnHeader)grid.GetCell(0, 0).View;
+                var cellView = (SourceGrid.Cells.Views.Cell)grid.GetCell(1, 1).View;
+
+                cellView.Measure(
+                    new SourceGrid.CellContext(grid, new SourceGrid.Position(1, 1)),
+                    Size.Empty);
+
+                Assert.That(cellView.BackColor, Is.EqualTo(Color.Lavender));
+                Assert.That(cellView.ForeColor, Is.EqualTo(Color.DarkSlateBlue));
+                Assert.That(
+                    ((DevAge.Drawing.VisualElements.ColumnHeader)headerView.Background).BackColor,
+                    Is.EqualTo(Color.Lavender));
+                var selection = (SourceGrid.Selection.SelectionBase)grid.Selection;
+                Assert.That(selection.BackColor, Is.EqualTo(Color.FromArgb(75, Color.Crimson)));
+                Assert.That(selection.Border.Top.Color, Is.EqualTo(Color.DarkOrange));
+            }
+        }
+        finally
+        {
+            BootstrapThemeManager.CurrentTheme = original;
+        }
+    }
+
     private static void AssertHeaderTheme(
         SourceGrid.Cells.Views.IView columnHeaderView,
         SourceGrid.Cells.Views.IView rowHeaderView,
@@ -166,5 +203,34 @@ public sealed class BootstrapSourceGridRuntimeViewThemeTests
         {
             Assert.That(selectedAfter[index], Is.EqualTo(selectedBefore[index]));
         }
+    }
+
+    private static BootstrapTheme CreateCustomTheme()
+    {
+        var defaults = BootstrapTheme.CreateDefault(BootstrapThemeMode.Light);
+        var colors = defaults.Colors;
+        return new BootstrapTheme(
+            BootstrapThemeMode.Light,
+            new BootstrapThemeColors(
+                Color.Crimson,
+                colors.Secondary,
+                colors.Success,
+                colors.Danger,
+                colors.Warning,
+                colors.Info,
+                colors.Light,
+                colors.Dark,
+                Color.Cornsilk,
+                Color.Cornsilk,
+                Color.Lavender,
+                Color.Sienna,
+                Color.DarkSlateBlue,
+                colors.MutedText,
+                Color.Gray,
+                Color.DarkOrange,
+                colors.Hover,
+                colors.Active),
+            defaults.Metrics,
+            defaults.Typography);
     }
 }
