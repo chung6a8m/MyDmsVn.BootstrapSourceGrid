@@ -66,12 +66,12 @@ The superproject commit records the submodule commit IDs; no script should silen
 
 ## 4. Project references
 
-Initial product project references vendor projects directly so compile-time API mismatches are visible:
+Initial product project references vendor projects directly so compile-time API mismatches are visible. From `src/MyDmsVn.BootstrapSourceGrid/MyDmsVn.BootstrapSourceGrid.csproj` the expected relative paths are:
 
 ```xml
 <ItemGroup>
-  <ProjectReference Include="..\..\..\vendor\Bootstrap5WinFormUI\src\MyDmsVn.Bootstrap5WinFormUI\MyDmsVn.Bootstrap5WinFormUI.csproj" />
-  <ProjectReference Include="..\..\..\vendor\sourcegrid\SourceGrid\SourceGrid.csproj" />
+  <ProjectReference Include="..\..\vendor\Bootstrap5WinFormUI\src\MyDmsVn.Bootstrap5WinFormUI\MyDmsVn.Bootstrap5WinFormUI.csproj" />
+  <ProjectReference Include="..\..\vendor\sourcegrid\SourceGrid\SourceGrid.csproj" />
 </ItemGroup>
 ```
 
