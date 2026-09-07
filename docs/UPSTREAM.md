@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-This repository integrates two independently maintained vendors. This document pins the initial baselines and defines how they are consumed, patched, and upgraded.
+This repository integrates two independently maintained vendors. This document pins the initial baselines and defines how they are consumed, patched, upgraded, and distributed.
 
 ## 2. Pinned baselines
 
@@ -38,7 +38,7 @@ SourceGrid 5.0 explicitly treats its historical public API as a compatibility co
 
 ## 3. Repository layout
 
-Initial implementation uses Git submodules:
+Development/pre-release implementation uses Git submodules:
 
 ```text
 vendor/
@@ -64,9 +64,9 @@ git submodule update --init --recursive
 
 The superproject commit records the submodule commit IDs; no script should silently move submodules to vendor default branches.
 
-## 4. Project references
+## 4. Project references during development
 
-Initial product project references vendor projects directly so compile-time API mismatches are visible. From `src/MyDmsVn.BootstrapSourceGrid/MyDmsVn.BootstrapSourceGrid.csproj` the expected relative paths are:
+Development/pre-release product builds reference vendor projects directly so compile-time API mismatches are visible. From `src/MyDmsVn.BootstrapSourceGrid/MyDmsVn.BootstrapSourceGrid.csproj` the expected relative paths are:
 
 ```xml
 <ItemGroup>
@@ -76,6 +76,8 @@ Initial product project references vendor projects directly so compile-time API 
 ```
 
 Paths must be verified during Stage 0 after submodules are initialized. Do not copy vendor source files into `src/MyDmsVn.BootstrapSourceGrid`.
+
+This ProjectReference/submodule mode is the approved temporary development strategy (decision 2B / D-017). It is not the final public NuGet dependency graph.
 
 ## 5. Vendor modification policy
 
@@ -135,19 +137,49 @@ Pay special attention to changes in:
 - painting invalidation and shared View assumptions;
 - project TFM/dependency changes.
 
-## 9. Migration to NuGet packages
+## 9. Approved public NuGet dependency strategy
 
-A future release may replace one or both project references with NuGet dependencies. This is allowed only when:
+Public distribution uses strategy **2A** from project-owner decision D-017.
 
-- a published package corresponds to a tested vendor baseline;
-- package supports both required TFMs;
+Before publishing `MyDmsVn.BootstrapSourceGrid`, both vendor dependencies must be available as resolvable NuGet packages with exact versions and verified equivalence to the tested source baselines, or to explicitly approved upgraded baselines.
+
+For each vendor package record:
+
+```text
+PackageId
+Version
+Feed
+Supported TFMs
+Verified source commit/baseline
+Public API/behavior equivalence result
+Transitive dependency review
+License/notice review
+```
+
+The public release build must use those approved `PackageReference` dependencies rather than unresolved vendor `ProjectReference` dependencies.
+
+A package transition is accepted only when:
+
+- the published package corresponds to a tested vendor baseline;
+- the package supports both `net48` and `net8.0-windows`;
 - public APIs used by integration match the verified source baseline;
 - transitive dependencies are acceptable;
 - demo, Designer, and automated tests pass against package references;
-- reproducible version pins are documented.
+- reproducible version pins and feeds are documented;
+- a clean consumer restore succeeds without checking out the vendor source repositories.
 
-Do not mix source project references and package references to different versions of the same vendor in one build graph.
+Do not mix source project references and package references to different versions of the same vendor in one build graph. Do not reference both project and package copies of the same vendor assembly simultaneously.
+
+If either vendor package is unavailable or unverified, remain in temporary strategy **2B** for development/source distribution and do **not** publish a public BootstrapSourceGrid NuGet package yet.
+
+Never solve missing package dependencies by silently embedding/copying vendor source or assemblies into `MyDmsVn.BootstrapSourceGrid.nupkg`.
 
 ## 10. Licensing
 
-Before first public package release, verify and document redistribution/license obligations for both vendor packages/repositories. Do not copy vendor license text into this repository unless the packaging/legal requirement actually calls for it; retain required notices through the normal dependency/package mechanism.
+The integration repository/package uses the MIT license (D-016); see root `LICENSE`.
+
+This license choice applies to this repository's own integration source only. Before first public package release, verify and document redistribution/dependency obligations for both vendor packages/repositories.
+
+Do not copy vendor license text into this repository unless the packaging/legal requirement actually calls for it. Retain required notices through the normal dependency/package mechanism or an explicitly documented notice file where required.
+
+The release is blocked if vendor license/notice obligations for the approved package dependency graph have not been verified.
