@@ -145,3 +145,33 @@ A later switch to published package references is allowed if the packages expose
 ## D-015 — SourceGrid behavior changes require explicit intent
 
 **Decision:** Styling is not permission to redefine SourceGrid editing, selection, focus, navigation, spans, clipboard, scrolling, or event ordering. Any intentional behavioral change requires a separate approved decision and regression coverage.
+
+## D-016 — Repository and package use the MIT license
+
+**Decision:** The integration repository and the `MyDmsVn.BootstrapSourceGrid` package use the MIT license.
+
+The root `LICENSE` file is authoritative for the integration's own source. Package metadata must use `PackageLicenseExpression` value `MIT` when the product project is created/configured for packing.
+
+**Rationale:** MIT is a simple permissive license appropriate for a reusable .NET UI integration library.
+
+**Important boundary:** This decision licenses only this repository's own integration source. Before public release, vendor license and redistribution/dependency obligations for `MyDmsVn.Bootstrap5WinFormUI` and SourceGrid must still be verified and documented. Do not infer vendor-license compatibility merely from this repository using MIT.
+
+## D-017 — Public NuGet uses exact matching vendor packages; source/submodule mode remains temporary during development
+
+**Decision:** The dependency strategy has two deliberate phases:
+
+1. **Development / pre-release:** use pinned Git submodules plus `ProjectReference` (temporary strategy 2B).
+2. **Public NuGet release:** switch the release dependency graph to resolvable, exact-version vendor NuGet packages that have been verified as equivalent to the tested vendor source baselines (strategy 2A).
+
+Public publication of `MyDmsVn.BootstrapSourceGrid` is blocked until both vendor packages have verified:
+
+- PackageId and version;
+- feed availability;
+- support for `net48` and `net8.0-windows`;
+- source/commit equivalence or an explicitly approved upgraded baseline;
+- compatible public APIs/behavior;
+- acceptable transitive dependencies and license obligations.
+
+Do not publish a package that depends on unresolved project references, and do not silently embed/copy vendor assemblies or source into `MyDmsVn.BootstrapSourceGrid.nupkg` to bypass dependency resolution.
+
+When switching to package references for release validation, do not reference project and package copies of the same vendor assembly simultaneously.
