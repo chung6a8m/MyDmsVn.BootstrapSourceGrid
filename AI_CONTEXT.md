@@ -12,6 +12,7 @@ For mandatory operating rules read `AGENTS.md`. For detailed requirements start 
 - Primary public type: `MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid`
 - Direct base type: `SourceGrid.Grid`
 - Required TFMs: `net48;net8.0-windows`
+- Repository/package license: MIT
 
 ## Product intent
 
@@ -60,9 +61,9 @@ SourceGrid 5.0 supports `net48` and `net8.0-windows` and treats its large histor
 
 Exact upstream seams verified against these commits are recorded in `docs/UPSTREAM_API_SEAMS.md`. Do not substitute remembered SourceGrid/Bootstrap APIs for that verified record.
 
-## Initial dependency strategy
+## Approved two-phase dependency strategy
 
-During repository bootstrap, vendor source is consumed as pinned Git submodules and referenced with `ProjectReference`:
+During development/pre-release, vendor source is consumed as pinned Git submodules and referenced with `ProjectReference` (temporary strategy 2B):
 
 ```text
 vendor/
@@ -70,7 +71,17 @@ vendor/
   sourcegrid/           @ f4e457b...
 ```
 
-This provides commit-level reproducibility without copying or rewriting vendor source. A later migration to published NuGet versions is allowed only after equivalent API/behavior is verified and documented.
+This provides commit-level reproducibility without copying or rewriting vendor source.
+
+For **public NuGet release**, strategy 2A is mandatory: `MyDmsVn.BootstrapSourceGrid` must depend on resolvable exact-version vendor NuGet packages that have been verified as equivalent to the tested source baselines, or to explicitly approved upgraded baselines.
+
+Public publication is blocked until both vendor packages have verified PackageId/version/feed, both required TFMs, source/commit correspondence, API/behavior equivalence, acceptable transitive dependencies, and license/notice obligations. Do not silently embed vendor DLLs/source into the integration package to bypass this requirement.
+
+## Licensing
+
+The integration repository/package uses MIT (`docs/DECISIONS.md` D-016; root `LICENSE`). Future package metadata must use `PackageLicenseExpression=MIT`.
+
+This decision applies to the integration's own source only. Vendor license/notice obligations must still be verified before public package release.
 
 ## Ownership boundaries
 
@@ -229,9 +240,14 @@ Pure mapping/style logic should be tested without handles. Control and editor be
 
 Manual/demo gates cover designer loading, runtime light/dark switching, DPI changes, selection/focus, keyboard editing, scrolling, spans, and representative SourceGrid samples.
 
-## Pending owner decisions
+## Owner-decision status
 
-`docs/PENDING_DECISIONS.md` contains choices agents must not make silently. At the initial planning state these are release-related and do not block ordinary MVP implementation.
+The initial owner-only release choices are resolved:
+
+- 1A: MIT license -> D-016.
+- 2A with 2B temporary -> D-017.
+
+`docs/PENDING_DECISIONS.md` is now an audit trail/future decision register. No unresolved owner decision currently blocks ordinary MVP implementation. Public release can still be blocked by failed verification of the already-approved license/dependency requirements.
 
 ## Source-of-truth order
 
