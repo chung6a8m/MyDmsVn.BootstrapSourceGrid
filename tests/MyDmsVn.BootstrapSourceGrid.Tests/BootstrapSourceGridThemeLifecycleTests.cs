@@ -1,4 +1,6 @@
+using System;
 using System.Threading;
+using System.Windows.Forms;
 using MyDmsVn.Bootstrap5WinFormUI.Theme;
 using NUnit.Framework;
 using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
@@ -115,6 +117,77 @@ public sealed class BootstrapSourceGridThemeLifecycleTests
         finally
         {
             BootstrapThemeManager.CurrentTheme = original;
+        }
+    }
+
+    [Test]
+    public void ThemeChangedFromWorkerThreadIsMarshaledToCreatedHandle()
+    {
+        var original = BootstrapThemeManager.CurrentTheme;
+        var light = BootstrapTheme.CreateDefault(BootstrapThemeMode.Light);
+        var dark = BootstrapTheme.CreateDefault(BootstrapThemeMode.Dark);
+
+        try
+        {
+            BootstrapThemeManager.CurrentTheme = light;
+
+            using (var grid = new ThreadTrackingBootstrapSourceGrid())
+            {
+                grid.CreateControl();
+                Assert.That(grid.IsHandleCreated, Is.True);
+                var uiThreadId = Thread.CurrentThread.ManagedThreadId;
+                grid.ResetThemeApplicationThread();
+
+                Exception? workerException = null;
+                var worker = new Thread(() =>
+                {
+                    try
+                    {
+                        BootstrapThemeManager.CurrentTheme = dark;
+                    }
+                    catch (Exception exception)
+                    {
+                        workerException = exception;
+                    }
+                });
+
+                worker.Start();
+                Assert.That(worker.Join(TimeSpan.FromSeconds(5)), Is.True);
+
+                var deadline = DateTime.UtcNow.AddSeconds(5);
+                while (grid.LastThemeApplicationThreadId == 0 &&
+                    DateTime.UtcNow < deadline)
+                {
+                    Application.DoEvents();
+                    Thread.Sleep(10);
+                }
+
+                Assert.That(workerException, Is.Null);
+                Assert.That(grid.LastThemeApplicationThreadId, Is.EqualTo(uiThreadId));
+                Assert.That(grid.CurrentThemeSnapshot.CellBackColor, Is.EqualTo(dark.Colors.Surface));
+                Assert.That(grid.BackColor, Is.EqualTo(dark.Colors.Surface));
+                Assert.That(grid.ForeColor, Is.EqualTo(dark.Colors.Text));
+            }
+        }
+        finally
+        {
+            BootstrapThemeManager.CurrentTheme = original;
+        }
+    }
+
+    private sealed class ThreadTrackingBootstrapSourceGrid : BootstrapSourceGridControl
+    {
+        internal int LastThemeApplicationThreadId { get; private set; }
+
+        internal void ResetThemeApplicationThread()
+        {
+            LastThemeApplicationThreadId = 0;
+        }
+
+        internal override void ApplyBootstrapTheme()
+        {
+            LastThemeApplicationThreadId = Thread.CurrentThread.ManagedThreadId;
+            base.ApplyBootstrapTheme();
         }
     }
 }

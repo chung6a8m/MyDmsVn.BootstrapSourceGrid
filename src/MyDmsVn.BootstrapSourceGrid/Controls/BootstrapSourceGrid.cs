@@ -73,12 +73,36 @@ public class BootstrapSourceGrid : SourceGrid.Grid
 
     private void OnThemeChanged(object? sender, BootstrapThemeChangedEventArgs e)
     {
-        if (IsDisposed)
+        if (IsDisposed || Disposing)
         {
             return;
         }
 
-        _themeSnapshot = BootstrapSourceGridThemeAdapter.CreateSnapshot(e.NewTheme);
+        if (InvokeRequired)
+        {
+            try
+            {
+                BeginInvoke((Action)(() => ApplyThemeChange(e.NewTheme)));
+            }
+            catch (InvalidOperationException) when (IsDisposed || Disposing)
+            {
+                // Disposal can race a queued application-level theme change.
+            }
+
+            return;
+        }
+
+        ApplyThemeChange(e.NewTheme);
+    }
+
+    private void ApplyThemeChange(BootstrapTheme theme)
+    {
+        if (IsDisposed || Disposing)
+        {
+            return;
+        }
+
+        _themeSnapshot = BootstrapSourceGridThemeAdapter.CreateSnapshot(theme);
         if (_useThemeFont)
         {
             ApplyThemeFont(_themeSnapshot.BodyFont);
