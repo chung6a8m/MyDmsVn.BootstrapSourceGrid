@@ -2,24 +2,24 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Complete the MVP with an integrated demo, consumer documentation, reproducible release validation, package metadata, and an explicit dependency/licensing decision before public NuGet publication.
+**Goal:** Complete the MVP with an integrated demo, consumer documentation, reproducible release validation, package metadata, MIT licensing, and the approved two-phase vendor dependency strategy.
 
-**Architecture:** The release continues to build against exact vendor submodule commits. The integration assembly remains separate. Do not silently embed/copy vendor source or binaries into the package to bypass dependency packaging. Public package publication is gated on an approved license and a resolvable vendor dependency strategy.
+**Architecture:** Development/pre-release continues to build against exact vendor submodule commits. The integration assembly remains separate. The repository/package license is MIT (D-016). Public NuGet publication uses exact matching/resolvable vendor NuGet packages (D-017 / strategy 2A); pinned submodules plus `ProjectReference` remain the temporary development model (strategy 2B). Do not silently embed/copy vendor source or binaries into the package to bypass dependency packaging.
 
 **Tech Stack:** WinForms demo, SDK-style NuGet pack, Windows CI, Markdown docs, dual-target test matrix.
 
-**Spec:** PRD FR-13 and MVP acceptance gates; UPSTREAM; COMPATIBILITY; TESTING; decisions D-005/D-006/D-010/D-011.
+**Spec:** PRD FR-13 and MVP acceptance gates; UPSTREAM; COMPATIBILITY; TESTING; decisions D-005/D-006/D-010/D-011/D-016/D-017.
 
-## Release decision gates
+## Release decision status
 
-Before publishing a public package, obtain explicit project-owner decisions for:
+Project-owner decisions were resolved on 2026-09-07:
 
 ```text
-R1. Repository/package license.
-R2. NuGet dependency distribution strategy for the exact SourceGrid and Bootstrap vendor baselines.
+R1. Repository/package license: MIT (1A / D-016).
+R2. Public NuGet dependency strategy: 2A, with 2B temporary during development (D-017).
 ```
 
-Development artifacts, demo, tests, local pack validation, and documentation may proceed before those decisions. Public package publishing may not.
+These policy choices no longer require another approval prompt. Public publication is still blocked until their implementation/verification requirements pass: vendor package identity/equivalence, vendor license/notice review, clean consumer restore, dual-TFM package validation, and final package inspection.
 
 ---
 
@@ -126,6 +126,7 @@ custom SourceGrid View opt-out example
 consumer Font override behavior
 links to demo and docs
 build-from-source/submodule commands
+MIT license link
 ```
 
 Retain exact vendor baseline information.
@@ -141,6 +142,7 @@ minimal code sample
 SourceGrid API compatibility promise
 Bootstrap theme behavior
 known MVP boundaries
+MIT license
 project/documentation link
 ```
 
@@ -170,7 +172,9 @@ dual-TFM build/test
 demo/manual matrices
 pack validation
 public API review
-license/dependency gate
+MIT package metadata
+vendor package-equivalence/dependency gate
+vendor license/notice verification
 versioning/tagging
 post-release verification
 ```
@@ -189,6 +193,7 @@ git commit -m "docs: add BootstrapSourceGrid consumer and release guides"
 **Files:**
 - Modify: `src/MyDmsVn.BootstrapSourceGrid/MyDmsVn.BootstrapSourceGrid.csproj`
 - Use: `docs/PACKAGE_README.md`
+- Use: `LICENSE`
 
 - [ ] **Step 1: Add stable package identity**
 
@@ -204,6 +209,7 @@ Set:
 <RepositoryType>git</RepositoryType>
 <PackageTags>winforms;sourcegrid;bootstrap;grid;desktop;net48;net8</PackageTags>
 <PackageReadmeFile>README.md</PackageReadmeFile>
+<PackageLicenseExpression>MIT</PackageLicenseExpression>
 <IsPackable>true</IsPackable>
 <IncludeSymbols>true</IncludeSymbols>
 <SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -221,9 +227,11 @@ Use the repository's chosen versioning policy; do not copy Bootstrap vendor's `1
 
 Verify the resulting `.nupkg` contains `README.md` at package root.
 
-- [ ] **Step 3: Do not set `PackageLicenseExpression` until R1 is approved**
+- [ ] **Step 3: Encode the approved MIT license**
 
-After project owner approves a license, add the correct `PackageLicenseExpression` or packaged license file and create root `LICENSE` in the same change.
+D-016 is already approved and root `LICENSE` already exists. Keep `PackageLicenseExpression` set to `MIT` and verify generated package metadata reports MIT.
+
+Do not duplicate the MIT text inside the package unless NuGet/package policy later requires a license file instead of the expression.
 
 - [ ] **Step 4: Inspect project-reference pack output**
 
@@ -235,16 +243,17 @@ dotnet pack src/MyDmsVn.BootstrapSourceGrid/MyDmsVn.BootstrapSourceGrid.csproj -
 
 Inspect generated `.nuspec` inside `.nupkg` and record how project references are represented.
 
-The expected concern is that exact source commit pins are not necessarily resolvable as public NuGet dependencies. Do not solve this by manually embedding vendor DLLs without approval.
+The expected concern is that exact source commit pins are not necessarily resolvable as public NuGet dependencies. Do not solve this by manually embedding vendor DLLs.
 
-- [ ] **Step 5: Record dependency evidence for R2**
+- [ ] **Step 5: Record dependency evidence for approved D-017**
 
 Create/update `docs/RELEASE.md` with:
 
 ```text
 Bootstrap baseline has PackageId MyDmsVn.Bootstrap5WinFormUI and version metadata at the pinned commit.
-SourceGrid baseline has Version 5.0.0 but its exact public package identity/availability must be verified before publication.
-Local ProjectReference builds remain canonical until dependency packages are approved and verified.
+SourceGrid baseline has Version 5.0.0 but its exact public package identity/availability and source correspondence must be verified before publication.
+Local ProjectReference builds remain canonical during development (temporary 2B).
+Public NuGet publication requires verified exact matching/resolvable vendor PackageReference dependencies (2A).
 ```
 
 - [ ] **Step 6: Commit package metadata/local-pack capability**
@@ -256,10 +265,12 @@ git commit -m "build: add BootstrapSourceGrid package metadata"
 
 ---
 
-### Task 4: Decide and implement public NuGet dependency strategy
+### Task 4: Implement the approved public NuGet dependency strategy
 
 **Files:**
-- Modify depending on approved R2: product csproj, `docs/UPSTREAM.md`, `docs/RELEASE.md`, possibly version props.
+- Modify: product csproj, `docs/UPSTREAM.md`, `docs/RELEASE.md`, possibly version props.
+
+**Approved strategy:** D-017 / 2A for public release, with 2B temporary during development.
 
 - [ ] **Step 1: Verify public/internal package availability for exact-equivalent vendor builds**
 
@@ -271,20 +282,22 @@ package version
 target TFMs
 commit/source correspondence
 feed
-license
+license/notices
+transitive dependencies
 ```
 
 Do not assume SourceGrid package version `5.0.0` on a feed corresponds to the pinned fork commit without verification.
 
-- [ ] **Step 2: Present R2 choices to project owner if not already approved**
+- [ ] **Step 2: Apply D-017 without requesting another strategy decision**
 
-Allowed strategies:
+The required behavior is:
 
 ```text
-A. Publish/consume matching vendor NuGet packages; integration package depends on them. Preferred for public distribution.
-B. Keep BootstrapSourceGrid source/submodule-only for MVP and postpone public NuGet publication.
-C. Publish coordinated packages from controlled feeds for both vendor baselines, then depend on exact versions.
+Development: pinned submodules + ProjectReference (temporary 2B).
+Public release: exact verified vendor NuGet PackageReference dependencies (2A).
 ```
+
+If matching vendor packages are not yet available or cannot be tied confidently to an approved source baseline, stop the public-publication path and keep development/source distribution on 2B. This is an implementation/verification blocker, not a reason to silently choose a different policy.
 
 Forbidden default:
 
@@ -292,29 +305,36 @@ Forbidden default:
 silently bundle vendor assemblies/source into MyDmsVn.BootstrapSourceGrid.nupkg
 ```
 
-- [ ] **Step 3: Implement approved strategy and rebuild from a clean package restore**
+- [ ] **Step 3: Switch the release build graph to approved PackageReference dependencies**
 
-If strategy A/C switches to `PackageReference`, remove the corresponding `ProjectReference` from release build graph and verify both TFMs against the package. Do not reference project + package copies of the same assembly simultaneously.
+Remove the corresponding release `ProjectReference` dependencies and verify both TFMs against the vendor packages. Do not reference project + package copies of the same assembly simultaneously.
 
-If strategy B is chosen, mark package publication disabled/not-release-ready while retaining local project-reference pack only for inspection; do not publish a broken dependency package.
+The implementation may use an explicit build property/configuration to retain project references for source-development while using package references for clean release validation, provided the graph is unambiguous and documented.
 
-- [ ] **Step 4: Update `docs/UPSTREAM.md`**
+- [ ] **Step 4: Validate clean package consumption**
 
-Record exact release dependency versions/feeds and the source commit equivalence that was verified.
-
-- [ ] **Step 5: Commit dependency strategy**
-
-Commit message should state the actual chosen strategy, e.g.:
+From a clean consumer project with no vendor source checkout:
 
 ```text
-build: use pinned vendor packages for release
+restore MyDmsVn.BootstrapSourceGrid plus its dependencies
+compile a minimal BootstrapSourceGrid sample for net48
+compile a minimal BootstrapSourceGrid sample for net8.0-windows
+run representative runtime smoke tests
 ```
 
-or:
+- [ ] **Step 5: Update `docs/UPSTREAM.md` and `docs/RELEASE.md`**
+
+Record exact release dependency versions/feeds and the source commit equivalence that was verified, plus vendor license/notice findings.
+
+- [ ] **Step 6: Commit dependency strategy implementation**
+
+Once verified:
 
 ```text
-docs: defer NuGet publication pending vendor packages
+build: use verified vendor packages for release
 ```
+
+If vendor packages are still unavailable, do not mark this task complete and do not publish the integration package.
 
 ---
 
@@ -348,9 +368,11 @@ if (git -C vendor/Bootstrap5WinFormUI status --porcelain) { throw "Bootstrap ven
 if (git -C vendor/sourcegrid status --porcelain) { throw "SourceGrid vendor became dirty" }
 ```
 
-- [ ] **Step 4: Pack as a non-publishing CI check once package dependency strategy permits**
+- [ ] **Step 4: Pack as a non-publishing CI check once approved package dependencies are available**
 
 Run `dotnet pack` and upload the `.nupkg`/`.snupkg` as CI artifacts. CI must not publish to NuGet without an explicit release workflow and secrets policy.
+
+Until D-017 package-equivalence requirements are met, source/submodule CI may perform local pack inspection but must not represent that artifact as publicly publishable.
 
 - [ ] **Step 5: Commit CI**
 
@@ -422,13 +444,15 @@ git commit -m "docs: complete BootstrapSourceGrid MVP API review"
 
 ### Task 7: Final release gate
 
-- [ ] **Step 1: Verify exact vendor source pins or approved package equivalents**
+- [ ] **Step 1: Verify exact vendor source pins and approved package equivalents**
+
+For development/source verification:
 
 ```powershell
 git submodule status
 ```
 
-If release build uses packages, compare versions to `docs/UPSTREAM.md` instead.
+For public release, compare exact PackageReference versions/feeds and verified source correspondence to `docs/UPSTREAM.md`.
 
 - [ ] **Step 2: Full clean validation**
 
@@ -449,11 +473,20 @@ Execute the recorded Stage 3 DPI/Designer and Stage 4 editor/interaction matrice
 dotnet pack src/MyDmsVn.BootstrapSourceGrid/MyDmsVn.BootstrapSourceGrid.csproj -c Release --no-build -o artifacts/packages
 ```
 
-Inspect package assets for both TFMs, README, symbols, dependency declarations, repository metadata, and approved license metadata.
+Inspect package assets for both TFMs, README, symbols, dependency declarations, repository metadata, `PackageLicenseExpression=MIT`, and required vendor notices.
 
-- [ ] **Step 5: Confirm R1/R2 are resolved before publication**
+- [ ] **Step 5: Verify D-016/D-017 implementation before publication**
 
-Public publish is BLOCKED if license or vendor dependency strategy is unresolved.
+The policy decisions are already resolved. Public publish is BLOCKED unless all of the following are true:
+
+```text
+MIT package metadata is encoded correctly.
+Vendor license/notice obligations are verified.
+Exact vendor package versions/feeds/source equivalence are documented.
+Release build uses those approved resolvable PackageReference dependencies.
+Clean consumer restore succeeds without vendor source checkout.
+Both TFMs pass build/test/demo/Designer validation against package dependencies.
+```
 
 - [ ] **Step 6: Verify repository cleanliness**
 
@@ -469,10 +502,11 @@ Expected: no uncommitted release changes and no vendor dirt.
 
 - [ ] Demo exercises all PRD MVP scenarios.
 - [ ] Consumer/package/release docs are complete.
-- [ ] Package metadata is correct for `MyDmsVn.BootstrapSourceGrid`.
+- [ ] Package metadata is correct for `MyDmsVn.BootstrapSourceGrid` and declares MIT.
 - [ ] Public API remains thin and SourceGrid-compatible.
 - [ ] CI validates dual-target build/tests without modal hangs.
-- [ ] Exact vendor dependency strategy is documented.
-- [ ] License is explicitly approved and encoded before public publication.
+- [ ] Development source mode remains pinned/reproducible through submodules + ProjectReference.
+- [ ] Public NuGet dependency graph uses verified exact vendor packages per D-017.
+- [ ] Vendor license/notice obligations are verified for the public dependency graph.
 - [ ] Known limitations document native scrollbar and conservative editor boundaries.
 - [ ] Full release validation passes.
