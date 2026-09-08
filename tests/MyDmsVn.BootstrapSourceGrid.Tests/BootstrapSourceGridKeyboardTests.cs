@@ -220,6 +220,36 @@ public sealed class BootstrapSourceGridKeyboardTests
     }
 
     [Test]
+    public void NonEditKeyPreservesSelectionWithCoveredSpanActivePosition()
+    {
+        using (var fixture = new KeyboardFixture())
+        {
+            fixture.Grid[2, 2] = null;
+            fixture.Grid[2, 1] = new SourceGrid.Cells.Cell(
+                "spanned",
+                typeof(string))
+            {
+                ColumnSpan = 2,
+            };
+            var covered = new SourceGrid.Position(2, 2);
+            Assert.That(fixture.Grid.Selection.Focus(covered, true), Is.True);
+            fixture.Grid.Selection.SelectCell(new SourceGrid.Position(1, 0), true);
+            var selectedBefore = fixture.Grid.Selection
+                .GetSelectionRegion()
+                .GetCellsPositions();
+            Assert.That(selectedBefore.Count, Is.GreaterThan(1));
+
+            fixture.Grid.DispatchKeyDown(Keys.F5);
+
+            var selectedAfter = fixture.Grid.Selection
+                .GetSelectionRegion()
+                .GetCellsPositions();
+            Assert.That(fixture.Grid.Selection.ActivePosition, Is.EqualTo(covered));
+            Assert.That(selectedAfter, Is.EquivalentTo(selectedBefore));
+        }
+    }
+
+    [Test]
     public void ShiftTabCommitsActiveEditBeforeMovingBackward()
     {
         using (var fixture = new KeyboardFixture())
@@ -357,6 +387,11 @@ public sealed class BootstrapSourceGridKeyboardTests
         {
             var message = new Message();
             return base.ProcessCmdKey(ref message, keys);
+        }
+
+        internal void DispatchKeyDown(Keys keys)
+        {
+            base.OnKeyDown(new KeyEventArgs(keys));
         }
 
         public override void ProcessSpecialGridKey(KeyEventArgs e)

@@ -62,8 +62,9 @@ Stage 4 intentionally hardens three command-key behaviors for
   cell in the active row, skipping hidden or unselectable columns and resolving
   spanned cells to their canonical start position.
 - Home and End remain editor-owned while a cell editor is active.
-- Keyboard edit activation canonicalizes a covered span coordinate before
-  SourceGrid resolves the cell editor and edit context.
+- F2 edit activation canonicalizes a covered span coordinate before SourceGrid
+  resolves the cell editor and edit context. Other keys retain SourceGrid's
+  existing selection and controller context.
 
 All other command keys continue through SourceGrid's existing processing path.
 

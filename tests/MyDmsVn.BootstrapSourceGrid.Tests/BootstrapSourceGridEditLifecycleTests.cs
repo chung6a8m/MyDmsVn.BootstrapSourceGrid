@@ -151,52 +151,11 @@ public sealed class BootstrapSourceGridEditLifecycleTests
         }
     }
 
-    [Test]
-    public void CoveredSpanPositionStartsAnyKeyEditingAtCanonicalCell()
-    {
-        using (var form = new Form())
-        using (var grid = new EditLifecycleTestGrid())
-        {
-            var cell = new SourceGrid.Cells.Cell("before", typeof(string))
-            {
-                ColumnSpan = 2,
-            };
-            var covered = new SourceGrid.Position(0, 1);
-            var canonical = new SourceGrid.Position(0, 0);
-            grid.Redim(1, 2);
-            grid[0, 0] = cell;
-            form.Controls.Add(grid);
-            form.Show();
-            Assert.That(grid.Selection.Focus(covered, true), Is.True);
-
-            var canonicalContext = new SourceGrid.CellContext(grid, canonical);
-            var editor = (SourceGrid.Cells.Editors.TextBox)cell.Editor;
-            grid.DispatchKeyDown(Keys.X);
-            grid.DispatchKeyPress('x');
-
-            try
-            {
-                Assert.That(editor.IsEditing, Is.True);
-                Assert.That(editor.EditPosition, Is.EqualTo(canonical));
-                Assert.That(canonicalContext.IsEditing(), Is.True);
-            }
-            finally
-            {
-                canonicalContext.EndEdit(true);
-            }
-        }
-    }
-
     private sealed class EditLifecycleTestGrid : BootstrapSourceGridControl
     {
         internal void DispatchKeyDown(Keys keys)
         {
             base.OnKeyDown(new KeyEventArgs(keys));
-        }
-
-        internal void DispatchKeyPress(char keyChar)
-        {
-            base.OnKeyPress(new KeyPressEventArgs(keyChar));
         }
     }
 

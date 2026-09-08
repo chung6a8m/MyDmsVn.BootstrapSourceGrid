@@ -167,7 +167,7 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     /// <inheritdoc />
     protected override void OnKeyDown(KeyEventArgs e)
     {
-        if (!e.Handled)
+        if (!e.Handled && e.KeyCode == Keys.F2)
         {
             FocusCanonicalActivePosition();
         }

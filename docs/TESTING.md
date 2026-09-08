@@ -183,8 +183,8 @@ Test styling does not alter:
 Create representative row/column spans and verify:
 
 - covered positions still resolve according to SourceGrid behavior;
-- keyboard editing from a covered position uses the canonical span owner and
-  preserves commit/cancel behavior;
+- F2 editing from a covered position uses the canonical span owner and preserves
+  commit/cancel behavior without changing non-edit key selection semantics;
 - themed Views render on span owner without creating duplicate semantic cells;
 - theme switch does not mutate span definitions.
 

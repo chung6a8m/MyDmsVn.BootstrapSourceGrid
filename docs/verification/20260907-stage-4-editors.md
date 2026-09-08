@@ -23,5 +23,6 @@ Verified against SourceGrid `f4e457b43582bf01892f50bdc74aa480531e5944` on both `
 - BootstrapSourceGrid handles Shift+Tab in `ProcessSpecialGridKey` so backward
   navigation does not fall through SourceGrid's Shift range-extension branch,
   while retaining SourceGrid controller and virtual special-key dispatch.
-- F2 and AnyKey activation canonicalize a covered span coordinate before creating
-  the SourceGrid edit context; commit and cancel operate on the span owner.
+- F2 activation canonicalizes a covered span coordinate before creating the
+  SourceGrid edit context; commit and cancel operate on the span owner. Other
+  keys preserve SourceGrid's existing active-position and controller context.
