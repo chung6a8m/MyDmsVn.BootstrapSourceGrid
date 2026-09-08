@@ -1,4 +1,5 @@
-using System.Threading;
+﻿using System.Threading;
+using MyDmsVn.Bootstrap5WinFormUI.Theme;
 using NUnit.Framework;
 using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
 
@@ -12,6 +13,58 @@ public sealed class BootstrapSourceGridHeaderViewTests
     public void ConfigureWinForms()
     {
         WinFormsTestGuard.Configure();
+    }
+
+    [TestCase(BootstrapThemeMode.Light)]
+    [TestCase(BootstrapThemeMode.Dark)]
+    public void GetCell_ReplacesDefaultGenericHeaderViewAndAppliesTheme(
+        BootstrapThemeMode mode)
+    {
+        var original = BootstrapThemeManager.CurrentTheme;
+        var theme = BootstrapTheme.CreateDefault(mode);
+
+        try
+        {
+            BootstrapThemeManager.CurrentTheme = theme;
+            using (var grid = new BootstrapSourceGridControl())
+            {
+                grid.Redim(1, 1);
+                grid[0, 0] = new SourceGrid.Cells.Header(string.Empty);
+
+                var resolved = grid.GetCell(0, 0);
+
+                Assert.That(resolved.View, Is.Not.SameAs(SourceGrid.Cells.Views.Header.Default));
+                Assert.That(resolved.View, Is.InstanceOf<SourceGrid.Cells.Views.Header>());
+                var view = (SourceGrid.Cells.Views.Header)resolved.View;
+                Assert.That(view.Background, Is.TypeOf<DevAge.Drawing.VisualElements.Header>());
+                var background = (DevAge.Drawing.VisualElements.Header)view.Background;
+                Assert.That(
+                    background.BackgroundColorStyle,
+                    Is.EqualTo(DevAge.Drawing.BackgroundColorStyle.Solid));
+                Assert.That(background.BackColor, Is.EqualTo(theme.Colors.SurfaceSecondary));
+                Assert.That(background.Border.Top.Color, Is.EqualTo(theme.Colors.Border));
+                Assert.That(view.ForeColor, Is.EqualTo(theme.Colors.Text));
+                Assert.That(view.Font, Is.Null);
+            }
+        }
+        finally
+        {
+            BootstrapThemeManager.CurrentTheme = original;
+        }
+    }
+
+    [Test]
+    public void GetCell_DoesNotReplaceCustomGenericHeaderView()
+    {
+        using (var grid = new BootstrapSourceGridControl())
+        {
+            grid.Redim(1, 1);
+            var customView = new SourceGrid.Cells.Views.Header();
+            var header = new SourceGrid.Cells.Header(string.Empty) { View = customView };
+            grid[0, 0] = header;
+
+            Assert.That(grid.GetCell(0, 0).View, Is.SameAs(customView));
+        }
     }
 
     [Test]

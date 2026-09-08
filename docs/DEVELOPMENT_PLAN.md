@@ -53,12 +53,13 @@ Plan: `plans/20260907-003-control-shell-and-theme-adapter.md`.
 
 ## 4. Stage 2 — Cell, header, alternate row, selection visual integration
 
-**Outcome:** SourceGrid visual extension points render Bootstrap-aligned default cell/header states while preserving consumer Views and SourceGrid behavior.
+**Outcome:** SourceGrid visual extension points render Bootstrap-aligned default cell/generic-header/row-header/column-header states while preserving consumer Views and SourceGrid behavior.
 
 Deliverables:
 
 - default cell View/style;
 - alternating-row View/style;
+- generic-header View/style;
 - column-header View/style;
 - row-header View/style;
 - selection/focus visual integration;

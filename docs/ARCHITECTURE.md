@@ -91,11 +91,13 @@ MyDmsVn.BootstrapSourceGrid.sln
 |       |   `-- BootstrapSourceGridThemeFont.cs
 |       +-- Views/
 |       |   +-- BootstrapSourceGridCellView.cs
+|       |   +-- BootstrapSourceGridHeaderView.cs
 |       |   +-- BootstrapSourceGridColumnHeaderView.cs
 |       |   `-- BootstrapSourceGridRowHeaderView.cs
 |       +-- Editors/
 |       |   `-- BootstrapSourceGridEditorStyler.cs
 |       `-- Internal/
+|           +-- BootstrapSourceGridHeaderStyle.cs
 |           +-- BootstrapSourceGridStyleApplicator.cs
 |           `-- BootstrapSourceGridDpiMetrics.cs
 |
