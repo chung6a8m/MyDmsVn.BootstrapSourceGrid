@@ -7,3 +7,4 @@ using System.Runtime.Versioning;
 #endif
 
 [assembly: InternalsVisibleTo("MyDmsVn.BootstrapSourceGrid.Tests")]
+[assembly: InternalsVisibleTo("MyDmsVn.BootstrapSourceGrid.Demo")]
