@@ -4,6 +4,8 @@
 
 Development and source validation use pinned vendor submodules plus `ProjectReference` (D-017 temporary strategy 2B). A locally generated package is an inspection artifact only until every public-dependency gate below passes. CI and local validation must not describe or publish that artifact as a public release candidate while the gate is blocked.
 
+The current integration inspection package version is `0.1.0-preview.1`. It belongs to this repository's own version line and is not derived from the Bootstrap vendor's `1.0.0-rc.1` metadata. A later release version must still pass every gate in this document.
+
 ## Pre-release checklist
 
 1. Start from a clean release branch and confirm `git status --short` is empty.
@@ -56,6 +58,12 @@ license and notice obligations
 The release build must use only those exact `PackageReference` dependencies. It must not simultaneously reference project and package copies of the same assembly. If either package cannot be tied confidently to an approved baseline, public publication stops and source-development mode remains on submodules.
 
 Never copy vendor DLLs or source into the integration package to bypass this gate.
+
+### Current project-reference pack evidence
+
+The pinned Bootstrap project declares `PackageId` `MyDmsVn.Bootstrap5WinFormUI` and version `1.0.0-rc.1`. The pinned SourceGrid project declares version `5.0.0`; its default SDK package identity is `SourceGrid`, but public feed availability and correspondence to fork commit `f4e457b43582bf01892f50bdc74aa480531e5944` still require independent verification.
+
+Packing the development graph as `0.1.0-preview.1` produces dependency groups for both TFMs with bare version values `MyDmsVn.Bootstrap5WinFormUI` `1.0.0-rc.1` and `SourceGrid` `5.0.0`. Those entries are not exact NuGet bracket pins, and the package contains no vendor binaries. This is useful inspection evidence, but it does not satisfy D-017's exact-package/source-equivalence gate and must not be published as the public integration package.
 
 ## Package inspection
 
