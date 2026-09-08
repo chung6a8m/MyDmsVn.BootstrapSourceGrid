@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Threading;
 using MyDmsVn.Bootstrap5WinFormUI.Theme;
 using MyDmsVn.BootstrapSourceGrid.Internal;
 using MyDmsVn.BootstrapSourceGrid.Theming;
@@ -16,6 +17,8 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     private bool _initialized;
     private bool _settingThemeFont;
     private bool _themeSubscribed;
+    private int _themeRefreshPending;
+    private readonly int _owningThreadId;
     private bool _useThemeFont = true;
     private Font? _themeFont;
     private BootstrapSourceGridThemeSnapshot _themeSnapshot;
@@ -28,6 +31,7 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     /// </summary>
     public BootstrapSourceGrid()
     {
+        _owningThreadId = Thread.CurrentThread.ManagedThreadId;
         Name = nameof(BootstrapSourceGrid);
         var theme = BootstrapThemeManager.CurrentTheme;
         _themeSnapshot = BootstrapSourceGridThemeAdapter.CreateSnapshot(theme);
@@ -109,6 +113,19 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     }
 
     /// <inheritdoc />
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+        if (Interlocked.Exchange(ref _themeRefreshPending, 0) != 0)
+        {
+            ApplyThemeChange();
+            return;
+        }
+
+        RefreshDpiMetrics(CurrentDpi);
+    }
+
+    /// <inheritdoc />
     protected override void Dispose(bool disposing)
     {
         if (disposing)
@@ -132,6 +149,11 @@ public class BootstrapSourceGrid : SourceGrid.Grid
             return;
         }
 
+        if (DeferThemeChangeUntilHandleCreated())
+        {
+            return;
+        }
+
         if (InvokeRequired)
         {
             try
@@ -142,11 +164,31 @@ public class BootstrapSourceGrid : SourceGrid.Grid
             {
                 // Disposal can race a queued application-level theme change.
             }
+            catch (InvalidOperationException)
+            {
+                Interlocked.Exchange(ref _themeRefreshPending, 1);
+            }
 
             return;
         }
 
         ApplyThemeChange();
+    }
+
+    private bool DeferThemeChangeUntilHandleCreated()
+    {
+        if (IsHandleCreated || Thread.CurrentThread.ManagedThreadId == _owningThreadId)
+        {
+            return false;
+        }
+
+        Interlocked.Exchange(ref _themeRefreshPending, 1);
+        if (!IsHandleCreated)
+        {
+            return true;
+        }
+
+        return Interlocked.Exchange(ref _themeRefreshPending, 0) == 0;
     }
 
     private void ApplyThemeChange()

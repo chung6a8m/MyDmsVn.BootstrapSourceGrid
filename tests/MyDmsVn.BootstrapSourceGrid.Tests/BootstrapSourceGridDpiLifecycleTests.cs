@@ -1,4 +1,5 @@
 using System.Threading;
+using System.Windows.Forms;
 using MyDmsVn.Bootstrap5WinFormUI.Rendering;
 using MyDmsVn.Bootstrap5WinFormUI.Theme;
 using MyDmsVn.BootstrapSourceGrid.Internal;
@@ -43,6 +44,34 @@ public sealed class BootstrapSourceGridDpiLifecycleTests
         {
             Assert.That(grid.IsHandleCreated, Is.False);
             Assert.That(grid.CurrentDpi, Is.EqualTo(DpiScaler.DefaultDpi));
+        }
+    }
+
+    [Test]
+    public void FirstHandleCreationResynchronizesMetricsFromDeviceDpi()
+    {
+        using (var dpiProbe = new Control())
+        using (var grid = new BootstrapSourceGridControl())
+        {
+            dpiProbe.CreateControl();
+            var deviceDpi = dpiProbe.DeviceDpi;
+            var poisonedDpi = deviceDpi <= 192 ? 384 : 96;
+            var theme = BootstrapThemeManager.CurrentTheme;
+            var expectedPadding = DpiScaler.Scale(theme.Metrics.SpacingXS, deviceDpi);
+            var expectedBorder = DpiScaler.Scale(theme.Metrics.BorderWidth, deviceDpi);
+            var expectedFocus = DpiScaler.Scale(theme.Metrics.FocusBorderWidth, deviceDpi);
+            grid.RefreshDpiMetrics(poisonedDpi);
+
+            Assert.That(grid.CurrentDpiMetrics.CellPadding, Is.Not.EqualTo(expectedPadding));
+            Assert.That(grid.IsHandleCreated, Is.False);
+
+            grid.CreateControl();
+
+            Assert.That(grid.IsHandleCreated, Is.True);
+            Assert.That(grid.CurrentDpi, Is.EqualTo(deviceDpi));
+            Assert.That(grid.CurrentDpiMetrics.CellPadding, Is.EqualTo(expectedPadding));
+            Assert.That(grid.CurrentDpiMetrics.CellBorderThickness, Is.EqualTo(expectedBorder));
+            Assert.That(grid.CurrentDpiMetrics.FocusThickness, Is.EqualTo(expectedFocus));
         }
     }
 

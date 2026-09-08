@@ -19,6 +19,56 @@ public sealed class BootstrapSourceGridHandleLifecycleTests
     }
 
     [Test]
+    public void WorkerThemeChangeBeforeFirstHandleIsAppliedOnOwningThreadAfterHandleCreation()
+    {
+        var originalTheme = BootstrapThemeManager.CurrentTheme;
+        var light = BootstrapTheme.CreateDefault(BootstrapThemeMode.Light);
+        var dark = BootstrapTheme.CreateDefault(BootstrapThemeMode.Dark);
+
+        try
+        {
+            BootstrapThemeManager.CurrentTheme = light;
+            using (var grid = new TrackingBootstrapSourceGrid())
+            {
+                var owningThreadId = Thread.CurrentThread.ManagedThreadId;
+                var snapshotBefore = grid.CurrentThemeSnapshot;
+                Exception? workerException = null;
+                grid.ResetThemeApplicationCount();
+
+                var worker = new Thread(() =>
+                {
+                    try
+                    {
+                        BootstrapThemeManager.CurrentTheme = dark;
+                    }
+                    catch (Exception exception)
+                    {
+                        workerException = exception;
+                    }
+                });
+                worker.Start();
+
+                Assert.That(worker.Join(TimeSpan.FromSeconds(5)), Is.True, "Theme worker did not finish.");
+                Assert.That(workerException, Is.Null);
+                Assert.That(grid.IsHandleCreated, Is.False);
+                Assert.That(grid.ThemeApplicationCount, Is.Zero);
+                Assert.That(grid.CurrentThemeSnapshot, Is.SameAs(snapshotBefore));
+
+                grid.CreateControl();
+
+                Assert.That(grid.IsHandleCreated, Is.True);
+                Assert.That(grid.ThemeApplicationCount, Is.EqualTo(1));
+                Assert.That(grid.LastThemeApplicationThreadId, Is.EqualTo(owningThreadId));
+                Assert.That(grid.CurrentThemeSnapshot, Is.Not.SameAs(snapshotBefore));
+            }
+        }
+        finally
+        {
+            BootstrapThemeManager.CurrentTheme = originalTheme;
+        }
+    }
+
+    [Test]
     public void RepeatedHandleRecreationKeepsOneThemeCallbackAndUsableGrid()
     {
         var originalTheme = BootstrapThemeManager.CurrentTheme;
@@ -137,9 +187,12 @@ public sealed class BootstrapSourceGridHandleLifecycleTests
     {
         internal int ThemeApplicationCount { get; private set; }
 
+        internal int? LastThemeApplicationThreadId { get; private set; }
+
         internal void ResetThemeApplicationCount()
         {
             ThemeApplicationCount = 0;
+            LastThemeApplicationThreadId = null;
         }
 
         internal void RecreateGridHandle()
@@ -150,6 +203,7 @@ public sealed class BootstrapSourceGridHandleLifecycleTests
         internal override void ApplyBootstrapTheme()
         {
             ThemeApplicationCount++;
+            LastThemeApplicationThreadId = Thread.CurrentThread.ManagedThreadId;
             base.ApplyBootstrapTheme();
         }
     }
