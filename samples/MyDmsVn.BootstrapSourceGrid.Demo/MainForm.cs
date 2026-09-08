@@ -67,7 +67,9 @@ public sealed partial class MainForm : Form
 
             if (row == 3)
             {
-                grid[row, 7] = new SourceGrid.Cells.Cell("Two-column span for DPI alignment")
+                grid[row, 7] = new SourceGrid.Cells.Cell(
+                    "Two-column span for DPI alignment",
+                    typeof(string))
                 {
                     ColumnSpan = 2,
                 };

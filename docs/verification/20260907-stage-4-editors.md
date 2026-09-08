@@ -26,3 +26,7 @@ Verified against SourceGrid `f4e457b43582bf01892f50bdc74aa480531e5944` on both `
 - F2 activation canonicalizes a covered span coordinate before creating the
   SourceGrid edit context; commit and cancel operate on the span owner. Other
   keys preserve SourceGrid's existing active-position and controller context.
+- The demo's two-column span uses the typed string-cell constructor, so its
+  SourceGrid editor supports F2, AnyKey, and DoubleClick. Automated hit-test
+  coverage enters through the covered column and verifies a visible editor with
+  the canonical span-owner `EditPosition` for all three activation modes.
