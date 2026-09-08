@@ -136,7 +136,7 @@ public class BootstrapSourceGrid : SourceGrid.Grid
         {
             try
             {
-                BeginInvoke((Action)(() => ApplyThemeChange(e.NewTheme)));
+                BeginInvoke((Action)ApplyThemeChange);
             }
             catch (InvalidOperationException) when (IsDisposed || Disposing)
             {
@@ -146,20 +146,14 @@ public class BootstrapSourceGrid : SourceGrid.Grid
             return;
         }
 
-        ApplyThemeChange(e.NewTheme);
+        ApplyThemeChange();
     }
 
-    private void ApplyThemeChange(BootstrapTheme theme)
+    private void ApplyThemeChange()
     {
         if (IsDisposed || Disposing)
         {
             return;
-        }
-
-        _themeSnapshot = BootstrapSourceGridThemeAdapter.CreateSnapshot(theme);
-        if (_useThemeFont)
-        {
-            ApplyThemeFont(_themeSnapshot.BodyFont);
         }
 
         ApplyBootstrapTheme();
@@ -169,7 +163,13 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     internal virtual void ApplyBootstrapTheme()
     {
         var theme = BootstrapThemeManager.CurrentTheme;
+        _themeSnapshot = BootstrapSourceGridThemeAdapter.CreateSnapshot(theme);
         _dpiMetrics = BootstrapSourceGridDpiMetrics.FromTheme(theme, CurrentDpi);
+        if (_useThemeFont)
+        {
+            ApplyThemeFont(_themeSnapshot.BodyFont);
+        }
+
         BackColor = _themeSnapshot.CellBackColor;
         ForeColor = _themeSnapshot.CellForeColor;
         _styleApplicator.ApplyTheme(_themeSnapshot, _dpiMetrics);
