@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using MyDmsVn.Bootstrap5WinFormUI.Theme;
 using MyDmsVn.BootstrapSourceGrid.Editors;
 using NUnit.Framework;
 using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
@@ -39,6 +40,23 @@ public sealed class BootstrapTextBoxEditorTests
             {
                 context.EndEdit(true);
             }
+        }
+    }
+
+    [Test]
+    public void SetEditValueSelectsAllTextBeforeControlIsShown()
+    {
+        using (var grid = new BootstrapSourceGridControl())
+        {
+            var editor = grid.EditorRegistry.Register(new BootstrapTextBoxEditor(typeof(string)));
+
+            editor.SetEditValue("replacement");
+
+            var nativeEditor = editor.BootstrapControl.Controls
+                .OfType<TextBox>()
+                .Single();
+            Assert.That(nativeEditor.SelectionStart, Is.Zero);
+            Assert.That(nativeEditor.SelectionLength, Is.EqualTo("replacement".Length));
         }
     }
 
@@ -250,6 +268,118 @@ public sealed class BootstrapTextBoxEditorTests
             Assert.That(fixture.Editor.IsEditing, Is.False);
             Assert.That(fixture.Cells[0].Value, Is.EqualTo("committed by validation"));
             Assert.That(valueChangedCount, Is.EqualTo(1));
+        }
+    }
+
+    [Test]
+    public void ActiveEditFollowsRuntimeThemeWithoutCellViewPropertyInjection()
+    {
+        var originalTheme = BootstrapThemeManager.CurrentTheme;
+        using (var customFont = new Font(FontFamily.GenericMonospace, 17f, FontStyle.Bold))
+        {
+            try
+            {
+                BootstrapThemeManager.CurrentTheme = BootstrapTheme.CreateDefault(BootstrapThemeMode.Light);
+                using (var fixture = new TextEditorFixture("first", "second"))
+                {
+                    var customView = new SourceGrid.Cells.Views.Cell
+                    {
+                        BackColor = Color.Red,
+                        ForeColor = Color.Lime,
+                        Font = customFont,
+                    };
+                    fixture.Cells[0].View = customView;
+                    var context = fixture.StartEdit(0);
+
+                    try
+                    {
+                        BootstrapThemeManager.CurrentTheme =
+                            BootstrapTheme.CreateDefault(BootstrapThemeMode.Dark);
+                        Application.DoEvents();
+                        var theme = BootstrapThemeManager.CurrentTheme;
+                        var nativeEditor = fixture.Editor.BootstrapControl.Controls
+                            .OfType<TextBox>()
+                            .Single();
+
+                        Assert.That(fixture.Editor.UseCellViewProperties, Is.False);
+                        Assert.That(nativeEditor.BackColor, Is.EqualTo(theme.Colors.Surface));
+                        Assert.That(nativeEditor.ForeColor, Is.EqualTo(theme.Colors.Text));
+                        Assert.That(nativeEditor.BackColor, Is.Not.EqualTo(customView.BackColor));
+                        Assert.That(nativeEditor.ForeColor, Is.Not.EqualTo(customView.ForeColor));
+                        Assert.That(nativeEditor.Font.Name, Is.EqualTo(theme.Typography.Body.FontFamilyName));
+                        Assert.That(nativeEditor.Font.SizeInPoints, Is.EqualTo(theme.Typography.Body.SizeInPoints).Within(0.01f));
+                        Assert.That(nativeEditor.Font.Style, Is.EqualTo(theme.Typography.Body.Style));
+                    }
+                    finally
+                    {
+                        context.EndEdit(true);
+                    }
+                }
+            }
+            finally
+            {
+                BootstrapThemeManager.CurrentTheme = originalTheme;
+            }
+        }
+    }
+
+    [Test]
+    public void ConsumerReadOnlyAndControlEnabledSettingsAreNotOverwrittenAtEditStart()
+    {
+        using (var fixture = new TextEditorFixture("first", "second"))
+        {
+            fixture.Editor.BootstrapControl.ReadOnly = true;
+            fixture.Editor.BootstrapControl.Enabled = false;
+
+            var context = fixture.StartEdit(0);
+
+            try
+            {
+                Assert.That(fixture.Editor.IsEditing, Is.True);
+                Assert.That(fixture.Editor.BootstrapControl.ReadOnly, Is.True);
+                Assert.That(fixture.Editor.BootstrapControl.Enabled, Is.False);
+            }
+            finally
+            {
+                context.EndEdit(true);
+            }
+        }
+    }
+
+    [Test]
+    public void DisabledGridPreventsEditingAndDoesNotOverwriteConsumerControlEnabledSetting()
+    {
+        using (var fixture = new TextEditorFixture("first", "second"))
+        {
+            var position = new SourceGrid.Position(0, 0);
+            Assert.That(fixture.Grid.Selection.Focus(position, true), Is.True);
+            var context = new SourceGrid.CellContext(fixture.Grid, position, fixture.Cells[0]);
+            fixture.Grid.Enabled = false;
+            context.StartEdit();
+
+            Assert.That(fixture.Editor.IsEditing, Is.False);
+            Assert.That(fixture.Editor.BootstrapControl.Enabled, Is.True);
+
+            fixture.Grid.Enabled = true;
+
+            Assert.That(fixture.Editor.BootstrapControl.Enabled, Is.True);
+        }
+    }
+
+    [Test]
+    public void SourceGridEditorEnableEditStillDecidesWhetherEditingStarts()
+    {
+        using (var fixture = new TextEditorFixture("first", "second"))
+        {
+            fixture.Editor.EnableEdit = false;
+            var position = new SourceGrid.Position(0, 0);
+            Assert.That(fixture.Grid.Selection.Focus(position, true), Is.True);
+            var context = new SourceGrid.CellContext(fixture.Grid, position, fixture.Cells[0]);
+
+            context.StartEdit();
+
+            Assert.That(fixture.Editor.IsEditing, Is.False);
+            Assert.That(fixture.Cells[0].Value, Is.EqualTo("first"));
         }
     }
 

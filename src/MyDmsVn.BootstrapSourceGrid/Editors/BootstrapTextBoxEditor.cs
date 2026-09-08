@@ -31,19 +31,13 @@ public sealed class BootstrapTextBoxEditor : SourceGrid.Cells.Editors.EditorCont
     public override void SetEditValue(object editValue)
     {
         BootstrapControl.Text = editValue?.ToString() ?? string.Empty;
+        ((BootstrapSourceGridTextBoxControl)Control).SelectAllForGridEdit();
     }
 
     /// <inheritdoc />
     public override object GetEditedValue()
     {
         return BootstrapControl.Text;
-    }
-
-    /// <inheritdoc />
-    protected override void OnStartingEdit(SourceGrid.CellContext cellContext, Control editorControl)
-    {
-        base.OnStartingEdit(cellContext, editorControl);
-        ((BootstrapSourceGridTextBoxControl)editorControl).SelectAllForGridEdit();
     }
 
     /// <inheritdoc />
