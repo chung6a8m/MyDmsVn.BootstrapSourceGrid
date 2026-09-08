@@ -130,6 +130,7 @@ Known default identities include:
 
 ```text
 SourceGrid.Cells.Views.Cell.Default
+SourceGrid.Cells.Views.Header.Default
 SourceGrid.Cells.Views.ColumnHeader.Default
 SourceGrid.Cells.Views.RowHeader.Default
 ```
@@ -147,6 +148,7 @@ BootstrapThemeManager.CurrentTheme
 BootstrapSourceGridThemeAdapter
        |
        +--> shared cell View/style
+       +--> shared generic header View/style
        +--> shared column header View/style
        +--> shared row header View/style
        +--> selection/focus visual state

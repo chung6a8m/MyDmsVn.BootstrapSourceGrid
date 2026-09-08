@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
 using MyDmsVn.Bootstrap5WinFormUI.Theme;
@@ -140,6 +140,41 @@ public sealed class BootstrapSourceGridRuntimeViewThemeTests
     }
 
     [Test]
+    public void GenericHeaderViewTracksLightDarkLightThemeChanges()
+    {
+        var original = BootstrapThemeManager.CurrentTheme;
+        var light = BootstrapTheme.CreateDefault(BootstrapThemeMode.Light);
+        var dark = BootstrapTheme.CreateDefault(BootstrapThemeMode.Dark);
+
+        try
+        {
+            BootstrapThemeManager.CurrentTheme = light;
+            using (var grid = new BootstrapSourceGridControl())
+            {
+                grid.Redim(1, 1);
+                grid[0, 0] = new SourceGrid.Cells.Header(string.Empty);
+
+                var view = (SourceGrid.Cells.Views.Header)grid.GetCell(0, 0).View;
+                AssertGenericHeaderTheme(view, light);
+
+                BootstrapThemeManager.CurrentTheme = dark;
+
+                Assert.That(grid.GetCell(0, 0).View, Is.SameAs(view));
+                AssertGenericHeaderTheme(view, dark);
+
+                BootstrapThemeManager.CurrentTheme = light;
+
+                Assert.That(grid.GetCell(0, 0).View, Is.SameAs(view));
+                AssertGenericHeaderTheme(view, light);
+            }
+        }
+        finally
+        {
+            BootstrapThemeManager.CurrentTheme = original;
+        }
+    }
+
+    [Test]
     public void CustomThemeTokensFlowIntoCellsHeadersAndSelection()
     {
         var original = BootstrapThemeManager.CurrentTheme;
@@ -189,6 +224,16 @@ public sealed class BootstrapSourceGridRuntimeViewThemeTests
         Assert.That(rowBackground.BackColor, Is.EqualTo(theme.Colors.SurfaceSecondary));
         Assert.That(columnHeaderView.ForeColor, Is.EqualTo(theme.Colors.Text));
         Assert.That(rowHeaderView.ForeColor, Is.EqualTo(theme.Colors.Text));
+    }
+
+    private static void AssertGenericHeaderTheme(
+        SourceGrid.Cells.Views.Header view,
+        BootstrapTheme theme)
+    {
+        var background = (DevAge.Drawing.VisualElements.Header)view.Background;
+        Assert.That(background.BackColor, Is.EqualTo(theme.Colors.SurfaceSecondary));
+        Assert.That(background.Border.Top.Color, Is.EqualTo(theme.Colors.Border));
+        Assert.That(view.ForeColor, Is.EqualTo(theme.Colors.Text));
     }
 
     private static void AssertSelectionUnchanged(

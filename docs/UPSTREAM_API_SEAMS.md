@@ -202,6 +202,7 @@ Use **reference identity**, not only runtime type, to decide whether the integra
 
 ```text
 Views.Cell.Default
+Views.Header.Default
 Views.ColumnHeader.Default
 Views.RowHeader.Default
 ```
@@ -210,7 +211,23 @@ If a consumer has assigned any different View instance, treat it as consumer-own
 
 ## 6. Header seams
 
-### 6.1 Column headers
+### 6.1 Generic headers
+
+Verified SourceGrid generic-header View:
+
+```csharp
+SourceGrid.Cells.Views.Header
+```
+
+`SourceGrid.Cells.Header` defaults to the exact singleton `SourceGrid.Cells.Views.Header.Default`. The View can be subclassed and its OS-themed `HeaderThemed` background can be replaced with the programmable non-themed visual element:
+
+```csharp
+DevAge.Drawing.VisualElements.Header
+```
+
+The programmable element exposes `BackColor`, `Border`, and `BackgroundColorStyle`. The integration maps only the exact default singleton to its shared Bootstrap generic-header View; explicit consumer View instances remain untouched.
+
+### 6.2 Column headers
 
 Verified SourceGrid column-header View:
 
@@ -245,7 +262,7 @@ apply Bootstrap colors/border/padding
 retain SourceGrid ElementSort/model/controller behavior
 ```
 
-### 6.2 Row headers
+### 6.3 Row headers
 
 Verified SourceGrid row-header View:
 
@@ -357,7 +374,7 @@ Whenever either vendor baseline changes, verify all of the following before acce
 [ ] SourceGrid Grid/GridVirtual inheritance
 [ ] Grid.GetCell remains virtual
 [ ] indexer/InsertCell behavior and whether interception assumptions changed
-[ ] default Cell/ColumnHeader/RowHeader View identities
+[ ] default Cell/Header/ColumnHeader/RowHeader View identities
 [ ] ViewBase style properties/shareability
 [ ] header visual-element contracts
 [ ] Selection visual properties/decorator behavior

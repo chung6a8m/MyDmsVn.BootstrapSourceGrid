@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Apply Bootstrap semantic visuals to SourceGrid default cells, alternating rows, row/column headers, selection, and focus while preserving custom consumer Views and all SourceGrid behavior.
+**Goal:** Apply Bootstrap semantic visuals to SourceGrid default cells, alternating rows, generic/row/column headers, selection, and focus while preserving custom consumer Views and all SourceGrid behavior.
 
 **Architecture:** SourceGrid cell assignment cannot be intercepted through the public indexer because its setter calls a private `InsertCell`. Instead, `BootstrapSourceGrid` overrides virtual `GetCell(int,int)` and lazily substitutes only known SourceGrid default View singletons with integration-owned shared Views. Custom consumer Views are never replaced. Shared Views read/update integration theme state; no full-grid rewrite is required on theme changes.
 
@@ -18,6 +18,7 @@ At `f4e457b...`:
 - `grid[row,col] = cell` uses private `InsertCell`, so subclass assignment interception is unavailable without a vendor patch.
 - `Cells.Virtual.CellVirtual.View` is public and intentionally shareable.
 - ordinary cells default to `Cells.Views.Cell.Default`.
+- generic headers default to `Cells.Views.Header.Default`.
 - column headers default to `Cells.Views.ColumnHeader.Default`.
 - row headers default to `Cells.Views.RowHeader.Default`.
 - `Cells.Views.ViewBase` exposes `BackColor`, `ForeColor`, `Border`, `Padding`, `Font` and is designed to be shared.
@@ -231,6 +232,7 @@ Before ordinary-cell default detection:
 ```text
 Views.ColumnHeader.Default -> integration column-header View
 Views.RowHeader.Default    -> integration row-header View (Task 4)
+Views.Header.Default       -> integration generic-header View
 Views.Cell.Default         -> integration ordinary-cell View
 ```
 
@@ -427,6 +429,7 @@ git commit -m "test: harden Bootstrap SourceGrid visual integration"
 
 - [ ] Ordinary SourceGrid default cells receive Bootstrap visuals lazily through `GetCell`.
 - [ ] Alternating rows are based on current row position and remain correct after row movement/reindexing.
+- [ ] Generic headers receive the same Bootstrap semantic appearance as row and column headers.
 - [ ] Column headers retain sort-indicator/model/controller behavior.
 - [ ] Row headers use programmable Bootstrap colors rather than OS themed background.
 - [ ] Consumer custom Views are never replaced by theme refresh.

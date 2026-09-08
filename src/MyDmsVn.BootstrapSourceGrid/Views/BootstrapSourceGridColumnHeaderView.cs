@@ -1,4 +1,4 @@
-using DevAge.Drawing;
+﻿using DevAge.Drawing;
 using MyDmsVn.BootstrapSourceGrid.Internal;
 using MyDmsVn.BootstrapSourceGrid.Theming;
 
@@ -24,12 +24,6 @@ internal sealed class BootstrapSourceGridColumnHeaderView : SourceGrid.Cells.Vie
         BootstrapSourceGridThemeSnapshot snapshot,
         BootstrapSourceGridDpiMetrics dpiMetrics)
     {
-        var border = new RectangleBorder(
-            new BorderLine(snapshot.BorderColor, dpiMetrics.CellBorderThickness));
-        _background.BackColor = snapshot.HeaderBackColor;
-        _background.Border = border;
-        ForeColor = snapshot.HeaderForeColor;
-        Padding = new Padding(dpiMetrics.CellPadding);
-        Font = null;
+        BootstrapSourceGridHeaderStyle.Apply(this, _background, snapshot, dpiMetrics);
     }
 }

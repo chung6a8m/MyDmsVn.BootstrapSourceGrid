@@ -61,7 +61,7 @@ Provide Bootstrap-aligned defaults for ordinary cells and alternating rows while
 
 ### FR-05 — Header visual integration
 
-Provide Bootstrap-aligned defaults for column headers and row headers using SourceGrid-compatible visual extension points.
+Provide Bootstrap-aligned defaults for generic headers, column headers, and row headers using SourceGrid-compatible visual extension points.
 
 ### FR-06 — Selection and focus visuals
 

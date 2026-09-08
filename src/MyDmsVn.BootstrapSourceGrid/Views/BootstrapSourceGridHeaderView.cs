@@ -4,15 +4,15 @@ using MyDmsVn.BootstrapSourceGrid.Theming;
 
 namespace MyDmsVn.BootstrapSourceGrid.Views;
 
-internal sealed class BootstrapSourceGridRowHeaderView : SourceGrid.Cells.Views.RowHeader
+internal sealed class BootstrapSourceGridHeaderView : SourceGrid.Cells.Views.Header
 {
-    private readonly DevAge.Drawing.VisualElements.RowHeader _background;
+    private readonly DevAge.Drawing.VisualElements.Header _background;
 
-    internal BootstrapSourceGridRowHeaderView(
+    internal BootstrapSourceGridHeaderView(
         BootstrapSourceGridThemeSnapshot snapshot,
         BootstrapSourceGridDpiMetrics dpiMetrics)
     {
-        _background = new DevAge.Drawing.VisualElements.RowHeader
+        _background = new DevAge.Drawing.VisualElements.Header
         {
             BackgroundColorStyle = BackgroundColorStyle.Solid,
         };
