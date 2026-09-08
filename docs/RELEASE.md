@@ -6,6 +6,8 @@ Development and source validation use pinned vendor submodules plus `ProjectRefe
 
 The current integration inspection package version is `0.1.0-preview.1`. It belongs to this repository's own version line and is not derived from the Bootstrap vendor's `1.0.0-rc.1` metadata. A later release version must still pass every gate in this document.
 
+As verified on 2026-09-09, public publication is **BLOCKED**: no exact Bootstrap package is available, NuGet.org exposes only legacy SourceGrid `4.4.0`, the configured internal feed contains neither required package, source/package correspondence cannot be established, and the Bootstrap vendor license/notice obligation is unresolved. See [UPSTREAM.md](UPSTREAM.md#11-public-package-verification-status-2026-09-09) for evidence and unblock requirements.
+
 ## Pre-release checklist
 
 1. Start from a clean release branch and confirm `git status --short` is empty.
