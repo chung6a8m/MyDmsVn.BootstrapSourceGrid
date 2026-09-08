@@ -1,5 +1,9 @@
 # Testing strategy
 
+## Current automation status
+
+GitHub Actions is disabled for this repository as of 2026-09-09. The repository therefore intentionally has no active `.github/workflows/ci.yml`. Until Actions is re-enabled and a workflow is restored, local restore, build, bounded test, package-verification, and repository-cleanliness commands are the authoritative automated gates. Contributors and coding sessions must not wait for a GitHub CI result or treat the absence of one as a failed validation.
+
 ## 1. Goals
 
 Testing must prove both integration correctness and preservation of SourceGrid behavior. Because this is WinForms code, automated tests must also be safe for unattended execution.

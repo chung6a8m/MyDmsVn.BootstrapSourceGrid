@@ -183,3 +183,23 @@ This license choice applies to this repository's own integration source only. Be
 Do not copy vendor license text into this repository unless the packaging/legal requirement actually calls for it. Retain required notices through the normal dependency/package mechanism or an explicitly documented notice file where required.
 
 The release is blocked if vendor license/notice obligations for the approved package dependency graph have not been verified.
+
+## 11. Public package verification status (2026-09-09)
+
+Public publication is currently **blocked**. Verification against the configured feeds and the official repository state produced this evidence:
+
+| Vendor | Source metadata at pinned commit | Feed availability | Commit/package correspondence | License/notice result |
+|---|---|---|---|---|
+| Bootstrap5WinFormUI | `PackageId=MyDmsVn.Bootstrap5WinFormUI`; `Version=1.0.0-rc.1`; `net48;net8.0-windows` | No exact package on NuGet.org or the configured internal feed; no GitHub release | Cannot verify because no candidate package is available | Blocked: the pinned repository has no license file and the project has no package license metadata |
+| SourceGrid | SDK-default `PackageId=SourceGrid`; `Version=5.0.0`; `net48;net8.0-windows` | NuGet.org exposes only legacy `SourceGrid 4.4.0`; neither `5.0.0` nor another exact candidate exists on the configured internal feed; no GitHub release | `4.4.0` predates and is not equivalent to fork commit `f4e457b43582bf01892f50bdc74aa480531e5944` | Source baseline includes `SourceGrid/SourceGrid.License.txt`, an MIT-style license requiring preservation of its copyright and permission notice; package-level notice handling remains unverified without a 5.0.0 candidate |
+
+Official feed evidence:
+
+- `https://api.nuget.org/v3-flatcontainer/mydmsvn.bootstrap5winformui/index.json` returned 404.
+- `https://api.nuget.org/v3-flatcontainer/sourcegrid/index.json` listed only `4.4.0`.
+- `https://www.nuget.org/packages/SourceGrid/` identifies `4.4.0` as the sole gallery version and as a .NET Framework 3.5 asset, not the dual-target pinned fork.
+- `https://github.com/chung6a8m/MyDmsVn.Bootstrap5WinFormUI/releases` and `https://github.com/chung6a8m/sourcegrid/releases` contained no releases.
+
+The SourceGrid source baseline declares `Microsoft.Data.SqlClient`, `Microsoft.Windows.Compatibility`, and `System.Text.Json`, plus `System.Resources.Extensions` for `net48`. Bootstrap5WinFormUI declares no package dependency at its pinned project file. These source-graph observations do not substitute for review of an actual release package's transitive graph.
+
+Required unblock action: publish or otherwise provide exact vendor package candidates tied to the approved commits (or explicitly approve upgraded baselines), add/clarify the Bootstrap vendor license, then repeat TFM/API/behavior/transitive/license verification and clean-consumer validation. Until then, submodule plus `ProjectReference` remains the only approved build graph and local `.nupkg` files are inspection artifacts only.

@@ -16,7 +16,11 @@ This folder contains the canonical product, architecture, compatibility, testing
 10. `TESTING.md` — automated and manual validation strategy.
 11. `DEVELOPMENT_PLAN.md` — staged roadmap and stage gates.
 12. `PENDING_DECISIONS.md` — numbered project-owner decisions that must not be silently chosen by an agent.
-13. `plans/` — task-level implementation plans.
+13. `PACKAGE_README.md` — concise package-facing consumer guide.
+14. `KNOWN_LIMITATIONS.md` — intentional MVP boundaries.
+15. `RELEASE.md` — release validation, dependency, packaging, and publication gates.
+16. `verification/` — dated implementation and manual verification evidence.
+17. `plans/` — task-level implementation plans.
 
 `../CONTRIBUTING.md` summarizes the contributor workflow and points back to these canonical documents.
 

@@ -178,6 +178,10 @@ Do not jump to a later stage while the current stage's gate is failing.
 
 ## 12. Validation gates
 
+### Temporary GitHub Actions status
+
+GitHub Actions is disabled for this repository as of 2026-09-09, so `.github/workflows/ci.yml` is intentionally absent. Until the repository owner re-enables Actions and restores a workflow, pull requests and implementation sessions must use the local validation commands below as the required automated gate. Do not wait for, require, or report a GitHub CI check as a completion condition during this period.
+
 Before reporting a stage complete:
 
 ```powershell

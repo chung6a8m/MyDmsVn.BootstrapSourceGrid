@@ -1,137 +1,114 @@
 # MyDmsVn.BootstrapSourceGrid
 
-Bootstrap-inspired SourceGrid control for native Windows Forms applications.
-
-`BootstrapSourceGrid` combines the SourceGrid 5.0 grid engine with the theme, typography, rendering, DPI, accessibility, and design conventions of `MyDmsVn.Bootstrap5WinFormUI` while preserving SourceGrid's public programming model.
+`MyDmsVn.BootstrapSourceGrid` is a Bootstrap-themed SourceGrid control for native Windows Forms applications. It derives directly from `SourceGrid.Grid`, so existing SourceGrid cells, views, editors, selection, spans, keyboard behavior, and scrolling remain available while default visuals follow `MyDmsVn.Bootstrap5WinFormUI` themes.
 
 ## Status
 
-This repository is in the architecture and implementation-planning phase. The initial implementation must follow the decisions in `docs/DECISIONS.md` and the staged plans under `docs/plans/`.
+The source-distributed MVP is implemented and validated on both supported TFMs. Public NuGet publication is currently blocked by D-017 because exact vendor packages and complete license/source-equivalence evidence are not yet available. The supported consumption model today is source checkout with the pinned vendor submodules and `ProjectReference`; do not use `dotnet add package MyDmsVn.BootstrapSourceGrid` until the release gate is documented as complete.
 
-## Core design
+## Platform and dependencies
 
-```text
-                  MyDmsVn.BootstrapSourceGrid
-                            |
-                    BootstrapSourceGrid
-                            |
-                      SourceGrid.Grid
+- Windows Forms on `net48` and `net8.0-windows`.
+- `MyDmsVn.Bootstrap5WinFormUI` for theme, typography, color, and DPI semantics.
+- SourceGrid 5.0 for the grid engine.
+- MIT license for this integration; see [LICENSE](LICENSE).
 
-          uses                                  uses
-           |                                     |
-           v                                     v
-MyDmsVn.Bootstrap5WinFormUI              SourceGrid 5.0
-Theme / Rendering / DPI                  Grid engine / Cells
-Typography / semantic tokens             Views / Editors / Selection
+Development builds use pinned vendor submodules and `ProjectReference`:
+
+- `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@95077df0c8bad8593143c2190606d2f444bfc653`
+- `chung6a8m/sourcegrid@f4e457b43582bf01892f50bdc74aa480531e5944`
+
+Public NuGet publication is intentionally blocked until exact, resolvable vendor packages are verified against these source baselines, including both TFMs and license/notice obligations. See [release process](docs/RELEASE.md) and [upstream policy](docs/UPSTREAM.md).
+
+## Consume from source today
+
+Add this repository to your application's source tree and initialize its nested vendor submodules:
+
+```powershell
+git submodule add https://github.com/chung6a8m/MyDmsVn.BootstrapSourceGrid.git vendor/MyDmsVn.BootstrapSourceGrid
+git submodule update --init --recursive
+dotnet sln add vendor/MyDmsVn.BootstrapSourceGrid/src/MyDmsVn.BootstrapSourceGrid/MyDmsVn.BootstrapSourceGrid.csproj
+dotnet add path/to/Your.WinFormsApp.csproj reference vendor/MyDmsVn.BootstrapSourceGrid/src/MyDmsVn.BootstrapSourceGrid/MyDmsVn.BootstrapSourceGrid.csproj
 ```
 
-The key public type is intended to be:
+The integration project resolves its pinned Bootstrap5WinFormUI and SourceGrid projects from its own `vendor/` submodules. Commit the parent repository's integration-submodule pointer so every consumer build uses the reviewed integration revision. If you prefer a standalone clone instead, run `git submodule update --init --recursive` in that clone and reference the same product `.csproj` by its relative or absolute path.
+
+## Quick start
+
+Reference the integration and its approved vendor dependencies, then use normal SourceGrid APIs:
 
 ```csharp
-namespace MyDmsVn.Bootstrap5WinFormUI.Controls;
+using MyDmsVn.Bootstrap5WinFormUI.Controls;
 
-public class BootstrapSourceGrid : SourceGrid.Grid
+var grid = new BootstrapSourceGrid
 {
-}
+    Dock = DockStyle.Fill,
+};
+
+grid.Redim(20, 4);
+grid.FixedRows = 1;
+grid[0, 0] = new SourceGrid.Cells.Header();
+grid[0, 1] = new SourceGrid.Cells.ColumnHeader("Name");
+grid[1, 0] = new SourceGrid.Cells.RowHeader(1);
+grid[1, 1] = new SourceGrid.Cells.Cell("Northwind", typeof(string));
+grid.Selection.EnableMultiSelection = true;
+Controls.Add(grid);
 ```
 
-The integration assembly/package remains separate from the Bootstrap framework:
+Switch themes at runtime without recreating the grid or its data:
 
-- Assembly: `MyDmsVn.BootstrapSourceGrid.dll`
-- Package: `MyDmsVn.BootstrapSourceGrid`
-- Base namespace for the public control: `MyDmsVn.Bootstrap5WinFormUI.Controls`
-- Target frameworks: `net48;net8.0-windows`
-- License: MIT
+```csharp
+using MyDmsVn.Bootstrap5WinFormUI.Theme;
 
-## Pinned architectural baselines
+BootstrapThemeManager.CurrentTheme =
+    BootstrapTheme.CreateDefault(BootstrapThemeMode.Dark);
+```
 
-The first implementation is designed against these exact upstream snapshots:
+Only exact SourceGrid default View singletons are substituted automatically. A consumer View remains authoritative across theme changes:
 
-- Bootstrap framework: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@95077df0c8bad8593143c2190606d2f444bfc653`
-- SourceGrid: `chung6a8m/sourcegrid@f4e457b43582bf01892f50bdc74aa480531e5944`
+```csharp
+var customView = new SourceGrid.Cells.Views.Cell
+{
+    BackColor = Color.LemonChiffon,
+    ForeColor = Color.DarkSlateBlue,
+};
 
-See `docs/UPSTREAM.md` for upgrade/distribution rules and `docs/UPSTREAM_API_SEAMS.md` for the exact vendor APIs/extension seams already verified against those commits.
+grid[1, 1].View = customView;
+```
 
-## Dependency and distribution policy
+The control initially owns a font created from the Bootstrap body typography token. Assigning `grid.Font` opts that grid instance into consumer-font mode; later theme changes keep the exact assigned Font, and the application remains responsible for disposing it after the grid is disposed.
 
-Development/pre-release uses the exact vendor source baselines as pinned Git submodules plus `ProjectReference`. This is the approved temporary strategy while the integration is being built and verified.
+## Demo
 
-Public NuGet publication uses a different, already-approved release contract: `MyDmsVn.BootstrapSourceGrid` must depend on resolvable exact-version vendor NuGet packages that have been verified as equivalent to the tested source baselines, or to explicitly approved upgraded baselines.
+The [demo application](samples/MyDmsVn.BootstrapSourceGrid.Demo) includes light/dark switching, reset, theme/DPI diagnostics, editable text/numeric/date/bool/enum cells, a read-only cell, sortable headers, a span, multi-selection, a custom View opt-out, a consumer Font opt-out, keyboard instructions, and enough data to scroll.
 
-A public package must not be published until both vendor dependencies have verified package identity/version/feed, support for `net48` and `net8.0-windows`, source correspondence, API/behavior equivalence, acceptable transitive dependencies, and license/notice obligations. Vendor assemblies/source must not be silently embedded into this package merely to bypass dependency resolution.
+```powershell
+dotnet run --project samples/MyDmsVn.BootstrapSourceGrid.Demo/MyDmsVn.BootstrapSourceGrid.Demo.csproj -f net8.0-windows
+```
 
-See decisions D-016 and D-017 in `docs/DECISIONS.md`.
+## Build from source
 
-## Non-negotiable boundaries
-
-1. `BootstrapSourceGrid` inherits `SourceGrid.Grid`; do not introduce a wrapper unless a documented blocker proves inheritance cannot meet a requirement.
-2. Dependency flow is one-way: this project depends on Bootstrap5WinFormUI and SourceGrid. Neither vendor may depend on this project or on each other because of this integration.
-3. Preserve SourceGrid's public grid API. Do not create Bootstrap-prefixed wrappers for rows, columns, cells, selection, controllers, editors, or ranges merely for naming consistency.
-4. Bootstrap styling is applied through theme adapters and SourceGrid Views/VisualModels where practical. Do not fork the SourceGrid painting engine just to recolor it.
-5. Keep SourceGrid patches at zero or near zero. Any required upstream patch must be isolated, justified, regression-tested, and proposed in the SourceGrid fork first.
-6. Both `net48` and `net8.0-windows` are first-class targets.
-7. Initial scope covers grid/cell/header/selection/theme integration. Native SourceGrid scrollbars remain unchanged initially; replacing the full editor subsystem is out of initial scope.
+```powershell
+git clone --recurse-submodules https://github.com/chung6a8m/MyDmsVn.BootstrapSourceGrid.git
+cd MyDmsVn.BootstrapSourceGrid
+git submodule update --init --recursive
+dotnet restore MyDmsVn.BootstrapSourceGrid.sln
+dotnet build MyDmsVn.BootstrapSourceGrid.sln -c Release
+dotnet test tests/MyDmsVn.BootstrapSourceGrid.Tests/MyDmsVn.BootstrapSourceGrid.Tests.csproj -c Release --no-build --blame-hang --blame-hang-timeout 5m
+```
 
 ## Documentation
 
-Start here:
+- [Package overview](docs/PACKAGE_README.md)
+- [Known MVP limitations](docs/KNOWN_LIMITATIONS.md)
+- [Release process](docs/RELEASE.md)
+- [Product requirements](docs/PRD.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Compatibility contract](docs/COMPATIBILITY.md)
+- [Testing strategy](docs/TESTING.md)
+- [Pinned upstream dependencies](docs/UPSTREAM.md)
+- [Architectural decisions](docs/DECISIONS.md)
 
-- `AGENTS.md` — mandatory operating rules for coding agents.
-- `AI_CONTEXT.md` — compact project model for AI assistants.
-- `CONTRIBUTING.md` — contributor workflow and validation discipline.
-- `docs/README.md` — documentation map and source-of-truth order.
-- `docs/PRD.md` — product requirements and definition of MVP.
-- `docs/ARCHITECTURE.md` — component boundaries and integration design.
-- `docs/DECISIONS.md` — approved architectural decisions.
-- `docs/UPSTREAM_API_SEAMS.md` — vendor integration seams verified against pinned commits.
-- `docs/UPSTREAM.md` — pinned vendor baselines, dependency distribution, and upgrade policy.
-- `docs/COMPATIBILITY.md` — target-framework and API compatibility rules.
-- `docs/TESTING.md` — automated/manual WinForms verification strategy.
-- `docs/DEVELOPMENT_PLAN.md` — stage roadmap and release gates.
-- `docs/PENDING_DECISIONS.md` — owner-decision audit trail and future decision register.
-- `docs/plans/` — task-level implementation plans.
+## Design boundaries
 
-## Implementation plans
-
-The initial plan set is intentionally staged:
-
-```text
-20260907-001  Master roadmap
-20260907-002  Foundation and vendor pinning
-20260907-003  Control shell and theme adapter
-20260907-004  Cell/header/selection theming
-20260907-005  Runtime theme/DPI/Designer hardening
-20260907-006  Editor and interaction hardening
-20260907-007  Demo, packaging, and release
-```
-
-Each stage has its own acceptance criteria, dual-target test gate, and vendor-cleanliness check.
-
-## Development principles
-
-- TDD for logic and observable behavior.
-- Preserve SourceGrid behavior unless the requirement explicitly changes it.
-- Reuse Bootstrap5WinFormUI theme tokens, typography, `DpiScaler`, and runtime theme notifications.
-- Keep WinForms Designer construction safe without application bootstrap/global initialization.
-- Dispose owned GDI resources and unsubscribe events.
-- Never let unattended GUI tests wait on modal dialogs or default WinForms exception UI.
-- Validate both TFMs before completing a stage.
-
-## Initial success criterion
-
-Existing SourceGrid usage should require only a type substitution for the common path:
-
-```csharp
-var grid = new BootstrapSourceGrid();
-grid.Redim(10, 4);
-grid[0, 0] = new SourceGrid.Cells.Cell("Northwind");
-grid.Selection.EnableMultiSelection = true;
-```
-
-The surrounding SourceGrid programming model should remain intact while the grid adopts Bootstrap5WinFormUI visual semantics and runtime theme behavior.
-
-## License
-
-This repository's integration source is licensed under the MIT License. See `LICENSE`.
-
-The MIT license does not replace or waive license/notice obligations of the two vendor dependencies; those must be verified for the final public package dependency graph before release.
+`BootstrapSourceGrid` is an integration layer, not a new grid engine. It does not wrap SourceGrid rows, columns, cells, ranges, or selection; it does not replace SourceGrid's editor architecture or native scrollbar subsystem; and neither vendor depends on this integration or on the other vendor because of it.
