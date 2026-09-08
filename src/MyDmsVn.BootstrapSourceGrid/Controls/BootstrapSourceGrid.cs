@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Threading;
 using MyDmsVn.Bootstrap5WinFormUI.Theme;
+using MyDmsVn.BootstrapSourceGrid.Editors;
 using MyDmsVn.BootstrapSourceGrid.Internal;
 using MyDmsVn.BootstrapSourceGrid.Theming;
 
@@ -207,11 +208,6 @@ public class BootstrapSourceGrid : SourceGrid.Grid
         var theme = BootstrapThemeManager.CurrentTheme;
         _themeSnapshot = BootstrapSourceGridThemeAdapter.CreateSnapshot(theme);
         _dpiMetrics = BootstrapSourceGridDpiMetrics.FromTheme(theme, CurrentDpi);
-        if (_useThemeFont)
-        {
-            ApplyThemeFont(_themeSnapshot.BodyFont);
-        }
-
         BackColor = _themeSnapshot.CellBackColor;
         ForeColor = _themeSnapshot.CellForeColor;
         _styleApplicator.ApplyTheme(_themeSnapshot, _dpiMetrics);
@@ -219,6 +215,12 @@ public class BootstrapSourceGrid : SourceGrid.Grid
             (SourceGrid.Selection.SelectionBase)Selection,
             _themeSnapshot,
             _dpiMetrics);
+        if (_useThemeFont)
+        {
+            ApplyThemeFont(_themeSnapshot.BodyFont);
+        }
+
+        BootstrapSourceGridEditorStyler.RefreshActiveEditor(this);
     }
 
     internal void RefreshDpiMetrics(int dpi)
