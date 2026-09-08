@@ -115,6 +115,8 @@ UseCellViewProperties   // default true
 
 `EditorControlBase` creates and stores its WinForms editor control from `CreateControl()` during editor construction, before any cell starts editing.
 
+The constructor assigns `mControl = CreateControl()`, rejects a null control, and immediately hides it. No grid or cell context is available during this eager construction.
+
 Consequences:
 
 - a Bootstrap editor adapter also creates its composite Bootstrap control eagerly;
@@ -124,6 +126,25 @@ Consequences:
 ### 6.3 Attach/show/focus lifecycle
 
 On first edit, the control is attached through SourceGrid's linked-control mechanism. SourceGrid remains responsible for editor bounds, showing/bringing to front/focus, and hiding at edit end.
+
+The exact pinned first-edit order in `InternalStartEdit(...)` is:
+
+```text
+EditorBase.InternalStartEdit(...) validates cell/grid/active position
+AttachControl(cellContext.Grid) when not already attached
+    -> assign mGrid
+    -> create LinkedControlValue
+    -> add it to grid.LinkedControls
+    -> subscribe Control.Validated and Control.KeyPress
+set linked-control position
+grid.ArrangeLinkedControls()
+OnStartingEdit(cellContext, Control)
+SetEditCell(cellContext)
+SafeSetEditValue(current cell value)
+ShowControl(Control)
+```
+
+`AttachControl(...)` is private, and the first protected callback receiving a `CellContext` is `OnStartingEdit(...)`, after `mGrid` and `grid.LinkedControls` have already been mutated. An adapter in this integration assembly therefore has no current SourceGrid seam that can reject a wrong-grid first edit before attachment.
 
 `GetMinimumSize(...)` derives from the editor control's preferred size. Bootstrap editor plans must test preferred/minimum height without silently resizing SourceGrid rows.
 
@@ -141,6 +162,8 @@ InternalEndEdit(...)
 CellContext.StartEdit()
 CellContext.EndEdit(bool cancel)
 ```
+
+Every concrete `EditorControlBase` subclass must implement the abstract `OnSendCharToEditor(char)` method. `SafeSetEditValue(...)` calls `SetEditValue(...)` and reports initialization failures through the grid user-exception path before applying the editor default. Commit calls `GetEditedValue()` through `ApplyEdit()`, then `SetCellValue(...)`; cancel calls `UndoEditValue()`, which restores the current cell value through `SafeSetEditValue(...)`, without writing an adapter-owned snapshot.
 
 Commit flow uses `GetEditedValue()` then SourceGrid `SetCellValue(...)`. Cancel/reset uses the normal edit-value restore path rather than requiring an integration-side value snapshot system.
 
@@ -260,6 +283,10 @@ BootstrapSourceGrid
 ```
 
 The registry/grid must dispose adapters/controls that were created but never attached, because SourceGrid cannot own a control it never received through its linked-control path.
+
+Cross-grid adapter reuse is explicitly unsupported. The supported grid-owned registry creation flow will avoid encouraging it, but this baseline does not promise a deterministic fail-before-attach exception: the only callback available to an integration adapter runs after SourceGrid has already changed `mGrid`/`LinkedControls`. A post-attach guard would leave partially mutated SourceGrid state and must not be added. Deterministic fail-before-attach enforcement requires a separately approved SourceGrid pre-attach seam.
+
+`EditorBase` is indirectly `IDisposable` through `DevAge.ComponentModel.ComponentLight`. That disposal contract removes the component from its site/container and raises `Disposed`; neither `EditorBase` nor `EditorControlBase` overrides it to dispose `EditorControlBase.Control`. The integration registry must therefore dispose the owned control as well as the editor component so both Bootstrap resources/theme subscriptions and SourceGrid component lifetime are released, including for an editor that was never attached.
 
 ## 12. Scrollbar seam
 

@@ -97,6 +97,8 @@ Therefore:
 4. `BootstrapSourceGrid` owns and disposes every adapter/control created through its editor registry, including controls that were created but never attached to `LinkedControls`.
 5. No automatic per-cell Bootstrap editor creation is allowed in the default cell factory path.
 
+Cross-grid reuse is unsupported, but the pinned SourceGrid attach sequence provides no integration-level callback before it mutates the editor's grid/linked-control attachment. The current no-vendor-change contract therefore does not promise a deterministic fail-before-attach runtime exception and does not add a post-attach guard that would leave SourceGrid in partially mutated state. Such enforcement requires a separately approved SourceGrid pre-attach seam.
+
 ## 7. Registry and public API direction
 
 The integration will expose a grid-owned registry after the three vertical slices prove the common adapter contract:

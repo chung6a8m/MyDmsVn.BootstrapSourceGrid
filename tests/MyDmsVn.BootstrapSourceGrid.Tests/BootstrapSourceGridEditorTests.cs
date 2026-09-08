@@ -2,6 +2,7 @@ using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
 using MyDmsVn.Bootstrap5WinFormUI.Theme;
+using MyDmsVn.BootstrapSourceGrid.Tests.EditorProbes;
 using MyDmsVn.BootstrapSourceGrid.Views;
 using NUnit.Framework;
 using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
@@ -148,6 +149,68 @@ public sealed class BootstrapSourceGridEditorTests
                     Assert.That(editor.IsEditing, Is.True);
                     Assert.That(editor.Control.BackColor, Is.EqualTo(customBackColor));
                     Assert.That(editor.Control.ForeColor, Is.EqualTo(customForeColor));
+                }
+                finally
+                {
+                    context.EndEdit(true);
+                    form.Close();
+                }
+            }
+        }
+        finally
+        {
+            BootstrapThemeManager.CurrentTheme = originalTheme;
+        }
+    }
+
+    [Test]
+    public void ThemeChangeKeepsBootstrapProbeVisualsOwnedByBootstrapControl()
+    {
+        var originalTheme = BootstrapThemeManager.CurrentTheme;
+        var light = BootstrapTheme.CreateDefault(BootstrapThemeMode.Light);
+        var dark = BootstrapTheme.CreateDefault(BootstrapThemeMode.Dark);
+
+        try
+        {
+            BootstrapThemeManager.CurrentTheme = light;
+            using (var cellFont = new Font(SystemFonts.DefaultFont.FontFamily, 18f, FontStyle.Bold))
+            using (var form = new Form())
+            using (var grid = new BootstrapSourceGridControl())
+            {
+                var editor = grid.EditorRegistry.Register(new BootstrapTextBoxProbeEditor());
+                var customView = new SourceGrid.Cells.Views.Cell
+                {
+                    BackColor = Color.MediumPurple,
+                    ForeColor = Color.Honeydew,
+                    Font = cellFont,
+                };
+                var cell = new SourceGrid.Cells.Cell("before")
+                {
+                    Editor = editor,
+                    View = customView,
+                };
+                grid.Redim(1, 1);
+                grid[0, 0] = cell;
+                form.Controls.Add(grid);
+                form.Show();
+
+                var context = new SourceGrid.CellContext(
+                    grid,
+                    new SourceGrid.Position(0, 0),
+                    cell);
+                customView.Measure(context, Size.Empty);
+                context.StartEdit();
+
+                try
+                {
+                    BootstrapThemeManager.CurrentTheme = dark;
+
+                    Assert.That(editor.UseCellViewProperties, Is.False);
+                    Assert.That(editor.BootstrapControl.BackColor, Is.Not.EqualTo(customView.BackColor));
+                    Assert.That(editor.BootstrapControl.ForeColor, Is.Not.EqualTo(customView.ForeColor));
+                    Assert.That(editor.BootstrapControl.Font, Is.Not.SameAs(cellFont));
+                    Assert.That(editor.BootstrapControl.Font.Name, Is.EqualTo(dark.Typography.Body.FontFamilyName));
+                    Assert.That(editor.BootstrapControl.Font.SizeInPoints, Is.EqualTo(dark.Typography.Body.SizeInPoints).Within(0.01f));
                 }
                 finally
                 {
