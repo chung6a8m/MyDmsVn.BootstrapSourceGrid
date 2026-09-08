@@ -55,49 +55,15 @@ jobs:
         shell: pwsh
         run: dotnet pack src/MyDmsVn.BootstrapSourceGrid/MyDmsVn.BootstrapSourceGrid.csproj -c Release --no-build -o artifacts/packages
 
-      - name: Inspect package contents
+      - name: Test package verification gate
         shell: pwsh
         run: |
-          Add-Type -AssemblyName System.IO.Compression.FileSystem
           $packages = @(Get-ChildItem artifacts/packages/MyDmsVn.BootstrapSourceGrid.*.nupkg |
             Where-Object { $_.Name -notlike '*.snupkg' })
           if ($packages.Count -ne 1) {
             throw "Expected one nupkg, found $($packages.Count)."
           }
-          $packagePath = $packages[0].FullName
-          $packageZip = [System.IO.Compression.ZipFile]::OpenRead($packagePath)
-          try {
-            $entryNames = @($packageZip.Entries | ForEach-Object FullName)
-            @(
-              'README.md',
-              'lib/net48/MyDmsVn.BootstrapSourceGrid.dll',
-              'lib/net8.0-windows7.0/MyDmsVn.BootstrapSourceGrid.dll'
-            ) | ForEach-Object {
-              if ($_ -notin $entryNames) {
-                throw "Missing package entry: $_"
-              }
-            }
-            if ($entryNames -match '(^|/)(SourceGrid|MyDmsVn\.Bootstrap5WinFormUI)\.dll$') {
-              throw 'A vendor binary was embedded in the integration package.'
-            }
-            $nuspecEntry = $packageZip.GetEntry('MyDmsVn.BootstrapSourceGrid.nuspec')
-            $reader = [System.IO.StreamReader]::new($nuspecEntry.Open())
-            try {
-              $nuspecText = $reader.ReadToEnd()
-            }
-            finally {
-              $reader.Dispose()
-            }
-            if ($nuspecText -notmatch '<license type="expression">MIT</license>') {
-              throw 'MIT package license expression is missing.'
-            }
-            if ($nuspecText -notmatch '<readme>README.md</readme>') {
-              throw 'Package README metadata is missing.'
-            }
-          }
-          finally {
-            $packageZip.Dispose()
-          }
+          pwsh -NoProfile -File scripts/Test-Verify-Package.ps1 -PackagePath $packages[0].FullName
 
       - name: Upload non-publishable inspection packages
         uses: actions/upload-artifact@v4

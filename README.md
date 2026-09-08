@@ -2,6 +2,10 @@
 
 `MyDmsVn.BootstrapSourceGrid` is a Bootstrap-themed SourceGrid control for native Windows Forms applications. It derives directly from `SourceGrid.Grid`, so existing SourceGrid cells, views, editors, selection, spans, keyboard behavior, and scrolling remain available while default visuals follow `MyDmsVn.Bootstrap5WinFormUI` themes.
 
+## Status
+
+The source-distributed MVP is implemented and validated on both supported TFMs. Public NuGet publication is currently blocked by D-017 because exact vendor packages and complete license/source-equivalence evidence are not yet available. The supported consumption model today is source checkout with the pinned vendor submodules and `ProjectReference`; do not use `dotnet add package MyDmsVn.BootstrapSourceGrid` until the release gate is documented as complete.
+
 ## Platform and dependencies
 
 - Windows Forms on `net48` and `net8.0-windows`.
@@ -15,6 +19,19 @@ Development builds use pinned vendor submodules and `ProjectReference`:
 - `chung6a8m/sourcegrid@f4e457b43582bf01892f50bdc74aa480531e5944`
 
 Public NuGet publication is intentionally blocked until exact, resolvable vendor packages are verified against these source baselines, including both TFMs and license/notice obligations. See [release process](docs/RELEASE.md) and [upstream policy](docs/UPSTREAM.md).
+
+## Consume from source today
+
+Add this repository to your application's source tree and initialize its nested vendor submodules:
+
+```powershell
+git submodule add https://github.com/chung6a8m/MyDmsVn.BootstrapSourceGrid.git vendor/MyDmsVn.BootstrapSourceGrid
+git submodule update --init --recursive
+dotnet sln add vendor/MyDmsVn.BootstrapSourceGrid/src/MyDmsVn.BootstrapSourceGrid/MyDmsVn.BootstrapSourceGrid.csproj
+dotnet add path/to/Your.WinFormsApp.csproj reference vendor/MyDmsVn.BootstrapSourceGrid/src/MyDmsVn.BootstrapSourceGrid/MyDmsVn.BootstrapSourceGrid.csproj
+```
+
+The integration project resolves its pinned Bootstrap5WinFormUI and SourceGrid projects from its own `vendor/` submodules. Commit the parent repository's integration-submodule pointer so every consumer build uses the reviewed integration revision. If you prefer a standalone clone instead, run `git submodule update --init --recursive` in that clone and reference the same product `.csproj` by its relative or absolute path.
 
 ## Quick start
 
