@@ -1,123 +1,38 @@
-# Verified Upstream API Seams
+# Verified upstream API seams
 
-This document records integration seams verified directly against the two pinned vendor commits. It exists to prevent future implementation work from relying on remembered assumptions or accidentally inventing vendor APIs.
+Exact integration facts verified against the pinned vendor baselines. Use this document instead of remembered assumptions; re-verify affected sections whenever a vendor pin changes.
 
-The canonical architectural intent remains in `DECISIONS.md` and `ARCHITECTURE.md`. When a vendor is upgraded, re-verify this document as part of the upgrade procedure in `UPSTREAM.md`.
+## 1. Baselines
 
-## 1. Verified baselines
+- Bootstrap5WinFormUI: `95077df0c8bad8593143c2190606d2f444bfc653`
+- SourceGrid: `f4e457b43582bf01892f50bdc74aa480531e5944`
 
-- Bootstrap framework: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@95077df0c8bad8593143c2190606d2f444bfc653`
-- SourceGrid: `chung6a8m/sourcegrid@f4e457b43582bf01892f50bdc74aa480531e5944`
+## 2. Bootstrap theme seams
 
-## 2. Bootstrap5WinFormUI seams
-
-### 2.1 Theme manager
-
-Verified public APIs:
+Verified:
 
 ```csharp
 BootstrapThemeManager.CurrentTheme
 BootstrapThemeManager.ThemeChanged
 BootstrapTheme.CreateDefault(BootstrapThemeMode.Light)
 BootstrapTheme.CreateDefault(BootstrapThemeMode.Dark)
-```
-
-`CurrentTheme` provides a usable default theme, so `BootstrapSourceGrid` construction does not need application-level theme initialization.
-
-### 2.2 Semantic theme state
-
-Verified theme groups:
-
-```text
 BootstrapTheme.Colors
 BootstrapTheme.Metrics
 BootstrapTheme.Typography
-```
-
-Verified color tokens used by the integration plans:
-
-```text
-Primary
-Secondary
-Light
-Dark
-Body
-Surface
-SurfaceSecondary
-Border
-Text
-MutedText
-Disabled
-Focus
-Hover
-Active
-```
-
-Use semantic tokens instead of hard-coded Bootstrap hex colors.
-
-### 2.3 Selection contrast helper
-
-Verified helper:
-
-```csharp
 ColorUtil.GetContrastingTextColor(...)
-```
-
-Selection foreground calculations should delegate to the framework helper instead of introducing a second luminance/contrast implementation.
-
-### 2.4 DPI helpers and tokens
-
-Verified defaults at 96 logical DPI:
-
-```text
-Metrics.SpacingXS       = 4
-Metrics.BorderWidth     = 1
-Metrics.FocusBorderWidth = 2
-```
-
-Verified DPI helper:
-
-```csharp
-DpiScaler.DefaultDpi // 96
+DpiScaler.DefaultDpi
 DpiScaler.Scale(int logicalPixels, int dpi)
 ```
 
-Integer scaling uses midpoint rounding away from zero.
+Relevant semantic tokens include `Surface`, `SurfaceSecondary`, `Text`, `MutedText`, `Border`, `Primary`, `Disabled`, `Focus`, `Hover`, and `Active`.
 
-Initial integration mapping:
+Bootstrap-owned integration metrics currently map from `SpacingXS`, `BorderWidth`, and `FocusBorderWidth`. Do not rescale SourceGrid/application-owned row heights, column widths, or scrollbars.
 
-```text
-BootstrapSourceGrid cell padding      <- SpacingXS
-BootstrapSourceGrid cell border width <- BorderWidth
-BootstrapSourceGrid focus border      <- FocusBorderWidth
-```
+The pinned `BootstrapDataGridView` remains the reference pattern for theme-owned Font lifetime: construct theme font, replace only owned fonts on theme change, opt out on consumer Font assignment, unsubscribe/dispose owned resources.
 
-These are integration-owned metrics only. SourceGrid-owned row heights, column widths, scrollbars, and application dimensions must not be scaled again by this integration.
+## 3. SourceGrid control and cell/View seams
 
-### 2.5 Theme-owned Font pattern
-
-The pinned framework's `BootstrapDataGridView` provides the reference lifecycle:
-
-```text
-construct in theme-font mode
-create a Font from Typography.Body
-own/dispose only that created Font
-on external Font assignment -> consumer-font mode
-runtime theme change replaces only the integration-owned Font
-Dispose unsubscribes ThemeChanged and releases the owned Font
-```
-
-`BootstrapSourceGrid` should reproduce this ownership pattern, not inherit from `BootstrapDataGridView`.
-
-## 3. SourceGrid control/inheritance seams
-
-Verified SourceGrid concrete control:
-
-```csharp
-public partial class Grid : GridVirtual
-```
-
-Relevant inheritance conceptually remains:
+Verified concrete inheritance:
 
 ```text
 System.Windows.Forms.Panel
@@ -127,261 +42,249 @@ System.Windows.Forms.Panel
   -> BootstrapSourceGrid
 ```
 
-`BootstrapSourceGrid` therefore receives SourceGrid's concrete rows/columns/cells/selection/editor/scrolling behavior directly.
-
-## 4. Important insertion/interception constraint
-
-A critical verified constraint is that common assignment:
+Normal assignment:
 
 ```csharp
 grid[row, column] = cell;
 ```
 
-ultimately calls SourceGrid's private `InsertCell(...)` implementation. The subclass cannot intercept that indexer assignment without changing SourceGrid.
+reaches a private SourceGrid `InsertCell(...)`; subclassing `SetCell(...)` does not intercept every normal assignment.
 
-`Grid.SetCell(int, int, ICellVirtual)` is virtual, but relying only on it would not catch normal indexer assignment.
-
-### Approved no-patch integration seam
-
-Use the virtual read path:
+Approved no-patch visual seam:
 
 ```csharp
 public override SourceGrid.Cells.ICellVirtual GetCell(int row, int column)
 ```
 
-The integration can:
+Call base, inspect the current View, replace only exact known default singleton identities, preserve all unknown/custom Views, and return the same cell.
 
-1. call `base.GetCell(row, column)`;
-2. inspect the returned cell's current View;
-3. replace only known SourceGrid default View singleton identities with Bootstrap integration-owned shared Views;
-4. leave every unknown/custom consumer View unchanged;
-5. return the same SourceGrid cell object.
+Known default identities:
 
-This keeps normal SourceGrid assignment intact and avoids a vendor patch.
-
-Do **not** hide/redeclare SourceGrid's indexer merely to intercept assignment.
-
-## 5. SourceGrid View seams
-
-### 5.1 Ordinary cells
-
-Verified default:
-
-```csharp
+```text
 SourceGrid.Cells.Views.Cell.Default
+SourceGrid.Cells.Views.Header.Default
+SourceGrid.Cells.Views.ColumnHeader.Default
+SourceGrid.Cells.Views.RowHeader.Default
 ```
 
-`CellVirtual.View` is public and SourceGrid explicitly documents Views as shareable across many cells.
+`ViewBase` exposes style state including `BackColor`, `ForeColor`, `Border`, `Padding`, and `Font`. `CellContext.Position` is available while Views prepare for drawing, allowing one shared ordinary-cell View to compute alternating rows without per-row View allocation.
 
-`SourceGrid.Cells.Views.ViewBase` exposes the required style properties:
+## 4. Header seams
+
+Generic, column, and row header Views are subclassable. Their default OS-themed backgrounds can be replaced with programmable DevAge visual elements while preserving SourceGrid View/controller behavior:
 
 ```text
-BackColor
-ForeColor
-Border
-Padding
-Font
-```
-
-The integration should keep the View's `Font` null where appropriate so SourceGrid falls back to `grid.Font`. That lets the BootstrapSourceGrid control-level theme/consumer Font ownership contract work consistently.
-
-### 5.2 Dynamic alternating rows
-
-`CellContext.Position` is available while the View prepares for drawing. Therefore one shared Bootstrap ordinary-cell View can select:
-
-```text
-even row -> Surface
-odd row  -> SurfaceSecondary
-```
-
-at draw/measure preparation time instead of creating one View per row or walking all cells after each theme change.
-
-### 5.3 Default-View ownership rule
-
-Use **reference identity**, not only runtime type, to decide whether the integration owns a default View:
-
-```text
-Views.Cell.Default
-Views.Header.Default
-Views.ColumnHeader.Default
-Views.RowHeader.Default
-```
-
-If a consumer has assigned any different View instance, treat it as consumer-owned and preserve it across theme changes.
-
-## 6. Header seams
-
-### 6.1 Generic headers
-
-Verified SourceGrid generic-header View:
-
-```csharp
-SourceGrid.Cells.Views.Header
-```
-
-`SourceGrid.Cells.Header` defaults to the exact singleton `SourceGrid.Cells.Views.Header.Default`. The View can be subclassed and its OS-themed `HeaderThemed` background can be replaced with the programmable non-themed visual element:
-
-```csharp
 DevAge.Drawing.VisualElements.Header
-```
-
-The programmable element exposes `BackColor`, `Border`, and `BackgroundColorStyle`. The integration maps only the exact default singleton to its shared Bootstrap generic-header View; explicit consumer View instances remain untouched.
-
-### 6.2 Column headers
-
-Verified SourceGrid column-header View:
-
-```csharp
-SourceGrid.Cells.Views.ColumnHeader
-```
-
-It owns sort-indicator behavior and defaults its background to an OS-themed DevAge visual element.
-
-Verified programmable non-themed DevAge visual element:
-
-```csharp
 DevAge.Drawing.VisualElements.ColumnHeader
-```
-
-It exposes:
-
-```text
-BackColor
-Border
-BackgroundColorStyle
-```
-
-and implements the header background contract required by the SourceGrid View.
-
-Recommended integration:
-
-```text
-subclass SourceGrid.Cells.Views.ColumnHeader
-replace only Background with DevAge.Drawing.VisualElements.ColumnHeader
-apply Bootstrap colors/border/padding
-retain SourceGrid ElementSort/model/controller behavior
-```
-
-### 6.3 Row headers
-
-Verified SourceGrid row-header View:
-
-```csharp
-SourceGrid.Cells.Views.RowHeader
-```
-
-Verified programmable DevAge background:
-
-```csharp
 DevAge.Drawing.VisualElements.RowHeader
 ```
 
-It likewise exposes programmable background/border state.
+The integration replaces only exact SourceGrid default View singleton identities; consumer header Views remain authoritative.
 
-## 7. Selection/focus seams
+## 5. Selection seams
 
-Verified selection decorator consumes:
+`GridVirtual.Selection` is exposed as `IGridSelection`, while Bootstrap-relevant visual properties are on `SourceGrid.Selection.SelectionBase`:
 
 ```text
-Grid.Selection.BackColor
-Grid.Selection.FocusBackColor
-Grid.Selection.Border
+BackColor
+FocusBackColor
+Border
 ```
 
-`GridVirtual.Selection` is publicly typed as `IGridSelection`, while these three
-visual properties are declared by `SourceGrid.Selection.SelectionBase`. The
-protected SourceGrid selection factory returns `SelectionBase` implementations,
-so integration code must access the visual properties through that concrete base
-contract rather than assuming they are members of `IGridSelection`.
+Changing `Grid.SelectionMode` recreates the selection object, so integration visual-ownership tracking must reset for the new instance.
 
-Changing `Grid.SelectionMode` recreates the SourceGrid selection object. Visual
-ownership tracking must therefore reset for the new selection instance so its
-fresh defaults are not mistaken for consumer overrides.
+Selection visual setters invalidate through their bound grid. During `CreateSelectionObject()`, an integration override that initializes visuals must respect SourceGrid binding order and must not leave duplicate decorators/bindings.
 
-`CreateSelectionObject()` returns before the `Selection` setter calls
-`BindToGrid(...)`. Selection visual setters invalidate through their bound grid,
-so an override that applies initial visuals inside the factory must temporarily
-bind the new selection and unbind it before returning. The normal SourceGrid
-setter then performs the authoritative bind without leaving a duplicate
-selection decorator.
+Consumer ownership rule: update a later theme value only when the current property still equals the value last applied by BootstrapSourceGrid.
 
-SourceGrid's default selection background uses a translucent highlight with alpha `75`.
+## 6. SourceGrid editor base lifecycle
 
-The integration can theme these properties without replacing the selection engine.
+### 6.1 EditorBase
 
-### Ownership rule
+Verified public concepts:
 
-For each selection visual property:
+```text
+EnableEdit
+EditableMode
+UseCellViewProperties   // default true
+```
 
-1. store the value last applied by BootstrapSourceGrid;
-2. on a later theme change, update it only if the current value still equals the last integration-applied value;
-3. if application code changed the value, treat that property as consumer-owned from then on.
+`SetCellValue(...)` runs the SourceGrid validation/conversion path before writing the final cell value. The adapter may return a string/raw/logical object; SourceGrid remains responsible for converting it to the editor/cell declared value type through its existing validator/type-converter behavior.
 
-Theme application must never call selection-state-changing methods simply to recolor selection.
+### 6.2 EditorControlBase eager control creation
 
-## 8. Editor seams
+`EditorControlBase` creates and stores its WinForms editor control from `CreateControl()` during editor construction, before any cell starts editing.
 
-Verified SourceGrid editor contract:
+Consequences:
 
-```csharp
-EditorBase.UseCellViewProperties // public, default true
-EditorControlBase.Control       // actual WinForms editor Control
+- a Bootstrap editor adapter also creates its composite Bootstrap control eagerly;
+- one adapter per cell can create thousands of controls/global theme subscriptions even if never edited;
+- Bootstrap adapters must therefore be shared/owned at grid scope rather than created automatically per cell.
+
+### 6.3 Attach/show/focus lifecycle
+
+On first edit, the control is attached through SourceGrid's linked-control mechanism. SourceGrid remains responsible for editor bounds, showing/bringing to front/focus, and hiding at edit end.
+
+`GetMinimumSize(...)` derives from the editor control's preferred size. Bootstrap editor plans must test preferred/minimum height without silently resizing SourceGrid rows.
+
+### 6.4 Start/value/cancel/commit seams
+
+Verified adapter seams include:
+
+```text
+OnStartingEdit(...)
+SafeSetEditValue(...)
+SetEditValue(...)
+GetEditedValue()
+OnSendCharToEditor(...)
+InternalEndEdit(...)
 CellContext.StartEdit()
 CellContext.EndEdit(bool cancel)
 ```
 
-### Built-in appearance propagation
+Commit flow uses `GetEditedValue()` then SourceGrid `SetCellValue(...)`. Cancel/reset uses the normal edit-value restore path rather than requiring an integration-side value snapshot system.
 
-`EditorControlBase.OnStartingEdit(...)` already copies from the cell View when `UseCellViewProperties == true`:
+### 6.5 View-property propagation
+
+`EditorControlBase.OnStartingEdit(...)` copies cell View `BackColor`, `ForeColor`, and `Font` into `Control` when `UseCellViewProperties == true`.
+
+Legacy MVP styling relies on this behavior. Bootstrap-native adapters must set `UseCellViewProperties = false` so the composite Bootstrap control retains its own theme/font/background/border semantics.
+
+`BootstrapSourceGridEditorStyler` must respect that opt-out and not restyle those adapters.
+
+### 6.6 Control.Validated auto-end-edit behavior
+
+`EditorControlBase` subscribes to `Control.Validated`. While an edit is active, validation/focus transitions can cause SourceGrid to call the edit context's `EndEdit(false)` path.
+
+This is a critical seam for composite controls and especially `BootstrapLookupBox`: popup/result/child focus transitions must not accidentally commit the SourceGrid cell. Solve integration event ordering at the adapter boundary rather than disabling SourceGrid validation globally.
+
+### 6.7 SourceGrid native TextBox compatibility reference
+
+The built-in SourceGrid text editor creates `DevAgeTextBox` with border removed and validator assigned. On edit start it aligns View-dependent settings, initializes the value, and selects text. Its first-character path replaces current text with the typed character and moves the caret to the end.
+
+`BootstrapTextBoxEditor` should preserve these observable edit-entry semantics while letting the Bootstrap control own visuals.
+
+## 7. SourceGrid editor Factory limitation
+
+`SourceGrid.Cells.Editors.Factory` is static/hardwired around built-in editor choices such as text, combo/standard-values, and UITypeEditor paths. No appropriate injection/registration seam was found for globally replacing built-in editors from this integration without changing SourceGrid.
+
+Therefore the Bootstrap editor initiative uses explicit adapters/registry creation and does not override/patch the global factory.
+
+## 8. BootstrapTextBox seams
+
+At the pinned Bootstrap baseline:
+
+- `BootstrapTextBox` is a composite `UserControl` implementing the framework connected-control contract;
+- it contains a native text editor exposed to subclasses through a protected `Editor` seam;
+- public behavior includes `Text`, `PlaceholderText`, validation state, icon/trailing-icon options, clear-button behavior, `ReadOnly`, password mode, `Clear()`, and `SelectAll()`;
+- entering the outer control focuses the inner editor;
+- editor events are forwarded through the Bootstrap control lifecycle;
+- it subscribes to `BootstrapThemeManager.ThemeChanged` and unsubscribes in disposal;
+- consumer Font assignment changes its theme-font ownership behavior.
+
+Adapter consequence: use a narrow internal subclass only for protected caret/selection operations needed by SourceGrid first-character behavior. Do not expose the inner native editor publicly and do not use reflection.
+
+## 9. BootstrapFormattedTextBox seams
+
+At the pinned baseline:
+
+- derives from `BootstrapTextBox`;
+- separates formatted/display `Text` from canonical `RawValue`;
+- exposes formatting modes including `None`, `General`, `Numeral`, `Date`, `Time`, `CreditCard`, and `Custom`;
+- supports formatter/options, raw-value change behavior, caret mapping, and internal undo/redo semantics.
+
+Adapter value contract:
 
 ```text
-BackColor
-ForeColor
-Font
+SetEditValue(cell logical value) -> RawValue
+GetEditedValue()                  -> RawValue
+SourceGrid                        -> final conversion/validation
 ```
 
-The default SourceGrid text editor uses a `DevAgeTextBox` with `BorderStyle.None` and remains SourceGrid-owned.
+Do not commit formatted `Text` or let `FormatMode` become a second declared cell type system.
 
-### Integration consequence
+## 10. BootstrapLookupBox seams
 
-MVP does not need Bootstrap-specific replacement editor classes.
-
-The only extra bridge planned is:
+At the pinned baseline, the lookup model includes:
 
 ```text
-runtime theme changes while an editor is already active
+DataSource
+DisplayMember
+ValueMember
+Columns
+SearchMembers
+ResultsGrid
+SelectedItem
+SelectedValue
+CommittedDisplayText
+HasPendingText
+HighlightedItem
+MinimumSearchLength
+DropDown sizing/behavior
+unmatched-text policy
+Enter behavior
+validation/events
 ```
 
-For that case, update the active `EditorControlBase.Control` from the current cell View only when `UseCellViewProperties == true`.
+Useful selection/edit APIs include `SelectItem`, `SelectValue`, `ClearSelection`, and `CancelPendingEdit`.
 
-If a consumer sets `UseCellViewProperties = false`, the integration must not restyle that editor control.
-
-## 9. Scrollbar seam
-
-SourceGrid's `CustomScrollControl` owns its horizontal/vertical native scrollbar instances and scrolling layout.
-
-MVP leaves this subsystem unchanged. Replacing scrollbars would expand the integration into wheel input, thumb tracking, PageUp/PageDown, focus, Win32 message handling, accessibility, layout, and DPI behavior.
-
-## 10. Upgrade re-verification checklist
-
-Whenever either vendor baseline changes, verify all of the following before accepting the update:
+Adapter value contract:
 
 ```text
-[ ] BootstrapThemeManager CurrentTheme/ThemeChanged contracts
-[ ] Bootstrap theme token names/semantics
-[ ] DpiScaler behavior
-[ ] framework theme-font ownership reference pattern
-[ ] SourceGrid Grid/GridVirtual inheritance
-[ ] Grid.GetCell remains virtual
-[ ] indexer/InsertCell behavior and whether interception assumptions changed
+configuration first
+SetEditValue(cell logical value) -> SelectedValue
+GetEditedValue()                  -> SelectedValue
+```
+
+Display text is not the logical cell value when `ValueMember` is configured.
+
+### Lookup dropdown controller behavior
+
+The pinned dropdown controller already owns popup/overlay tracking, focus-domain handling, result-grid navigation, message-filter installation/removal, anchor tracking, application/window deactivation handling, theme updates, result mouse commit, Escape cancellation, and disposal.
+
+It deliberately restores/keeps focus on the lookup editor in several popup/result-grid paths. This makes the control a good candidate for a thin adapter, but SourceGrid's outer `Control.Validated` subscription still requires an explicit interaction test matrix.
+
+Do not fork or duplicate the popup controller in this repository unless a standalone BootstrapLookupBox test proves a vendor defect independent of SourceGrid.
+
+## 11. Bootstrap editor lifetime/ownership seam
+
+One SourceGrid `EditorControlBase` can be assigned to multiple cells in the same grid because only one edit for that editor is active at a time. An editor/control that has attached to one grid must not be treated as safely shareable with another grid.
+
+Approved integration model:
+
+```text
+BootstrapSourceGrid
+    -> grid-owned editor registry
+        -> small set of shared adapters
+            -> eager Bootstrap control instances
+```
+
+The registry/grid must dispose adapters/controls that were created but never attached, because SourceGrid cannot own a control it never received through its linked-control path.
+
+## 12. Scrollbar seam
+
+`SourceGrid.CustomScrollControl` owns horizontal/vertical native scrollbars and scrolling layout. Current work leaves this subsystem unchanged.
+
+## 13. Upgrade re-verification checklist
+
+When either vendor baseline changes, re-check at least:
+
+```text
+[ ] Bootstrap ThemeManager/theme tokens/DpiScaler/theme-font lifecycle
+[ ] SourceGrid Grid/GridVirtual inheritance and GetCell interception assumptions
 [ ] default Cell/Header/ColumnHeader/RowHeader View identities
-[ ] ViewBase style properties/shareability
-[ ] header visual-element contracts
-[ ] Selection visual properties/decorator behavior
-[ ] Grid.Selection interface type and SelectionBase visual-property contract
-[ ] EditorBase.UseCellViewProperties behavior
-[ ] EditorControlBase appearance propagation
+[ ] ViewBase styling/shareability and header visual elements
+[ ] selection interface/SelectionBase behavior
+[ ] EditorBase UseCellViewProperties default and conversion path
+[ ] EditorControlBase eager CreateControl behavior
+[ ] attach/show/focus/hide lifecycle
+[ ] Validated -> EndEdit behavior
+[ ] first-character/text editor semantics
+[ ] editor Factory extensibility
+[ ] BootstrapTextBox protected/public seams and theme disposal
+[ ] BootstrapFormattedTextBox RawValue/format/caret behavior
+[ ] BootstrapLookupBox SelectedValue/popup/focus/deactivation behavior
 [ ] CustomScrollControl ownership
 ```
 
-If a seam changes, update this document, affected plans/tests, and `UPSTREAM.md` in the same vendor-upgrade change.
+Update this document and affected plans/tests in the same vendor-upgrade change.

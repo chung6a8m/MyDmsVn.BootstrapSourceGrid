@@ -175,3 +175,48 @@ Public publication of `MyDmsVn.BootstrapSourceGrid` is blocked until both vendor
 Do not publish a package that depends on unresolved project references, and do not silently embed/copy vendor assemblies or source into `MyDmsVn.BootstrapSourceGrid.nupkg` to bypass dependency resolution.
 
 When switching to package references for release validation, do not reference project and package copies of the same vendor assembly simultaneously.
+
+## D-018 — Post-MVP Bootstrap editors use adapters; SourceGrid remains the editor engine
+
+**Decision:** The completed MVP restriction in D-009 is satisfied. Post-MVP work may now add Bootstrap-native editor adapters, but it must not replace SourceGrid's editor architecture.
+
+Required model:
+
+```text
+SourceGrid edit lifecycle
+        -> thin integration adapter
+        -> Bootstrap5WinFormUI control
+```
+
+SourceGrid remains authoritative for edit start/end, commit/cancel, editor placement, final validation/type conversion, and grid navigation. Bootstrap controls remain authoritative for their visual/theme and control-specific interaction behavior.
+
+**Rationale:** This extends visual integration into native Bootstrap input controls while keeping SourceGrid's mature behavioral model intact.
+
+## D-019 — Bootstrap editor lifetime is grid-owned and shared, not per-cell
+
+**Decision:** Bootstrap editor adapters created by this integration are owned by one `BootstrapSourceGrid` instance and are normally shared by many cells in that grid, typically one adapter per column/configuration.
+
+Rules:
+
+- no default one-editor-per-cell allocation;
+- no adapter instance shared across grid instances;
+- the grid-owned registry disposes all adapters/controls it creates, including never-started editors;
+- consumer-created/custom SourceGrid editors remain outside registry ownership unless explicitly registered by a future approved API.
+
+**Rationale:** SourceGrid `EditorControlBase` eagerly creates its WinForms control. Bootstrap inputs are composite controls and may subscribe to global theme events, so per-cell construction is an avoidable memory/event-lifetime risk.
+
+## D-020 — Bootstrap editor logical values remain distinct from presentation
+
+**Decision:** Initial Bootstrap editor adapters use these logical value bridges:
+
+```text
+BootstrapTextBox          -> Text
+BootstrapFormattedTextBox -> RawValue
+BootstrapLookupBox        -> SelectedValue
+```
+
+After the adapter returns the logical value, SourceGrid performs final validation and conversion to the declared cell value type.
+
+`BootstrapFormattedTextBox.Text` is presentation, not the committed raw value. `BootstrapLookupBox` display text is presentation, not the committed lookup value when `ValueMember` is configured.
+
+**Rationale:** This prevents the integration from creating a second type/validation system and preserves SourceGrid's value semantics while using richer Bootstrap controls.

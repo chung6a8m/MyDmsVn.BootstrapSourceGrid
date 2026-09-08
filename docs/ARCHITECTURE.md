@@ -1,25 +1,53 @@
 # Architecture
 
-## 1. Overview
+## 1. System boundary
 
-`MyDmsVn.BootstrapSourceGrid` is an integration layer, not a new grid engine. The core control derives from `SourceGrid.Grid` and maps Bootstrap5WinFormUI theme semantics into SourceGrid's visual extension points.
+`MyDmsVn.BootstrapSourceGrid` is an integration layer between two independent vendors:
 
 ```text
 Application
     |
     v
-BootstrapSourceGrid
-    |
-    +------------------------------+
-    |                              |
-    v                              v
-Bootstrap5WinFormUI                SourceGrid
-Theme/Rendering/DPI                Grid/Cells/Views/Editors/Selection
+BootstrapSourceGrid : SourceGrid.Grid
+    +--> Bootstrap5WinFormUI  (theme/control semantics)
+    `--> SourceGrid           (grid/edit behavior)
 ```
 
-## 2. Inheritance model
+It is not a new grid engine, a SourceGrid fork, or a wrapper that re-exposes SourceGrid APIs.
 
-The intended inheritance chain is:
+Pinned-vendor implementation facts belong in `UPSTREAM_API_SEAMS.md`; active editor-specific design belongs in `EDITOR_REPLACEMENT.md`.
+
+## 2. Stable ownership
+
+### SourceGrid owns
+
+- concrete/virtual grid model;
+- cells, rows, columns, ranges, positions, spans;
+- selection and active position;
+- controllers and keyboard/mouse navigation;
+- editor lifecycle, placement, final validation/conversion;
+- scrolling;
+- painting orchestration and View contracts.
+
+### Bootstrap5WinFormUI owns
+
+- current theme and runtime theme notifications;
+- semantic colors, metrics, typography;
+- DPI helpers;
+- visual and interactive behavior of Bootstrap controls.
+
+### BootstrapSourceGrid owns
+
+- translating Bootstrap theme tokens into SourceGrid visual state;
+- integration-owned Views/styles;
+- BootstrapSourceGrid font/resource lifecycle;
+- narrow editor adapters between SourceGrid and Bootstrap controls;
+- grid-owned Bootstrap editor lifetime;
+- tests, demo, docs, and package metadata.
+
+Neither vendor may gain a dependency on this integration or on the other vendor because of it.
+
+## 3. Inheritance and public model
 
 ```text
 System.Windows.Forms.Panel
@@ -29,277 +57,162 @@ System.Windows.Forms.Panel
     -> MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid
 ```
 
-This preserves the complete concrete SourceGrid API. The integration should avoid introducing a container control around `SourceGrid.Grid` because that would require forwarding a large API surface and would complicate event/focus/designer behavior.
+Direct inheritance preserves SourceGrid's concrete API. Do not add `BootstrapRow`, `BootstrapColumn`, `BootstrapCell`, or similar wrappers merely for naming consistency.
 
-## 3. Ownership boundaries
+## 4. Theme translation
 
-### 3.1 SourceGrid owns behavior
-
-SourceGrid remains authoritative for:
-
-- concrete cell storage and `GridVirtual` foundation;
-- row/column collections;
-- positions, ranges, spans;
-- selection and active position;
-- keyboard and mouse behavior;
-- controllers and event dispatch;
-- editor lifecycle;
-- scrolling and scrollbar ownership;
-- painting orchestration;
-- Model/View/Editor/Controller cell composition.
-
-BootstrapSourceGrid must not duplicate or replace these subsystems in MVP.
-
-### 3.2 Bootstrap5WinFormUI owns design semantics
-
-Bootstrap5WinFormUI remains authoritative for:
-
-- current theme selection;
-- semantic colors;
-- theme metrics;
-- typography tokens;
-- DPI scaling helpers;
-- Bootstrap visual conventions;
-- runtime `ThemeChanged` notifications.
-
-The integration consumes these APIs. It does not introduce an independent theme service.
-
-### 3.3 BootstrapSourceGrid owns translation
-
-The integration owns:
-
-- converting Bootstrap theme tokens into SourceGrid visual state;
-- applying default SourceGrid Views/styles to integration-created/default cells and headers;
-- keeping those defaults synchronized when the theme changes;
-- respecting consumer overrides;
-- Bootstrap-owned font lifecycle;
-- integration-specific tests, demo, docs, and package metadata.
-
-## 4. Proposed project topology
-
-```text
-MyDmsVn.BootstrapSourceGrid.sln
-|
-+-- src/
-|   `-- MyDmsVn.BootstrapSourceGrid/
-|       +-- MyDmsVn.BootstrapSourceGrid.csproj
-|       +-- Controls/
-|       |   `-- BootstrapSourceGrid.cs
-|       +-- Theming/
-|       |   +-- BootstrapSourceGridThemeAdapter.cs
-|       |   +-- BootstrapSourceGridThemeSnapshot.cs
-|       |   `-- BootstrapSourceGridThemeFont.cs
-|       +-- Views/
-|       |   +-- BootstrapSourceGridCellView.cs
-|       |   +-- BootstrapSourceGridHeaderView.cs
-|       |   +-- BootstrapSourceGridColumnHeaderView.cs
-|       |   `-- BootstrapSourceGridRowHeaderView.cs
-|       +-- Editors/
-|       |   `-- BootstrapSourceGridEditorStyler.cs
-|       `-- Internal/
-|           +-- BootstrapSourceGridHeaderStyle.cs
-|           +-- BootstrapSourceGridStyleApplicator.cs
-|           `-- BootstrapSourceGridDpiMetrics.cs
-|
-+-- tests/
-|   `-- MyDmsVn.BootstrapSourceGrid.Tests/
-|
-+-- samples/
-|   `-- MyDmsVn.BootstrapSourceGrid.Demo/
-|
-+-- vendor/
-|   +-- Bootstrap5WinFormUI/  (git submodule)
-|   `-- sourcegrid/           (git submodule)
-|
-`-- docs/
-```
-
-Names are implementation targets for the plans. If exact upstream type contracts prove a proposed helper unnecessary, remove the helper rather than creating an empty abstraction.
-
-## 5. Theme translation model
-
-The adapter should read one coherent snapshot from the current Bootstrap theme:
-
-```text
-BootstrapTheme
-    |
-    +-- Colors
-    |   +-- Surface
-    |   +-- SurfaceSecondary
-    |   +-- Text
-    |   +-- MutedText
-    |   +-- Border
-    |   `-- Primary
-    |
-    +-- Typography.Body
-    `-- Metrics
-```
-
-and expose integration-ready values without leaking mutable theme reads throughout cell painting.
-
-Conceptually:
-
-```csharp
-internal sealed class BootstrapSourceGridThemeSnapshot
-{
-    public Color CellBackColor { get; }
-    public Color AlternateCellBackColor { get; }
-    public Color CellForeColor { get; }
-    public Color HeaderBackColor { get; }
-    public Color HeaderForeColor { get; }
-    public Color BorderColor { get; }
-    public Color SelectionBackColor { get; }
-    public Color SelectionForeColor { get; }
-    public BootstrapFontToken BodyFont { get; }
-}
-```
-
-The exact selection text color should use the same contrast logic already present in Bootstrap5WinFormUI where possible rather than duplicating color heuristics.
-
-## 6. View strategy
-
-SourceGrid separates View from Model, Editor, and Controller. Therefore the preferred integration point is SourceGrid Views/VisualModels.
-
-Rules:
-
-1. Reuse SourceGrid view classes through inheritance/composition when their API supports it.
-2. Keep view instances shareable where SourceGrid allows safe sharing.
-3. Do not store cell-specific mutable state in globally shared Views.
-4. Consumer-assigned Views are authoritative and must not be overwritten during theme refresh unless they are integration-owned.
-5. Theme updates mutate/replace only integration-owned visual objects and then invalidate the grid.
-
-## 7. Default style application
-
-`BootstrapSourceGrid` should establish integration defaults during construction without requiring application bootstrap.
+The integration captures a coherent Bootstrap theme snapshot and maps semantic tokens into integration-owned SourceGrid visual objects.
 
 Conceptual flow:
 
 ```text
-constructor
-  -> capture current theme
-  -> create integration-owned Views/styles
-  -> apply Bootstrap font if consumer has not overridden Font
-  -> subscribe ThemeChanged
-  -> establish accessibility defaults
+BootstrapThemeManager.CurrentTheme
+        -> BootstrapSourceGridThemeAdapter
+        -> integration-owned cell/header Views
+        -> selection visual state
+        -> BootstrapSourceGrid-owned font/metrics
 ```
 
-When cells/headers are created or when the grid is redimensioned, integration defaults must be applied only where doing so does not erase explicit consumer customization.
+Rules:
 
-Because SourceGrid allows consumers to assign Views directly, the implementation must define ownership detection clearly. The recommended rule is identity-based: only Views created and tracked by this integration are automatically replaced/refreshed.
+- use semantic tokens rather than hard-coded Bootstrap colors;
+- preserve consumer-assigned Views and Fonts;
+- scale only integration-owned metrics through `DpiScaler`;
+- do not rebuild grid data on theme changes;
+- unsubscribe theme events and dispose integration-owned resources deterministically.
 
-## 8. Runtime theme update flow
+## 5. SourceGrid View integration
+
+SourceGrid's Model/View/Editor/Controller separation makes Views the primary visual integration seam.
+
+The implementation may replace only known SourceGrid default View singleton identities with shared BootstrapSourceGrid Views. Unknown/custom consumer View instances remain authoritative.
+
+Shared Views must not store mutable cell-specific state. Alternating-row decisions may use the current `CellContext.Position` at draw/measure time rather than allocating one View per row.
+
+Do not replace the complete SourceGrid paint engine when a View/VisualModel seam is sufficient.
+
+Exact default identities, header visual-element seams, and the `GetCell(...)` interception constraint are documented in `UPSTREAM_API_SEAMS.md`.
+
+## 6. Selection
+
+SourceGrid continues to own selected ranges and active position. BootstrapSourceGrid changes only integration-owned selection visual properties.
+
+Theme refresh must never clear/recreate selection merely to recolor it. If application code changes a selection visual property after the integration applied it, that property becomes consumer-owned and later theme changes must preserve it.
+
+## 7. Font and DPI ownership
+
+BootstrapSourceGrid starts in theme-font mode using Bootstrap body typography. If application code assigns `Font`, that grid instance enters consumer-font mode; the integration no longer replaces or disposes that font.
+
+Only integration-owned metrics are DPI-scaled. SourceGrid/application row heights, column widths, scrollbar dimensions, and other externally owned sizes are not silently rescaled.
+
+## 8. Editor architecture
+
+The completed MVP used SourceGrid's native editors plus `BootstrapSourceGridEditorStyler` for safe appearance alignment.
+
+Post-MVP Bootstrap-native editors extend, rather than replace, that architecture:
 
 ```text
-BootstrapThemeManager.ThemeChanged
+SourceGrid EditorControlBase lifecycle
         |
         v
-BootstrapSourceGrid.OnThemeChanged
+Bootstrap adapter
         |
-        +--> capture new ThemeSnapshot
-        +--> update/recreate integration-owned Views
-        +--> update Bootstrap-owned Font if still in theme-font mode
-        +--> update editor style bridge state
-        +--> recalculate Bootstrap-owned DPI metrics if needed
-        `--> Invalidate / Refresh layout only as required
+        v
+Bootstrap5WinFormUI control
 ```
 
-Must not:
+### SourceGrid remains authoritative for
 
-- recreate the grid;
-- clear cells;
-- reset selection;
-- change editing/navigation semantics;
-- reset consumer-assigned Views or Fonts.
+- edit start/end;
+- commit/cancel;
+- editor placement/show/hide;
+- final validation/type conversion;
+- grid navigation.
 
-## 9. Font lifecycle
+### Bootstrap editor control remains authoritative for
 
-Bootstrap5WinFormUI's existing controls provide the pattern:
+- theme/font/background/border/focus visuals;
+- control-specific interaction such as formatting or lookup popup/search.
 
-- control begins in theme-font mode;
-- it creates a font from `Typography.Body` and owns that instance;
-- theme changes may replace the owned font;
-- if consumer code assigns `Font`, the control exits theme-font mode;
-- consumer-owned fonts are never disposed by the control;
-- owned font is disposed in `Dispose(bool)`.
+### Integration adapter owns
 
-BootstrapSourceGrid should follow the same model.
+- value transfer into/out of the Bootstrap control;
+- first-character/caret adaptation where required;
+- event-ordering glue when SourceGrid lifecycle and Bootstrap child/popup focus interact;
+- owner-grid enforcement.
 
-## 10. DPI model
+Bootstrap adapters default `UseCellViewProperties = false`; the legacy editor styler must not push SourceGrid cell View properties into them.
 
-SourceGrid owns its own layout/scaling behavior. BootstrapSourceGrid should scale only metrics introduced by the integration.
+Canonical editor design: `EDITOR_REPLACEMENT.md`.
 
-Examples of Bootstrap-owned metrics:
+## 9. Bootstrap editor lifetime
 
-- additional padding used by integration Views;
-- focus/selection visual thickness if newly introduced;
-- editor border/padding adjustments introduced by the integration.
+SourceGrid `EditorControlBase` eagerly creates its WinForms control. Composite Bootstrap inputs can also own child controls and global theme subscriptions.
 
-Use `DpiScaler` with `DeviceDpi` when available. Avoid double-scaling SourceGrid-owned dimensions such as row heights or column widths unless SourceGrid explicitly delegates those values to the View.
-
-## 11. Editor integration
-
-MVP editor strategy is conservative.
+Therefore the default lifetime model is:
 
 ```text
-SourceGrid Editor lifecycle remains unchanged
-            |
-            v
-BootstrapSourceGridEditorStyler
-   applies safe appearance alignment only
+BootstrapSourceGrid
+    -> BootstrapSourceGridEditorRegistry
+        -> small set of shared editor adapters
+            -> one Bootstrap control per adapter
 ```
 
-The styler may set properties on editor controls when SourceGrid exposes them safely, for example font, foreground/background, selection color, or border-related properties. It must not replace commit/cancel/navigation behavior.
+Normally create one adapter per grid/column/configuration and assign that same editor to many cells.
 
-Any editor type that cannot be styled without behavioral risk remains native for MVP and is documented as such.
+Never:
 
-## 12. Selection and focus
+- create a Bootstrap editor automatically for every cell;
+- share one adapter across multiple grid instances;
+- patch SourceGrid's static editor factory to make replacement global.
 
-Selection behavior remains SourceGrid-owned. The integration changes only visual representation.
+The registry/grid disposes every adapter/control it creates, including editors never used to start an edit.
 
-Requirements:
+## 10. Initial Bootstrap editor value bridges
 
-- selected cells remain distinguishable in light and dark themes;
-- focused/active position remains discoverable;
-- selection foreground has adequate contrast;
-- keyboard navigation tests prove styling did not change active-position semantics;
-- theme changes while selection exists preserve selected ranges and active position.
+```text
+BootstrapTextBox          -> Text
+BootstrapFormattedTextBox -> RawValue
+BootstrapLookupBox        -> SelectedValue
+```
+
+These are edit-layer logical values only. SourceGrid remains responsible for converting/validating them into the declared cell type.
+
+Formatted display text and lookup display text are presentation, not substitutes for the logical value.
+
+## 11. Lookup focus/popup boundary
+
+`BootstrapLookupBox` is the highest-risk initial adapter because its popup/result focus behavior intersects SourceGrid's `Control.Validated` end-edit path.
+
+The integration must solve that at the adapter boundary and explicitly test event order. It must not globally disable SourceGrid validation/focus semantics or fork the lookup popup controller without a separately proven vendor bug.
+
+Required interaction coverage is listed in `EDITOR_REPLACEMENT.md` and the active lookup stage plan.
+
+## 12. Sizing
+
+SourceGrid places editor controls inside cell bounds; Bootstrap inputs have theme-driven preferred/minimum heights.
+
+The integration does not silently change SourceGrid row heights to fit Bootstrap editors. Preferred-size behavior is tested, while consumer/application row sizes remain authoritative.
 
 ## 13. Scrollbars
 
-SourceGrid's `CustomScrollControl` owns horizontal/vertical scrollbars and layout. MVP leaves this system intact.
+SourceGrid's `CustomScrollControl` continues to own native scrollbar layout and behavior. Scrollbar replacement is outside the current editor initiative and requires separate architecture approval.
 
-The integration may align surrounding grid surface/background so native scrollbars do not appear visually broken, but it must not replace scrollbar classes or scrolling mechanics.
+## 14. Designer and lifecycle
 
-## 14. Designer lifecycle
+Control/editor construction must be safe when no handle exists and no application theme initialization has run.
 
-Constructor and property getters/setters must be safe when:
+Every global event subscription and owned WinForms/GDI resource must have a deterministic disposal path. Automated GUI tests must be STA, bounded, and non-modal.
 
-- no application theme initialization has run;
-- no handle exists;
-- `Site?.DesignMode` behavior is inconsistent during nested construction;
-- the Designer serializes public properties;
-- the control is repeatedly created/disposed by the designer host.
+## 15. Performance principles
 
-Avoid runtime-only services in constructors.
+- no grid-data rebuild on theme changes;
+- no default per-cell composite editor controls;
+- prefer shared Views/adapters where SourceGrid safely supports sharing;
+- avoid hot-paint allocations;
+- test lifetime/object-count invariants rather than brittle wall-clock thresholds;
+- measure before introducing complex caching.
 
-## 15. Error handling
+## 16. Packaging boundary
 
-Theme adaptation should fail only for genuine programming/configuration errors. Normal control construction must not throw because optional runtime state is unavailable.
-
-Vendor/API mismatch should be caught at compile time by project references and tests rather than through reflection-based late binding.
-
-Do not swallow SourceGrid exceptions or replace its error semantics with Bootstrap-specific exceptions unless a future requirement explicitly introduces such behavior.
-
-## 16. Performance principles
-
-- No grid-data rebuild on theme changes.
-- No full collection walk on every paint if the same result can be applied once per theme change.
-- Prefer shared views/styles over one new GDI-heavy object per cell when safe.
-- Avoid allocating `Font`, `Pen`, `Brush`, or helper objects in hot cell painting paths.
-- Measure before introducing caching that complicates ownership/lifecycle.
-
-## 17. Packaging boundary
-
-The integration ships as its own assembly/package. It does not merge vendor binaries or source into one assembly.
-
-During development the vendor projects are referenced from pinned submodules. Release packaging must ensure package dependency strategy is explicit and reproducible; if package references replace project references, both TFMs and API compatibility must be revalidated first.
+The integration remains its own assembly/package and does not merge vendor source/binaries into one assembly. Development uses pinned vendor project references; public package release remains gated by the exact verified vendor-package strategy in `DECISIONS.md` and `RELEASE.md`.

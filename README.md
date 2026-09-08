@@ -1,41 +1,46 @@
 # MyDmsVn.BootstrapSourceGrid
 
-`MyDmsVn.BootstrapSourceGrid` is a Bootstrap-themed SourceGrid control for native Windows Forms applications. It derives directly from `SourceGrid.Grid`, so existing SourceGrid cells, views, editors, selection, spans, keyboard behavior, and scrolling remain available while default visuals follow `MyDmsVn.Bootstrap5WinFormUI` themes.
+Bootstrap-themed SourceGrid control for native Windows Forms.
+
+`BootstrapSourceGrid` derives directly from `SourceGrid.Grid`, preserving SourceGrid cells, views, editors, selection, spans, navigation, and scrolling while applying `MyDmsVn.Bootstrap5WinFormUI` theme, typography, and DPI semantics to the integration-owned visual layer.
 
 ## Status
 
-The source-distributed MVP is implemented and validated on both supported TFMs. Public NuGet publication is currently blocked by D-017 because exact vendor packages and complete license/source-equivalence evidence are not yet available. The supported consumption model today is source checkout with the pinned vendor submodules and `ProjectReference`; do not use `dotnet add package MyDmsVn.BootstrapSourceGrid` until the release gate is documented as complete.
+The source-distributed MVP is implemented and validated for:
 
-## Platform and dependencies
-
-- Windows Forms on `net48` and `net8.0-windows`.
-- `MyDmsVn.Bootstrap5WinFormUI` for theme, typography, color, and DPI semantics.
-- SourceGrid 5.0 for the grid engine.
-- MIT license for this integration; see [LICENSE](LICENSE).
-
-Development builds use pinned vendor submodules and `ProjectReference`:
-
-- `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@95077df0c8bad8593143c2190606d2f444bfc653`
-- `chung6a8m/sourcegrid@f4e457b43582bf01892f50bdc74aa480531e5944`
-
-Public NuGet publication is intentionally blocked until exact, resolvable vendor packages are verified against these source baselines, including both TFMs and license/notice obligations. See [release process](docs/RELEASE.md) and [upstream policy](docs/UPSTREAM.md).
-
-## Consume from source today
-
-Add this repository to your application's source tree and initialize its nested vendor submodules:
-
-```powershell
-git submodule add https://github.com/chung6a8m/MyDmsVn.BootstrapSourceGrid.git vendor/MyDmsVn.BootstrapSourceGrid
-git submodule update --init --recursive
-dotnet sln add vendor/MyDmsVn.BootstrapSourceGrid/src/MyDmsVn.BootstrapSourceGrid/MyDmsVn.BootstrapSourceGrid.csproj
-dotnet add path/to/Your.WinFormsApp.csproj reference vendor/MyDmsVn.BootstrapSourceGrid/src/MyDmsVn.BootstrapSourceGrid/MyDmsVn.BootstrapSourceGrid.csproj
+```text
+net48;net8.0-windows
 ```
 
-The integration project resolves its pinned Bootstrap5WinFormUI and SourceGrid projects from its own `vendor/` submodules. Commit the parent repository's integration-submodule pointer so every consumer build uses the reviewed integration revision. If you prefer a standalone clone instead, run `git submodule update --init --recursive` in that clone and reference the same product `.csproj` by its relative or absolute path.
+Public NuGet publication remains blocked by the vendor package/source-equivalence gate documented in [`docs/RELEASE.md`](./docs/RELEASE.md). Current supported consumption is source checkout with pinned vendor submodules and `ProjectReference`.
+
+The active post-MVP initiative is Bootstrap-native SourceGrid editor integration for:
+
+- `BootstrapTextBox`
+- `BootstrapFormattedTextBox`
+- `BootstrapLookupBox`
+
+This initiative preserves SourceGrid's edit lifecycle and uses grid-owned shared adapters rather than one composite Bootstrap control per cell. See [`docs/EDITOR_REPLACEMENT.md`](./docs/EDITOR_REPLACEMENT.md) and the active roadmap under [`docs/plans/`](./docs/plans/).
+
+For historical context, see [Archive](./docs/archive/).
+
+## Fixed baselines
+
+- Bootstrap framework: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@95077df0c8bad8593143c2190606d2f444bfc653`
+- SourceGrid: `chung6a8m/sourcegrid@f4e457b43582bf01892f50bdc74aa480531e5944`
+- Integration license: MIT
+
+Dependency direction remains:
+
+```text
+MyDmsVn.BootstrapSourceGrid
+    +--> MyDmsVn.Bootstrap5WinFormUI
+    `--> SourceGrid
+```
+
+Neither vendor depends on this integration or on the other vendor because of it.
 
 ## Quick start
-
-Reference the integration and its approved vendor dependencies, then use normal SourceGrid APIs:
 
 ```csharp
 using MyDmsVn.Bootstrap5WinFormUI.Controls;
@@ -51,11 +56,10 @@ grid[0, 0] = new SourceGrid.Cells.Header();
 grid[0, 1] = new SourceGrid.Cells.ColumnHeader("Name");
 grid[1, 0] = new SourceGrid.Cells.RowHeader(1);
 grid[1, 1] = new SourceGrid.Cells.Cell("Northwind", typeof(string));
-grid.Selection.EnableMultiSelection = true;
 Controls.Add(grid);
 ```
 
-Switch themes at runtime without recreating the grid or its data:
+Runtime theme changes use the framework theme manager and do not require rebuilding grid data:
 
 ```csharp
 using MyDmsVn.Bootstrap5WinFormUI.Theme;
@@ -64,27 +68,7 @@ BootstrapThemeManager.CurrentTheme =
     BootstrapTheme.CreateDefault(BootstrapThemeMode.Dark);
 ```
 
-Only exact SourceGrid default View singletons are substituted automatically. A consumer View remains authoritative across theme changes:
-
-```csharp
-var customView = new SourceGrid.Cells.Views.Cell
-{
-    BackColor = Color.LemonChiffon,
-    ForeColor = Color.DarkSlateBlue,
-};
-
-grid[1, 1].View = customView;
-```
-
-The control initially owns a font created from the Bootstrap body typography token. Assigning `grid.Font` opts that grid instance into consumer-font mode; later theme changes keep the exact assigned Font, and the application remains responsible for disposing it after the grid is disposed.
-
-## Demo
-
-The [demo application](samples/MyDmsVn.BootstrapSourceGrid.Demo) includes light/dark switching, reset, theme/DPI diagnostics, editable text/numeric/date/bool/enum cells, a read-only cell, sortable headers, a span, multi-selection, a custom View opt-out, a consumer Font opt-out, keyboard instructions, and enough data to scroll.
-
-```powershell
-dotnet run --project samples/MyDmsVn.BootstrapSourceGrid.Demo/MyDmsVn.BootstrapSourceGrid.Demo.csproj -f net8.0-windows
-```
+Consumer-assigned SourceGrid Views remain authoritative. Consumer-assigned `grid.Font` also opts that grid instance out of integration-owned theme-font replacement.
 
 ## Build from source
 
@@ -97,18 +81,36 @@ dotnet build MyDmsVn.BootstrapSourceGrid.sln -c Release
 dotnet test tests/MyDmsVn.BootstrapSourceGrid.Tests/MyDmsVn.BootstrapSourceGrid.Tests.csproj -c Release --no-build --blame-hang --blame-hang-timeout 5m
 ```
 
+GitHub Actions is temporarily disabled for this repository as of 2026-09-09; local validation is the required automated gate until Actions is restored.
+
+## Demo
+
+```powershell
+dotnet run --project samples/MyDmsVn.BootstrapSourceGrid.Demo/MyDmsVn.BootstrapSourceGrid.Demo.csproj -f net8.0-windows
+```
+
+The current demo covers the completed MVP. The active editor roadmap will extend it with shared Bootstrap text, formatted, and lookup editor scenarios after those stages are implemented.
+
 ## Documentation
 
-- [Package overview](docs/PACKAGE_README.md)
-- [Known MVP limitations](docs/KNOWN_LIMITATIONS.md)
-- [Release process](docs/RELEASE.md)
-- [Product requirements](docs/PRD.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Compatibility contract](docs/COMPATIBILITY.md)
-- [Testing strategy](docs/TESTING.md)
-- [Pinned upstream dependencies](docs/UPSTREAM.md)
-- [Architectural decisions](docs/DECISIONS.md)
+Start here for active work:
 
-## Design boundaries
+1. [`AGENTS.md`](./AGENTS.md) — mandatory operating rules.
+2. [`AI_CONTEXT.md`](./AI_CONTEXT.md) — compact project model.
+3. [`docs/EDITOR_REPLACEMENT.md`](./docs/EDITOR_REPLACEMENT.md) — active editor architecture.
+4. [`docs/DEVELOPMENT_PLAN.md`](./docs/DEVELOPMENT_PLAN.md) — active stage map.
+5. [`docs/plans/`](./docs/plans/) — active task plans only.
 
-`BootstrapSourceGrid` is an integration layer, not a new grid engine. It does not wrap SourceGrid rows, columns, cells, ranges, or selection; it does not replace SourceGrid's editor architecture or native scrollbar subsystem; and neither vendor depends on this integration or on the other vendor because of it.
+Canonical reference documents:
+
+- [`docs/DECISIONS.md`](./docs/DECISIONS.md)
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
+- [`docs/UPSTREAM_API_SEAMS.md`](./docs/UPSTREAM_API_SEAMS.md)
+- [`docs/UPSTREAM.md`](./docs/UPSTREAM.md)
+- [`docs/COMPATIBILITY.md`](./docs/COMPATIBILITY.md)
+- [`docs/TESTING.md`](./docs/TESTING.md)
+- [`docs/RELEASE.md`](./docs/RELEASE.md)
+
+## Design boundary
+
+This repository is an integration layer, not a new grid engine. SourceGrid remains authoritative for grid behavior. Bootstrap5WinFormUI remains authoritative for Bootstrap visual/control semantics. New integration code should be a narrow translation/adapter layer between those two established systems.

@@ -1,183 +1,53 @@
 # Development plan
 
-## 1. Strategy
+`docs/plans/` contains active implementation plans only.
 
-Implementation is split into small stages so each review can reject or accept an independently testable integration boundary. Do not collapse all stages into one large PR unless explicitly requested.
+The initial BootstrapSourceGrid MVP roadmap is complete and archived. For historical context, see [Archive](./archive/).
 
-Detailed task plans live under `docs/plans/`.
+## Active initiative — Bootstrap editor replacement
 
-## 2. Stage 0 — Repository foundation and pinned vendors
+Goal: add Bootstrap-native SourceGrid editor adapters without replacing SourceGrid's editor lifecycle.
 
-**Outcome:** reproducible dual-target solution with pinned vendor source, empty control/test/demo projects, and safe WinForms test harness.
+Canonical design: [`EDITOR_REPLACEMENT.md`](./EDITOR_REPLACEMENT.md)
 
-Deliverables:
+Master roadmap: [`plans/20260909-001-bootstrap-editor-replacement-master-roadmap.md`](./plans/20260909-001-bootstrap-editor-replacement-master-roadmap.md)
 
-- solution/project structure;
-- Git submodules pinned to approved commits;
-- product project targeting `net48;net8.0-windows`;
-- test project targeting both TFMs;
-- demo project;
-- project references to both vendors;
-- baseline build/test commands;
-- unattended WinForms test safeguards.
+Stages:
 
-Gate:
+1. [`20260909-002-editor-replacement-architecture-and-ownership.md`](./plans/20260909-002-editor-replacement-architecture-and-ownership.md) — verify lifecycle, sharing, sizing, disposal, and ownership.
+2. [`20260909-003-bootstrap-text-box-editor.md`](./plans/20260909-003-bootstrap-text-box-editor.md) — reference `BootstrapTextBox` adapter.
+3. [`20260909-004-bootstrap-formatted-text-box-editor.md`](./plans/20260909-004-bootstrap-formatted-text-box-editor.md) — `RawValue` adapter and formatting/conversion contract.
+4. [`20260909-005-bootstrap-lookup-box-editor.md`](./plans/20260909-005-bootstrap-lookup-box-editor.md) — `SelectedValue`, popup/focus, and keyboard interaction contract.
+5. [`20260909-006-editor-registry-hardening-and-expansion.md`](./plans/20260909-006-editor-registry-hardening-and-expansion.md) — public grid-owned registry, hardening, demo, docs, and future editor pattern.
 
-- clean clone + submodule init restores and builds both TFMs;
-- baseline tests run without modal UI;
-- no vendor source modification.
-
-Plan: `plans/20260907-002-foundation-and-vendor-pinning.md`.
-
-## 3. Stage 1 — BootstrapSourceGrid shell and theme adapter
-
-**Outcome:** `BootstrapSourceGrid : SourceGrid.Grid` exists, is Designer-safe, subscribes to runtime themes correctly, and can map theme tokens without yet styling every cell category.
-
-Deliverables:
-
-- public control shell;
-- theme snapshot/adapter;
-- theme-owned font lifecycle;
-- theme event subscribe/unsubscribe;
-- DPI helper for integration-owned metrics;
-- initial tests.
-
-Gate:
-
-- exact inheritance/namespace/API identity verified;
-- construction works before handle creation;
-- repeated theme switching/disposal is safe;
-- consumer font override is preserved.
-
-Plan: `plans/20260907-003-control-shell-and-theme-adapter.md`.
-
-## 4. Stage 2 — Cell, header, alternate row, selection visual integration
-
-**Outcome:** SourceGrid visual extension points render Bootstrap-aligned default cell/generic-header/row-header/column-header states while preserving consumer Views and SourceGrid behavior.
-
-Deliverables:
-
-- default cell View/style;
-- alternating-row View/style;
-- generic-header View/style;
-- column-header View/style;
-- row-header View/style;
-- selection/focus visual integration;
-- read-only/disabled visual treatment where safe;
-- ownership tracking for integration Views;
-- compatibility tests.
-
-Gate:
-
-- light/dark/custom theme tests pass;
-- consumer custom View remains untouched on theme switch;
-- selection/active position and spans remain unchanged;
-- no broad SourceGrid paint-engine fork.
-
-Plan: `plans/20260907-004-cell-header-selection-theming.md`.
-
-## 5. Stage 3 — Runtime theme, DPI, Designer, lifecycle hardening
-
-**Outcome:** visual integration remains correct across theme changes, DPI transitions, handle lifecycle, repeated disposal/recreation, and Designer use.
-
-Deliverables:
-
-- runtime theme refresh path;
-- DPI recalculation/invalidation path;
-- handle lifecycle tests;
-- Designer-safe defaults/property metadata;
-- resource/event leak hardening;
-- manual Designer/DPI matrix.
-
-Gate:
-
-- no data/selection reset on theme switch;
-- no duplicate theme subscriptions;
-- no integration-owned GDI leaks in repeated lifecycle tests;
-- 100/150/200% DPI manual smoke passes;
-- Designer smoke passes.
-
-Plan: `plans/20260907-005-runtime-theme-dpi-designer-hardening.md`.
-
-## 6. Stage 4 — Editor and interaction compatibility hardening
-
-**Outcome:** representative SourceGrid editors look coherent enough for MVP without replacing editor architecture, and input/focus/navigation remains SourceGrid-compatible.
-
-Deliverables:
-
-- editor appearance bridge for safely supported editor controls;
-- editing commit/cancel tests;
-- Tab/Shift+Tab/arrow/Page navigation regression tests where supported;
-- active-editor theme-switch behavior decision backed by tests;
-- focus/accessibility regression checks.
-
-Gate:
-
-- representative default editors can edit/commit/cancel on both TFMs;
-- no custom editor engine introduced;
-- keyboard navigation remains compatible;
-- any editor that cannot safely be themed is explicitly documented rather than behaviorally rewritten.
-
-Plan: `plans/20260907-006-editor-and-interaction-hardening.md`.
-
-## 7. Stage 5 — Demo, packaging, documentation, release preparation
-
-**Outcome:** consumer-ready MVP with demo, package metadata, reproducible validation, and complete docs.
-
-Deliverables:
-
-- demo scenarios from PRD;
-- package metadata/readme;
-- compatibility and upstream notices;
-- full test script/workflow if appropriate;
-- release checklist;
-- final API review;
-- no accidental vendor patches.
-
-Gate:
-
-- full build/test matrix passes;
-- demo covers required scenarios;
-- docs match shipped API;
-- package includes correct target assets/dependency declarations;
-- release notes state known editor/scrollbar limitations.
-
-Plan: `plans/20260907-007-demo-packaging-release.md`.
-
-## 8. Post-MVP candidates
-
-These are intentionally not part of the initial release and require separate brainstorming/design approval:
-
-- Bootstrap-specific custom editor suite;
-- custom scrollbar rendering/replacement;
-- `BootstrapSourceGridVirtual` or another explicit virtual-grid integration type;
-- richer empty/loading states similar to `BootstrapDataGridView`;
-- Bootstrap variants/sizes as public SourceGrid-specific API;
-- advanced accessibility/automation enhancements;
-- source-generated or configuration-driven View factories.
-
-Do not implement these opportunistically while completing MVP stages.
-
-## 9. Cross-stage invariants
+## Cross-stage invariants
 
 Every stage must preserve:
 
-- dependency direction;
-- SourceGrid public programming model;
-- dual-target support;
-- zero/near-zero vendor patch posture;
-- automatic runtime theme lifecycle;
-- consumer font/View ownership;
-- non-interactive automated tests;
-- scrollbar/editor MVP boundaries.
+- `BootstrapSourceGrid : SourceGrid.Grid` and the existing SourceGrid public programming model;
+- SourceGrid ownership of start/commit/cancel, final validation/conversion, placement, and grid navigation;
+- Bootstrap control ownership of editor theme/font/background/border/focus visuals;
+- `UseCellViewProperties = false` for Bootstrap-native adapters;
+- shared grid-scoped editor lifetime rather than per-cell composite controls;
+- no cross-grid adapter sharing;
+- consumer custom editors unchanged;
+- no SourceGrid global editor-factory patch;
+- `net48;net8.0-windows` support;
+- bounded non-modal STA GUI tests;
+- clean vendor worktrees.
 
-## 10. Stage execution discipline
+## Stage gate
 
-Each stage should normally be implemented on its own branch/PR. Before moving to the next stage:
+Before moving to the next stage:
 
-1. complete focused tests;
-2. build both TFMs;
-3. complete relevant manual checks;
-4. review API/diff for accidental SourceGrid behavior changes;
-5. update canonical docs if a durable rule changed;
-6. merge/accept the stage.
+```powershell
+dotnet restore MyDmsVn.BootstrapSourceGrid.sln
+dotnet build MyDmsVn.BootstrapSourceGrid.sln -c Release
+dotnet test tests/MyDmsVn.BootstrapSourceGrid.Tests/MyDmsVn.BootstrapSourceGrid.Tests.csproj -c Release --no-build --blame-hang --blame-hang-timeout 5m
+git -C vendor/Bootstrap5WinFormUI status --short
+git -C vendor/sourcegrid status --short
+```
+
+Expected: all commands exit `0` and both vendor status commands produce no output.
+
+Do not start a later stage while the current stage's acceptance gate is failing.
