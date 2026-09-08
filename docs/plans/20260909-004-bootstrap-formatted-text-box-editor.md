@@ -4,7 +4,7 @@
 
 **Goal:** Add a BootstrapFormattedTextBox-backed SourceGrid editor that commits canonical `RawValue` while keeping SourceGrid responsible for final typed conversion and validation.
 
-**Architecture:** Reuse the proven BootstrapTextBox adapter pattern but change the logical value bridge from formatted display `Text` to `RawValue`. Formatting, caret mapping, and undo/redo remain BootstrapFormattedTextBox responsibilities; SourceGrid still owns edit lifecycle and the final cell value type.
+**Architecture:** Reuse the proven BootstrapTextBox adapter pattern but change the logical value bridge from formatted display `Text` to `RawValue`. Formatting, caret mapping, first-character insertion, and undo/redo remain BootstrapFormattedTextBox responsibilities; SourceGrid still owns edit lifecycle and the final cell value type.
 
 **Tech Stack:** C#, WinForms, SourceGrid 5.0, `BootstrapFormattedTextBox`, NUnit, `net48`, `net8.0-windows`.
 
@@ -17,21 +17,23 @@
 - Do not build a second type system from `FormatMode`.
 - SourceGrid performs final conversion/validation.
 - One adapter/control may serve many cells in one grid.
+- Every concrete `EditorControlBase` adapter implements `OnSendCharToEditor(char)` from its first compilable version.
 - No vendor patch, reflection, modal error UI, or per-cell default editor creation.
 
 ---
 
-### Task 1: Implement the RawValue adapter contract
+### Task 1: Implement the RawValue adapter and first-character contract
 
 **Files:**
 - Create: `src/MyDmsVn.BootstrapSourceGrid/Editors/BootstrapFormattedTextBoxEditor.cs`
+- Create only if the pinned control requires a protected insertion seam: `src/MyDmsVn.BootstrapSourceGrid/Editors/Internal/BootstrapSourceGridFormattedTextBoxControl.cs`
 - Create: `tests/MyDmsVn.BootstrapSourceGrid.Tests/BootstrapFormattedTextBoxEditorTests.cs`
 
 **Interfaces:**
-- Produces: `BootstrapFormattedTextBoxEditor` with a strongly typed `BootstrapControl` property.
+- Produces: `BootstrapFormattedTextBoxEditor` with a strongly typed `BootstrapControl` property and a compile-complete SourceGrid first-character override.
 - Consumed later by: public grid editor registry.
 
-- [ ] **Step 1: Write failing raw-vs-display tests**
+- [ ] **Step 1: Write failing raw-vs-display and first-character tests**
 
 Cover:
 
@@ -40,11 +42,12 @@ SetEditValueInitializesRawValue
 GetEditedValueReturnsRawValueNotFormattedText
 CommitUsesSourceGridTypedConversion
 CancelRestoresOriginalLogicalValue
+SendFirstCharacterUsesFormattedInputSemantics
 ```
 
-Use a format where `Text` visibly differs from `RawValue` so the test fails if the adapter commits display text.
+Use a format where `Text` visibly differs from `RawValue` so the test fails if the adapter commits display text. For the first-character case, start editing through SourceGrid's `SendCharToEditor` path rather than directly assigning the final raw value.
 
-- [ ] **Step 2: Implement the adapter skeleton**
+- [ ] **Step 2: Implement the adapter skeleton, including the abstract first-character seam**
 
 Target shape:
 
@@ -62,10 +65,16 @@ public sealed class BootstrapFormattedTextBoxEditor : SourceGrid.Cells.Editors.E
 
     protected override Control CreateControl()
         => new BootstrapFormattedTextBox();
+
+    protected override void OnSendCharToEditor(char key)
+    {
+        // Forward through the exact formatted-input insertion seam verified in Stage 0.
+        // Do not leave this override as a no-op and do not bypass the control's raw/display mapping.
+    }
 }
 ```
 
-Use exact override signatures from the pinned SourceGrid seam record.
+The target shape is intentionally explicit that `OnSendCharToEditor(char)` exists in Task 1; replace the comment body with the real verified insertion call before the Task 1 build/test checkpoint. If `BootstrapFormattedTextBox` does not expose a safe public/protected insertion operation, create the smallest internal subclass seam in this task, analogous to the Stage 1 text-box control seam. Do not postpone the abstract override to Task 3.
 
 - [ ] **Step 3: Implement value initialization**
 
@@ -75,7 +84,11 @@ Map the incoming SourceGrid edit value into the canonical raw representation exp
 
 Return `BootstrapControl.RawValue` from `GetEditedValue()`. Never return formatted `Text` merely because it is visible to the user.
 
-- [ ] **Step 5: Run focused tests on both TFMs**
+- [ ] **Step 5: Implement first-character forwarding**
+
+Use the exact insertion/caret seam verified against the pinned `BootstrapFormattedTextBox`. The first typed character must flow through the control's own formatting/raw-value pipeline so `RawValue`, formatted `Text`, caret mapping, and undo state remain internally consistent. Do not implement this as a no-op, synthesize a commit, or copy the plain-text editor's native manipulation without verifying formatted caret/value behavior.
+
+- [ ] **Step 6: Run focused tests on both TFMs**
 
 ```powershell
 dotnet test tests/MyDmsVn.BootstrapSourceGrid.Tests/MyDmsVn.BootstrapSourceGrid.Tests.csproj -c Release -f net48 --filter BootstrapFormattedTextBoxEditorTests --blame-hang --blame-hang-timeout 5m
@@ -84,10 +97,10 @@ dotnet test tests/MyDmsVn.BootstrapSourceGrid.Tests/MyDmsVn.BootstrapSourceGrid.
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```powershell
-git add src/MyDmsVn.BootstrapSourceGrid/Editors/BootstrapFormattedTextBoxEditor.cs tests/MyDmsVn.BootstrapSourceGrid.Tests/BootstrapFormattedTextBoxEditorTests.cs
+git add src/MyDmsVn.BootstrapSourceGrid/Editors/BootstrapFormattedTextBoxEditor.cs src/MyDmsVn.BootstrapSourceGrid/Editors/Internal tests/MyDmsVn.BootstrapSourceGrid.Tests/BootstrapFormattedTextBoxEditorTests.cs
 git commit -m "feat: add BootstrapFormattedTextBox SourceGrid editor"
 ```
 
@@ -135,20 +148,20 @@ git commit -m "test: lock formatted editor value conversion"
 
 ---
 
-### Task 3: Preserve caret, first-character, undo/redo, and cancel behavior
+### Task 3: Preserve caret, first-character edge cases, undo/redo, and cancel behavior
 
 **Files:**
 - Modify: `tests/MyDmsVn.BootstrapSourceGrid.Tests/BootstrapFormattedTextBoxEditorTests.cs`
-- Create only if protected caret access is proven necessary: `src/MyDmsVn.BootstrapSourceGrid/Editors/Internal/BootstrapSourceGridFormattedTextBoxControl.cs`
 - Modify if required: `src/MyDmsVn.BootstrapSourceGrid/Editors/BootstrapFormattedTextBoxEditor.cs`
+- Modify if created in Task 1: `src/MyDmsVn.BootstrapSourceGrid/Editors/Internal/BootstrapSourceGridFormattedTextBoxControl.cs`
 
 - [ ] **Step 1: Test normal edit-start selection/caret behavior**
 
 Use the BootstrapFormattedTextBox public/protected APIs available at the pinned baseline. Prefer its own caret mapping rather than copying the plain-text adapter's native-editor manipulation if formatted text requires mapping.
 
-- [ ] **Step 2: Test first-character editing**
+- [ ] **Step 2: Harden first-character editing across representative formats**
 
-Start edit by typing a character and verify the resulting raw/display state is valid for the configured format. If the control already exposes a public/protected insertion API, use it; otherwise add the smallest internal subclass seam required by the pinned control.
+Extend the Task 1 first-character contract across representative formats and verify the resulting raw/display state is valid. Keep using the control-owned insertion seam established in Task 1; do not introduce a second first-character path here.
 
 - [ ] **Step 3: Test control-owned undo/redo**
 

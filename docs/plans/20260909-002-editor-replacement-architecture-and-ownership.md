@@ -4,7 +4,7 @@
 
 **Goal:** Prove the SourceGrid/Bootstrap editor lifecycle, sharing, disposal, sizing, and ownership rules before shipping any public Bootstrap editor adapter.
 
-**Architecture:** Use a test-only BootstrapTextBox-backed probe editor to exercise the real `EditorControlBase` lifecycle. Add only the minimum internal grid-owned disposal/ownership seam required by evidence; defer the public registry surface until all three editor adapters are proven.
+**Architecture:** Use a test-only BootstrapTextBox-backed probe editor to exercise the real `EditorControlBase` lifecycle. Add only the minimum internal grid-owned disposal/ownership seam required by evidence; defer the public registry surface until all three editor adapters are proven. The pinned SourceGrid attach sequence is treated as a hard boundary: integration code must not claim deterministic fail-before-attach cross-grid enforcement unless a separately approved SourceGrid seam makes that possible.
 
 **Tech Stack:** C#, WinForms, SourceGrid 5.0, MyDmsVn.Bootstrap5WinFormUI, NUnit, `net48`, `net8.0-windows`.
 
@@ -17,7 +17,7 @@
 - Probe/real Bootstrap adapters use `UseCellViewProperties = false`.
 - No per-cell editor allocation policy may be introduced.
 - No cross-grid sharing may be normalized as supported behavior.
-- Do not patch either vendor.
+- Do not patch either vendor as part of this stage. If deterministic fail-before-attach ownership enforcement is considered mandatory, stop and obtain separate approval for the smallest SourceGrid seam before changing vendor code.
 - GUI tests are STA, bounded, deterministic, and non-modal.
 
 ---
@@ -25,10 +25,10 @@
 ### Task 1: Re-verify exact editor seams and promote them to canonical docs
 
 **Files:**
-- Inspect: `vendor/sourcegrid/SourceGrid/Cells/Editors/EditorControlBase.cs`
-- Inspect: `vendor/sourcegrid/SourceGrid/Cells/Editors/EditorBase.cs`
-- Inspect: `vendor/sourcegrid/SourceGrid/Cells/Editors/TextBox.cs`
-- Inspect: `vendor/sourcegrid/SourceGrid/Cells/Editors/Factory.cs`
+- Inspect: `vendor/sourcegrid/SourceGrid/SourceGrid/Cells/Editors/EditorControlBase.cs`
+- Inspect: `vendor/sourcegrid/SourceGrid/SourceGrid/Cells/Editors/EditorBase.cs`
+- Inspect: `vendor/sourcegrid/SourceGrid/SourceGrid/Cells/Editors/TextBox.cs`
+- Inspect: `vendor/sourcegrid/SourceGrid/SourceGrid/Cells/Editors/Factory.cs`
 - Inspect: pinned Bootstrap input sources for `BootstrapTextBox`, `BootstrapFormattedTextBox`, `BootstrapLookupBox`
 - Modify: `docs/UPSTREAM_API_SEAMS.md`
 
@@ -40,19 +40,40 @@
 
 Confirm directly in the pinned source that `EditorControlBase` creates `Control` from `CreateControl()` during construction, attaches it through the grid linked-control mechanism on first edit, and uses `ShowControl`/hide logic without requiring a new control per cell.
 
+Record the exact first-edit order, including that `InternalStartEdit(...)` calls the private `AttachControl(cellContext.Grid)` before the first protected callback that receives `CellContext` (`OnStartingEdit(...)`). Explicitly record that an adapter in the integration assembly therefore has no current SourceGrid seam that can reject a wrong-grid first edit before SourceGrid mutates its linked-control attachment state.
+
 - [ ] **Step 2: Verify commit/cancel and first-character seams**
 
-Record the exact call paths for `SetEditValue`, `SafeSetEditValue`, `GetEditedValue`, `SetCellValue`, `InternalEndEdit`, `OnStartingEdit`, and `OnSendCharToEditor`.
+Record the exact call paths for `SetEditValue`, `SafeSetEditValue`, `GetEditedValue`, `SetCellValue`, `InternalEndEdit`, `OnStartingEdit`, and `OnSendCharToEditor`. Record that every concrete `EditorControlBase` subclass must implement `OnSendCharToEditor(char)` even when later tasks add richer first-character behavior.
 
 - [ ] **Step 3: Verify focus/validation behavior**
 
 Confirm the `Control.Validated` subscription and the exact condition that calls `EditCellContext.EndEdit(false)`. This fact is a hard dependency for Stage 3 lookup integration.
 
-- [ ] **Step 4: Verify SourceGrid factory limitation**
+- [ ] **Step 4: Lock the cross-grid ownership boundary**
+
+Choose and record one of these outcomes based on the pinned source:
+
+```text
+A. No vendor change (default)
+   - cross-grid adapter reuse remains explicitly unsupported;
+   - registry/grid ownership and documentation prevent supported creation flows from encouraging reuse;
+   - no runtime guarantee claims failure before SourceGrid attachment;
+   - do not add a post-attach guard that throws after LinkedControls/mGrid have already been mutated.
+
+B. Separately approved SourceGrid seam
+   - add the smallest protected/pre-attach validation hook upstream;
+   - record the exact pinned/upstream change in UPSTREAM_API_SEAMS.md;
+   - only then may Stage 4 require deterministic InvalidOperationException before attachment.
+```
+
+Do not defer this decision as an unspecified Stage 4 implementation detail.
+
+- [ ] **Step 5: Verify SourceGrid factory limitation**
 
 Confirm `Cells.Editors.Factory` remains static/hardwired and has no supported registration hook appropriate for globally replacing built-in editors. Record that the initiative uses explicit adapters instead.
 
-- [ ] **Step 5: Verify pinned Bootstrap control contracts**
+- [ ] **Step 6: Verify pinned Bootstrap control contracts**
 
 Record at least these facts in `UPSTREAM_API_SEAMS.md`:
 
@@ -75,7 +96,7 @@ BootstrapLookupBox
 - CancelPendingEdit and selection APIs
 ```
 
-- [ ] **Step 6: Commit only documentation corrections if pinned code differs from the current canonical record**
+- [ ] **Step 7: Commit only documentation corrections if pinned code differs from the current canonical record**
 
 ```powershell
 git add docs/UPSTREAM_API_SEAMS.md
@@ -117,10 +138,13 @@ internal sealed class BootstrapTextBoxProbeEditor : SourceGrid.Cells.Editors.Edi
 
     public override object GetEditedValue()
         => BootstrapControl.Text;
+
+    protected override void OnSendCharToEditor(char key)
+        => BootstrapControl.Text = key.ToString();
 }
 ```
 
-Use the exact method access modifiers required by the pinned SourceGrid base after Task 1 verification; do not change vendor source.
+Use the exact method access modifiers required by the pinned SourceGrid base after Task 1 verification; do not change vendor source. The probe only needs a compile-safe first-character seam; the production text adapter defines the full caret/selection contract in Stage 1.
 
 - [ ] **Step 2: Write an eager-construction test**
 
@@ -285,7 +309,8 @@ Bootstrap control is created eagerly
 Bootstrap adapter visuals are not copied from cell View
 registry/grid owns disposal
 row height is never silently resized by adapter
-cross-grid reuse is not a supported contract
+cross-grid reuse is unsupported
+without an approved SourceGrid pre-attach seam, no deterministic fail-before-attach runtime guard is promised
 ```
 
 - [ ] **Step 3: Commit any final canonical-doc correction**

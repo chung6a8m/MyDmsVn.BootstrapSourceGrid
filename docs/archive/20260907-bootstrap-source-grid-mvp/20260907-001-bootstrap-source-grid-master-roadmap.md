@@ -69,7 +69,7 @@ Delete any proposed helper from this target structure if upstream API inspection
 
 ### Stage 0 — Foundation and vendor pinning
 
-Plan: `docs/plans/20260907-002-foundation-and-vendor-pinning.md`
+Plan: `20260907-002-foundation-and-vendor-pinning.md`
 
 Acceptance:
 
@@ -81,7 +81,7 @@ Acceptance:
 
 ### Stage 1 — Control shell and theme adapter
 
-Plan: `docs/plans/20260907-003-control-shell-and-theme-adapter.md`
+Plan: `20260907-003-control-shell-and-theme-adapter.md`
 
 Acceptance:
 
@@ -94,7 +94,7 @@ Acceptance:
 
 ### Stage 2 — Cell/header/selection theming
 
-Plan: `docs/plans/20260907-004-cell-header-selection-theming.md`
+Plan: `20260907-004-cell-header-selection-theming.md`
 
 Acceptance:
 
@@ -106,7 +106,7 @@ Acceptance:
 
 ### Stage 3 — Runtime theme/DPI/Designer hardening
 
-Plan: `docs/plans/20260907-005-runtime-theme-dpi-designer-hardening.md`
+Plan: `20260907-005-runtime-theme-dpi-designer-hardening.md`
 
 Acceptance:
 
@@ -118,7 +118,7 @@ Acceptance:
 
 ### Stage 4 — Editor and interaction hardening
 
-Plan: `docs/plans/20260907-006-editor-and-interaction-hardening.md`
+Plan: `20260907-006-editor-and-interaction-hardening.md`
 
 Acceptance:
 
@@ -130,7 +130,7 @@ Acceptance:
 
 ### Stage 5 — Demo, packaging, release
 
-Plan: `docs/plans/20260907-007-demo-packaging-release.md`
+Plan: `20260907-007-demo-packaging-release.md`
 
 Acceptance:
 
@@ -177,5 +177,3 @@ After every stage:
 git status --short
 git submodule status
 ```
-
-Expected: only intended superproject changes, no dirty `vendor/*` submodule marker.
