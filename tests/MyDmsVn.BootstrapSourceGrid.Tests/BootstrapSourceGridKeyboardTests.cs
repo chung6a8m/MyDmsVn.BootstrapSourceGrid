@@ -98,7 +98,7 @@ public sealed class BootstrapSourceGridKeyboardTests
         {
             var position = new SourceGrid.Position(1, 1);
             Assert.That(fixture.Grid.Selection.Focus(position, true), Is.True);
-            var cell = fixture.Grid.GetCell(position);
+            var cell = (SourceGrid.Cells.Cell)fixture.Grid.GetCell(position);
             var context = new SourceGrid.CellContext(fixture.Grid, position, cell);
             var editor = (SourceGrid.Cells.Editors.TextBox)cell.Editor;
             var f2 = new KeyEventArgs(Keys.F2);
@@ -115,6 +115,107 @@ public sealed class BootstrapSourceGridKeyboardTests
                 Assert.That(escape.Handled, Is.True);
                 Assert.That(editor.IsEditing, Is.False);
                 Assert.That(cell.Model.ValueModel.GetValue(context), Is.EqualTo("1:1"));
+            }
+            finally
+            {
+                context.EndEdit(true);
+            }
+        }
+    }
+
+    [Test]
+    public void ShiftTabMovesBackwardWithoutExtendingSelection()
+    {
+        using (var fixture = new KeyboardFixture())
+        {
+            Assert.That(
+                fixture.Grid.Selection.Focus(new SourceGrid.Position(2, 1), true),
+                Is.True);
+
+            fixture.Grid.DispatchCommandKey(Keys.Shift | Keys.ShiftKey);
+            Assert.That(fixture.Grid.DispatchCommandKey(Keys.Shift | Keys.Tab), Is.True);
+
+            var active = new SourceGrid.Position(2, 0);
+            var selected = fixture.Grid.Selection
+                .GetSelectionRegion()
+                .GetCellsPositions();
+            Assert.That(fixture.Grid.Selection.ActivePosition, Is.EqualTo(active));
+            Assert.That(selected.Count, Is.EqualTo(1));
+            Assert.That(selected[0], Is.EqualTo(active));
+        }
+    }
+
+    [Test]
+    public void HomeAndEndMoveToFirstAndLastFocusableVisibleCellInRow()
+    {
+        using (var fixture = new KeyboardFixture())
+        {
+            fixture.Grid.Columns[0].Visible = false;
+            Assert.That(
+                fixture.Grid.Selection.Focus(new SourceGrid.Position(2, 2), true),
+                Is.True);
+
+            Assert.That(fixture.Grid.DispatchCommandKey(Keys.Home), Is.True);
+            AssertActivePosition(fixture.Grid, 2, 1);
+
+            Assert.That(fixture.Grid.DispatchCommandKey(Keys.End), Is.True);
+            AssertActivePosition(fixture.Grid, 2, 2);
+        }
+    }
+
+    [Test]
+    public void ShiftTabCommitsActiveEditBeforeMovingBackward()
+    {
+        using (var fixture = new KeyboardFixture())
+        {
+            var position = new SourceGrid.Position(2, 1);
+            Assert.That(fixture.Grid.Selection.Focus(position, true), Is.True);
+            var cell = (SourceGrid.Cells.Cell)fixture.Grid.GetCell(position);
+            var context = new SourceGrid.CellContext(fixture.Grid, position, cell);
+            var editor = (SourceGrid.Cells.Editors.TextBox)cell.Editor;
+            context.StartEdit();
+
+            try
+            {
+                editor.SetEditValue("committed by Shift+Tab");
+                fixture.Grid.DispatchCommandKey(Keys.Shift | Keys.ShiftKey);
+
+                Assert.That(
+                    fixture.Grid.DispatchCommandKey(Keys.Shift | Keys.Tab),
+                    Is.True);
+                Assert.That(editor.IsEditing, Is.False);
+                Assert.That(cell.Value, Is.EqualTo("committed by Shift+Tab"));
+                AssertActivePosition(fixture.Grid, 2, 0);
+                Assert.That(
+                    fixture.Grid.Selection.GetSelectionRegion().GetCellsPositions().Count,
+                    Is.EqualTo(1));
+            }
+            finally
+            {
+                context.EndEdit(true);
+            }
+        }
+    }
+
+    [Test]
+    public void HomeAndEndDoNotMoveActiveCellWhileEditing()
+    {
+        using (var fixture = new KeyboardFixture())
+        {
+            var position = new SourceGrid.Position(2, 1);
+            Assert.That(fixture.Grid.Selection.Focus(position, true), Is.True);
+            var context = new SourceGrid.CellContext(fixture.Grid, position);
+            context.StartEdit();
+
+            try
+            {
+                fixture.Grid.DispatchCommandKey(Keys.Home);
+                Assert.That(fixture.Grid.Selection.ActivePosition, Is.EqualTo(position));
+                Assert.That(context.IsEditing(), Is.True);
+
+                fixture.Grid.DispatchCommandKey(Keys.End);
+                Assert.That(fixture.Grid.Selection.ActivePosition, Is.EqualTo(position));
+                Assert.That(context.IsEditing(), Is.True);
             }
             finally
             {
@@ -150,7 +251,7 @@ public sealed class BootstrapSourceGridKeyboardTests
             {
                 ClientSize = new Size(260, 110),
             };
-            Grid = new BootstrapSourceGridControl
+            Grid = new KeyboardTestGrid
             {
                 Dock = DockStyle.Fill,
             };
@@ -174,7 +275,7 @@ public sealed class BootstrapSourceGridKeyboardTests
 
         internal Form Form { get; }
 
-        internal BootstrapSourceGridControl Grid { get; }
+        internal KeyboardTestGrid Grid { get; }
 
         public void Dispose()
         {
@@ -187,6 +288,15 @@ public sealed class BootstrapSourceGridKeyboardTests
             Form.Close();
             Form.Dispose();
             Grid.Dispose();
+        }
+    }
+
+    private sealed class KeyboardTestGrid : BootstrapSourceGridControl
+    {
+        internal bool DispatchCommandKey(Keys keys)
+        {
+            var message = new Message();
+            return base.ProcessCmdKey(ref message, keys);
         }
     }
 }

@@ -16,4 +16,8 @@ Verified against SourceGrid `f4e457b43582bf01892f50bdc74aa480531e5944` on both `
 - BootstrapSourceGrid does not replace SourceGrid editor classes or their commit/cancel/focus lifecycle.
 - `EditorBase.UseCellViewProperties` is the ownership switch. When false, runtime theme changes leave consumer editor colors and font untouched.
 - SourceGrid checkbox cells use their existing cell View/controller and do not create an active WinForms editor control. They remain native and are outside the active-editor refresh bridge.
-- SourceGrid does not expose Home/End in `GridSpecialKeys` at the pinned baseline. Stage 4 does not add a Bootstrap keyboard controller for those keys.
+- SourceGrid does not expose Home/End in `GridSpecialKeys` at the pinned baseline.
+  BootstrapSourceGrid handles bare Home/End through a narrow command-key override
+  when no editor is active; editor-active Home/End remains native to the editor.
+- BootstrapSourceGrid also intercepts Shift+Tab narrowly so backward navigation
+  does not fall through SourceGrid's Shift range-extension branch.

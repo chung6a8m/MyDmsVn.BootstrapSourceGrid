@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Threading;
+using System.Windows.Forms;
 using MyDmsVn.Bootstrap5WinFormUI.Theme;
 using MyDmsVn.BootstrapSourceGrid.Editors;
 using MyDmsVn.BootstrapSourceGrid.Internal;
@@ -123,6 +124,29 @@ public class BootstrapSourceGrid : SourceGrid.Grid
         }
 
         RefreshDpiMetrics(CurrentDpi);
+    }
+
+    /// <inheritdoc />
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    {
+        if (keyData == (Keys.Tab | Keys.Shift) &&
+            OverrideCommonCmdKey &&
+            (SpecialKeys & SourceGrid.GridSpecialKeys.Tab) == SourceGrid.GridSpecialKeys.Tab)
+        {
+            return ProcessReverseTab();
+        }
+
+        if (keyData == Keys.Home && TryMoveToRowBoundary(first: true))
+        {
+            return true;
+        }
+
+        if (keyData == Keys.End && TryMoveToRowBoundary(first: false))
+        {
+            return true;
+        }
+
+        return base.ProcessCmdKey(ref msg, keyData);
     }
 
     /// <inheritdoc />
@@ -286,5 +310,64 @@ public class BootstrapSourceGrid : SourceGrid.Grid
         var font = _themeFont;
         _themeFont = null;
         font?.Dispose();
+    }
+
+    private bool ProcessReverseTab()
+    {
+        var active = Selection.ActivePosition;
+        if (!active.IsEmpty())
+        {
+            var context = new SourceGrid.CellContext(this, active);
+            if (context.Cell is not null &&
+                context.IsEditing() &&
+                !context.EndEdit(false))
+            {
+                return true;
+            }
+        }
+
+        if (!Selection.MoveActiveCell(0, -1, -1, int.MaxValue))
+        {
+            FindForm()?.SelectNextControl(this, false, true, true, true);
+        }
+
+        return true;
+    }
+
+    private bool TryMoveToRowBoundary(bool first)
+    {
+        var active = Selection.ActivePosition;
+        if (active.IsEmpty())
+        {
+            return false;
+        }
+
+        var context = new SourceGrid.CellContext(this, active);
+        if (context.Cell is not null && context.IsEditing())
+        {
+            return false;
+        }
+
+        var column = first ? 0 : ColumnsCount - 1;
+        var limit = first ? ColumnsCount : -1;
+        var step = first ? 1 : -1;
+        for (; column != limit; column += step)
+        {
+            if (!Columns.IsColumnVisible(column))
+            {
+                continue;
+            }
+
+            var target = new SourceGrid.Position(active.Row, column);
+            if (!Selection.CanReceiveFocus(target))
+            {
+                continue;
+            }
+
+            Selection.Focus(target, true);
+            return true;
+        }
+
+        return false;
     }
 }
