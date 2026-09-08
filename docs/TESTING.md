@@ -120,6 +120,11 @@ Mandatory rules:
 - keep `Application.DoEvents()` finite and only at known synchronization points;
 - use bounded hang diagnostics for raw GUI test runs.
 
+Tests that deliberately exercise `GridVirtual.OnUserException` must attach
+`WinFormsTestGuard.CaptureUserExceptions(...)` before triggering the failure.
+The capture marks SourceGrid's event handled, records the exception for assertions,
+and prevents the vendor fallback `ErrorDialog` from opening.
+
 Recommended command:
 
 ```powershell
