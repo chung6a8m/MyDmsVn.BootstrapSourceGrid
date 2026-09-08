@@ -129,24 +129,50 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     /// <inheritdoc />
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
-        if (keyData == (Keys.Tab | Keys.Shift) &&
-            OverrideCommonCmdKey &&
-            (SpecialKeys & SourceGrid.GridSpecialKeys.Tab) == SourceGrid.GridSpecialKeys.Tab)
+        if (keyData == Keys.Home || keyData == Keys.End)
         {
-            return ProcessReverseTab();
-        }
-
-        if (keyData == Keys.Home && TryMoveToRowBoundary(first: true))
-        {
-            return true;
-        }
-
-        if (keyData == Keys.End && TryMoveToRowBoundary(first: false))
-        {
-            return true;
+            var args = new KeyEventArgs(keyData);
+            OnKeyDown(args);
+            if (args.Handled)
+            {
+                return true;
+            }
         }
 
         return base.ProcessCmdKey(ref msg, keyData);
+    }
+
+    /// <inheritdoc />
+    public override void ProcessSpecialGridKey(KeyEventArgs e)
+    {
+        if (!e.Handled &&
+            e.KeyData == (Keys.Tab | Keys.Shift) &&
+            (SpecialKeys & SourceGrid.GridSpecialKeys.Tab) == SourceGrid.GridSpecialKeys.Tab)
+        {
+            e.Handled = ProcessReverseTab();
+            return;
+        }
+
+        if (!e.Handled &&
+            ((e.KeyData == Keys.Home && TryMoveToRowBoundary(first: true)) ||
+             (e.KeyData == Keys.End && TryMoveToRowBoundary(first: false))))
+        {
+            e.Handled = true;
+            return;
+        }
+
+        base.ProcessSpecialGridKey(e);
+    }
+
+    /// <inheritdoc />
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        if (!e.Handled)
+        {
+            FocusCanonicalActivePosition();
+        }
+
+        base.OnKeyDown(e);
     }
 
     /// <inheritdoc />
@@ -351,6 +377,7 @@ public class BootstrapSourceGrid : SourceGrid.Grid
         var column = first ? 0 : ColumnsCount - 1;
         var limit = first ? ColumnsCount : -1;
         var step = first ? 1 : -1;
+        var previousTarget = SourceGrid.Position.Empty;
         for (; column != limit; column += step)
         {
             if (!Columns.IsColumnVisible(column))
@@ -358,7 +385,19 @@ public class BootstrapSourceGrid : SourceGrid.Grid
                 continue;
             }
 
-            var target = new SourceGrid.Position(active.Row, column);
+            var target = PositionToStartPosition(
+                new SourceGrid.Position(active.Row, column));
+            if (target.IsEmpty() || target == previousTarget)
+            {
+                continue;
+            }
+
+            previousTarget = target;
+            if (!Columns.IsColumnVisible(target.Column))
+            {
+                continue;
+            }
+
             if (!Selection.CanReceiveFocus(target))
             {
                 continue;
@@ -369,5 +408,20 @@ public class BootstrapSourceGrid : SourceGrid.Grid
         }
 
         return false;
+    }
+
+    private void FocusCanonicalActivePosition()
+    {
+        var active = Selection.ActivePosition;
+        if (active.IsEmpty())
+        {
+            return;
+        }
+
+        var canonical = PositionToStartPosition(active);
+        if (!canonical.IsEmpty() && canonical != active)
+        {
+            Selection.Focus(canonical, true);
+        }
     }
 }

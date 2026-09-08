@@ -146,6 +146,24 @@ public sealed class BootstrapSourceGridKeyboardTests
     }
 
     [Test]
+    public void ShiftTabRetainsSourceGridSpecialKeyDispatch()
+    {
+        using (var fixture = new KeyboardFixture())
+        {
+            Assert.That(
+                fixture.Grid.Selection.Focus(new SourceGrid.Position(2, 1), true),
+                Is.True);
+
+            Assert.That(
+                fixture.Grid.DispatchCommandKey(Keys.Shift | Keys.Tab),
+                Is.True);
+
+            Assert.That(fixture.Grid.ShiftTabDispatchCount, Is.EqualTo(1));
+            AssertActivePosition(fixture.Grid, 2, 0);
+        }
+    }
+
+    [Test]
     public void HomeAndEndMoveToFirstAndLastFocusableVisibleCellInRow()
     {
         using (var fixture = new KeyboardFixture())
@@ -160,6 +178,44 @@ public sealed class BootstrapSourceGridKeyboardTests
 
             Assert.That(fixture.Grid.DispatchCommandKey(Keys.End), Is.True);
             AssertActivePosition(fixture.Grid, 2, 2);
+        }
+    }
+
+    [Test]
+    public void HomeAndEndRetainSourceGridSpecialKeyDispatch()
+    {
+        using (var fixture = new KeyboardFixture())
+        {
+            Assert.That(
+                fixture.Grid.Selection.Focus(new SourceGrid.Position(2, 1), true),
+                Is.True);
+
+            Assert.That(fixture.Grid.DispatchCommandKey(Keys.Home), Is.True);
+            Assert.That(fixture.Grid.DispatchCommandKey(Keys.End), Is.True);
+
+            Assert.That(fixture.Grid.RowBoundaryDispatchCount, Is.EqualTo(2));
+        }
+    }
+
+    [Test]
+    public void EndFocusesCanonicalStartOfSpannedLastCell()
+    {
+        using (var fixture = new KeyboardFixture())
+        {
+            fixture.Grid[2, 2] = null;
+            fixture.Grid[2, 1] = new SourceGrid.Cells.Cell(
+                "spanned",
+                typeof(string))
+            {
+                ColumnSpan = 2,
+            };
+            Assert.That(
+                fixture.Grid.Selection.Focus(new SourceGrid.Position(2, 0), true),
+                Is.True);
+
+            Assert.That(fixture.Grid.DispatchCommandKey(Keys.End), Is.True);
+
+            AssertActivePosition(fixture.Grid, 2, 1);
         }
     }
 
@@ -293,10 +349,29 @@ public sealed class BootstrapSourceGridKeyboardTests
 
     private sealed class KeyboardTestGrid : BootstrapSourceGridControl
     {
+        internal int ShiftTabDispatchCount { get; private set; }
+
+        internal int RowBoundaryDispatchCount { get; private set; }
+
         internal bool DispatchCommandKey(Keys keys)
         {
             var message = new Message();
             return base.ProcessCmdKey(ref message, keys);
+        }
+
+        public override void ProcessSpecialGridKey(KeyEventArgs e)
+        {
+            if (e.KeyData == (Keys.Shift | Keys.Tab))
+            {
+                ShiftTabDispatchCount++;
+            }
+
+            if (e.KeyData == Keys.Home || e.KeyData == Keys.End)
+            {
+                RowBoundaryDispatchCount++;
+            }
+
+            base.ProcessSpecialGridKey(e);
         }
     }
 }

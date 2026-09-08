@@ -19,5 +19,9 @@ Verified against SourceGrid `f4e457b43582bf01892f50bdc74aa480531e5944` on both `
 - SourceGrid does not expose Home/End in `GridSpecialKeys` at the pinned baseline.
   BootstrapSourceGrid handles bare Home/End through a narrow command-key override
   when no editor is active; editor-active Home/End remains native to the editor.
-- BootstrapSourceGrid also intercepts Shift+Tab narrowly so backward navigation
-  does not fall through SourceGrid's Shift range-extension branch.
+  Targets are canonicalized so a spanned final cell focuses its logical start.
+- BootstrapSourceGrid handles Shift+Tab in `ProcessSpecialGridKey` so backward
+  navigation does not fall through SourceGrid's Shift range-extension branch,
+  while retaining SourceGrid controller and virtual special-key dispatch.
+- F2 and AnyKey activation canonicalize a covered span coordinate before creating
+  the SourceGrid edit context; commit and cancel operate on the span owner.
