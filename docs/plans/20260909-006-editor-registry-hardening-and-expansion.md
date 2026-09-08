@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Stabilize the three proven Bootstrap editor adapters behind a grid-owned public registry, enforce lifetime/cross-grid rules, add demo/documentation, and define the repeatable pattern for future Bootstrap editors.
+**Goal:** Stabilize the three proven Bootstrap editor adapters behind a grid-owned public registry, lock lifetime/cross-grid ownership rules without overstating the pinned SourceGrid interception seams, add demo/documentation, and define the repeatable pattern for future Bootstrap editors.
 
-**Architecture:** `BootstrapSourceGrid` exposes one `BootstrapSourceGridEditorRegistry`. Consumers explicitly create a small number of grid-owned editor adapters, configure their typed Bootstrap controls, and assign the shared editor instances to SourceGrid cells. The registry never replaces SourceGrid's global editor factory and never touches consumer custom editors.
+**Architecture:** `BootstrapSourceGrid` exposes one `BootstrapSourceGridEditorRegistry`. Consumers explicitly create a small number of grid-owned editor adapters, configure their typed Bootstrap controls, and assign the shared editor instances to SourceGrid cells. The registry never replaces SourceGrid's global editor factory and never touches consumer custom editors. Cross-grid reuse is unsupported; deterministic fail-before-attach enforcement is only permitted if Stage 0 recorded a separately approved SourceGrid pre-attach seam.
 
 **Tech Stack:** C#, WinForms, SourceGrid 5.0, MyDmsVn.Bootstrap5WinFormUI, NUnit, `net48`, `net8.0-windows`.
 
@@ -17,7 +17,9 @@
 - Returned adapters expose read-only strongly typed `BootstrapControl` properties.
 - Adapter constructors remain internal so normal creation flows through the owning grid registry.
 - Registry owns adapter/control disposal.
-- Cross-grid reuse must fail deterministically.
+- Cross-grid reuse is unsupported and must be documented as such.
+- Do not claim deterministic failure before SourceGrid attachment on the pinned baseline unless Stage 0 records an approved pre-attach SourceGrid seam.
+- Never add a post-attach ownership guard that throws only after SourceGrid has already mutated `mGrid`/`LinkedControls` state.
 - No automatic SourceGrid factory replacement and no per-cell default Bootstrap editor creation.
 - Consumer custom editors remain authoritative.
 - Both TFMs and bounded non-modal GUI test rules apply.
@@ -91,7 +93,7 @@ Initialize it once per grid instance. Do not name the property `Editors`, becaus
 
 - [ ] **Step 4: Add XML documentation**
 
-Document that callers create an editor once per grid/column/configuration and assign that shared instance to multiple cells; the grid owns disposal; the same instance must not be used by another grid.
+Document that callers create an editor once per grid/column/configuration and assign that shared instance to multiple cells; the grid owns disposal; the same instance must not be used by another grid. Do not promise that invalid cross-grid assignment is rejected before SourceGrid attachment unless the approved Stage 0 seam exists.
 
 - [ ] **Step 5: Run public API tests on both TFMs**
 
@@ -111,25 +113,51 @@ git commit -m "feat: expose grid-owned Bootstrap editor registry"
 
 ---
 
-### Task 2: Enforce cross-grid ownership deterministically
+### Task 2: Lock the cross-grid ownership contract at the verified SourceGrid seam
 
 **Files:**
-- Create: `src/MyDmsVn.BootstrapSourceGrid/Editors/Internal/BootstrapEditorOwnershipGuard.cs`
-- Modify: all three Bootstrap editor adapter files
+- Inspect: `docs/UPSTREAM_API_SEAMS.md`
+- Modify as required by the Stage 0 decision: all three Bootstrap editor adapter files
+- Create only if Stage 0 approved a pre-attach SourceGrid seam: `src/MyDmsVn.BootstrapSourceGrid/Editors/Internal/BootstrapEditorOwnershipGuard.cs`
 - Modify: `tests/MyDmsVn.BootstrapSourceGrid.Tests/BootstrapEditorRegistryTests.cs`
+- Modify: `tests/MyDmsVn.BootstrapSourceGrid.Tests/BootstrapEditorOwnershipTests.cs`
 
 **Interfaces:**
-- Produces: one documented failure mode for accidental adapter reuse in another grid.
+- Produces: one truthful ownership contract that matches the pinned SourceGrid lifecycle rather than a guard that fires after attachment state has already changed.
 
-- [ ] **Step 1: Write cross-grid failure tests**
+- [ ] **Step 1: Read and assert the Stage 0 ownership decision**
 
-Create `gridA` and `gridB`, create an editor through `gridA.BootstrapEditors`, assign it to a cell in `gridB`, and attempt to start edit. Assert a deterministic `InvalidOperationException` before the control is rebound/reparented to the second grid.
+Before writing code, confirm `docs/UPSTREAM_API_SEAMS.md` records one of these outcomes:
 
-Repeat for TextBox, FormattedTextBox, and LookupBox editors.
+```text
+A. Pinned baseline / no vendor change
+   InternalStartEdit -> AttachControl(cellContext.Grid) -> OnStartingEdit(...)
+   No protected integration seam runs before AttachControl.
+   Cross-grid reuse is unsupported, but no fail-before-attach runtime guarantee is claimed.
 
-- [ ] **Step 2: Implement the ownership guard**
+B. Separately approved SourceGrid seam
+   A specific protected/pre-attach callback exists and is documented.
+   Deterministic owner validation may use that callback before mGrid/LinkedControls mutation.
+```
 
-Target behavior:
+If neither outcome is recorded, stop this task and return to Stage 0 documentation. Do not improvise a guard in `OnStartingEdit`.
+
+- [ ] **Step 2: Keep supported creation ownership explicit**
+
+Pass the owning `BootstrapSourceGrid` through each internal adapter constructor and validate it for null. Do not expose an owner setter or any API that re-owns an adapter. This makes registry ownership explicit even when runtime cross-grid misuse remains outside the supported contract.
+
+- [ ] **Step 3A: Pinned baseline — document unsupported reuse without an unsafe runtime guard**
+
+When Stage 0 chose outcome A:
+
+- do not create `BootstrapEditorOwnershipGuard` merely to throw from `OnStartingEdit`;
+- do not write a test that intentionally starts a foreign-grid edit and expects a pre-attach exception, because the pinned lifecycle cannot satisfy that assertion without first mutating SourceGrid attachment state;
+- test the supported contract instead: registry-created editors are owned/disposed by their creating grid, same-grid sharing works, constructors stay internal, and public/XML docs state that cross-grid reuse is unsupported;
+- add/retain a known-limitation note that strict runtime fail-before-attach enforcement requires a SourceGrid seam.
+
+- [ ] **Step 3B: Approved seam — implement deterministic pre-attach ownership validation**
+
+Only when Stage 0 chose outcome B, implement a narrow guard such as:
 
 ```csharp
 internal static class BootstrapEditorOwnershipGuard
@@ -147,26 +175,26 @@ internal static class BootstrapEditorOwnershipGuard
 }
 ```
 
-Use the exact `CellContext` grid property verified in Stage 0. Call the guard at the earliest SourceGrid edit-start override that receives the current cell context, before control attachment/reparenting.
+Call it only from the documented pre-attach SourceGrid seam. Add cross-grid tests that assert the exception occurs before the control is attached/reparented or any linked-control state is mutated.
 
-- [ ] **Step 3: Store owner in each adapter**
-
-Pass the owning `BootstrapSourceGrid` through each internal constructor and validate it for null. Do not expose a setter.
-
-- [ ] **Step 4: Run cross-grid and same-grid sharing tests**
+- [ ] **Step 4: Run ownership and same-grid sharing tests**
 
 ```powershell
 dotnet test tests/MyDmsVn.BootstrapSourceGrid.Tests/MyDmsVn.BootstrapSourceGrid.Tests.csproj -c Release --filter "BootstrapEditorRegistryTests|BootstrapEditorOwnershipTests" --blame-hang --blame-hang-timeout 5m
 ```
 
-Expected: cross-grid attempts fail deterministically; same-grid sequential editing passes.
+Expected for outcome A: supported registry ownership, disposal, and same-grid sequential sharing pass; docs/API do not claim runtime cross-grid rejection.
 
-- [ ] **Step 5: Commit**
+Expected for outcome B: the same tests pass plus foreign-grid attempts fail deterministically before attachment.
+
+- [ ] **Step 5: Commit the chosen ownership implementation/documentation**
 
 ```powershell
-git add src/MyDmsVn.BootstrapSourceGrid/Editors tests/MyDmsVn.BootstrapSourceGrid.Tests
-git commit -m "fix: enforce Bootstrap editor grid ownership"
+git add src/MyDmsVn.BootstrapSourceGrid/Editors tests/MyDmsVn.BootstrapSourceGrid.Tests docs/UPSTREAM_API_SEAMS.md docs/KNOWN_LIMITATIONS.md
+git commit -m "docs: lock Bootstrap editor grid ownership contract"
 ```
+
+Use a code-oriented commit message instead if outcome B actually adds the approved runtime guard.
 
 ---
 
@@ -272,7 +300,7 @@ for (var row = 1; row < grid.RowsCount; row++)
 }
 ```
 
-State explicitly that the grid owns disposal and the editor must not be shared with another grid.
+State explicitly that the grid owns disposal and the editor must not be shared with another grid. On the pinned baseline/no-vendor-change outcome, also state that this is a supported-use restriction rather than a guaranteed pre-attach runtime exception; strict enforcement requires the separately approved SourceGrid seam described in `UPSTREAM_API_SEAMS.md`.
 
 - [ ] **Step 2: Document logical-value rules**
 
@@ -330,7 +358,7 @@ On the demo, verify Light/Dark, 100/150/200% DPI where available, text/formatted
 
 - [ ] **Step 3: API review**
 
-Reject any public API that duplicates SourceGrid cell/grid abstractions, exposes inner native text controls, makes adapter ownership ambiguous, or implies global factory replacement.
+Reject any public API that duplicates SourceGrid cell/grid abstractions, exposes inner native text controls, makes adapter ownership ambiguous, implies global factory replacement, or promises fail-before-attach cross-grid rejection that the recorded SourceGrid seam cannot provide.
 
 - [ ] **Step 4: Archive this roadmap only after all Stage 0–4 gates are complete**
 
