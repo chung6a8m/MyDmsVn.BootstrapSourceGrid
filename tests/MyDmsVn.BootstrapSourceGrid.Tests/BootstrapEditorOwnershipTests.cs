@@ -111,6 +111,22 @@ public sealed class BootstrapEditorOwnershipTests
         Assert.That(editor.IsEditorDisposed, Is.True);
     }
 
+    [Test]
+    public void RegisterRejectsNullEditor()
+    {
+        using (var grid = new BootstrapSourceGridControl())
+        {
+            System.Action registerNull = () =>
+            {
+                grid.EditorRegistry.Register<BootstrapTextBoxProbeEditor>(null!);
+            };
+
+            Assert.That(
+                registerNull,
+                Throws.ArgumentNullException.With.Property("ParamName").EqualTo("editor"));
+        }
+    }
+
     private static void EditAndCommit(
         BootstrapSourceGridControl grid,
         SourceGrid.Cells.Cell cell,
