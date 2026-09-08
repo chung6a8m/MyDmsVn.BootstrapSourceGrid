@@ -161,4 +161,138 @@ public sealed class BootstrapSourceGridEditorTests
             BootstrapThemeManager.CurrentTheme = originalTheme;
         }
     }
+
+    [Test]
+    public void FactoryTextEditorSupportsAppearanceCommitAndCancel()
+    {
+        AssertEditorLifecycle(
+            new SourceGrid.Cells.Cell("before", typeof(string)),
+            "after",
+            "cancelled",
+            typeof(SourceGrid.Cells.Editors.TextBox));
+    }
+
+    [Test]
+    public void FactoryNumericEditorSupportsAppearanceCommitAndCancel()
+    {
+        AssertEditorLifecycle(
+            new SourceGrid.Cells.Cell(10, typeof(int)),
+            20,
+            30,
+            typeof(SourceGrid.Cells.Editors.TextBox));
+    }
+
+    [Test]
+    public void FactoryDateTimeEditorSupportsAppearanceCommitAndCancel()
+    {
+        AssertEditorLifecycle(
+            new SourceGrid.Cells.Cell(new System.DateTime(2026, 9, 7), typeof(System.DateTime)),
+            new System.DateTime(2026, 9, 8),
+            new System.DateTime(2026, 9, 9),
+            typeof(SourceGrid.Cells.Editors.TextBoxUITypeEditor));
+    }
+
+    [Test]
+    public void FactoryBooleanEditorSupportsAppearanceCommitAndCancel()
+    {
+        AssertEditorLifecycle(
+            new SourceGrid.Cells.Cell(false, typeof(bool)),
+            true,
+            false,
+            typeof(SourceGrid.Cells.Editors.ComboBox));
+    }
+
+    [Test]
+    public void FactoryEnumEditorSupportsAppearanceCommitAndCancel()
+    {
+        AssertEditorLifecycle(
+            new SourceGrid.Cells.Cell(EditorChoice.Alpha, typeof(EditorChoice)),
+            EditorChoice.Beta,
+            EditorChoice.Alpha,
+            typeof(SourceGrid.Cells.Editors.ComboBox));
+    }
+
+    [Test]
+    public void DateTimePickerEditorSupportsAppearanceCommitAndCancel()
+    {
+        AssertEditorLifecycle(
+            new SourceGrid.Cells.Cell(
+                new System.DateTime(2026, 9, 7),
+                new SourceGrid.Cells.Editors.DateTimePicker()),
+            new System.DateTime(2026, 9, 8),
+            new System.DateTime(2026, 9, 9),
+            typeof(SourceGrid.Cells.Editors.DateTimePicker));
+    }
+
+    private static void AssertEditorLifecycle(
+        SourceGrid.Cells.Cell cell,
+        object committedValue,
+        object cancelledValue,
+        System.Type expectedEditorType)
+    {
+        var originalTheme = BootstrapThemeManager.CurrentTheme;
+        var light = BootstrapTheme.CreateDefault(BootstrapThemeMode.Light);
+        var dark = BootstrapTheme.CreateDefault(BootstrapThemeMode.Dark);
+        try
+        {
+            BootstrapThemeManager.CurrentTheme = light;
+            using (var form = new Form())
+            using (var grid = new BootstrapSourceGridControl())
+            {
+                grid.Redim(1, 1);
+                grid[0, 0] = cell;
+                form.Controls.Add(grid);
+                form.Show();
+
+                var context = new SourceGrid.CellContext(
+                    grid,
+                    new SourceGrid.Position(0, 0),
+                    cell);
+                grid.GetCell(0, 0).View.Measure(context, Size.Empty);
+                var editor = (SourceGrid.Cells.Editors.EditorControlBase)cell.Editor;
+                Assert.That(editor, Is.TypeOf(expectedEditorType));
+
+                context.StartEdit();
+                try
+                {
+                    Assert.That(editor.IsEditing, Is.True);
+                    Assert.That(editor.Control.Parent, Is.SameAs(grid));
+                    Assert.That(editor.Control.Visible, Is.True);
+                    Assert.That(editor.Control.BackColor, Is.EqualTo(cell.View.BackColor));
+                    Assert.That(editor.Control.ForeColor, Is.EqualTo(cell.View.ForeColor));
+                    Assert.That(editor.Control.Font, Is.EqualTo(grid.Font));
+
+                    BootstrapThemeManager.CurrentTheme = dark;
+                    Assert.That(editor.IsEditing, Is.True);
+                    Assert.That(editor.Control.BackColor, Is.EqualTo(dark.Colors.Surface));
+                    Assert.That(editor.Control.ForeColor, Is.EqualTo(dark.Colors.Text));
+                    Assert.That(editor.Control.Font, Is.EqualTo(grid.Font));
+
+                    editor.SetEditValue(committedValue);
+                    Assert.That(context.EndEdit(false), Is.True);
+                    Assert.That(cell.Value, Is.EqualTo(committedValue));
+
+                    context.StartEdit();
+                    editor.SetEditValue(cancelledValue);
+                    Assert.That(context.EndEdit(true), Is.True);
+                    Assert.That(cell.Value, Is.EqualTo(committedValue));
+                }
+                finally
+                {
+                    context.EndEdit(true);
+                    form.Close();
+                }
+            }
+        }
+        finally
+        {
+            BootstrapThemeManager.CurrentTheme = originalTheme;
+        }
+    }
+
+    private enum EditorChoice
+    {
+        Alpha,
+        Beta,
+    }
 }
