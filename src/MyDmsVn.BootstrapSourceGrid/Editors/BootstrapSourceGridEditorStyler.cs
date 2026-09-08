@@ -1,4 +1,3 @@
-using System.Drawing;
 using MyDmsVn.BootstrapSourceGrid.Views;
 using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
 
@@ -15,13 +14,15 @@ internal static class BootstrapSourceGridEditorStyler
         }
 
         var cell = grid.GetCell(position.Row, position.Column);
-        var editor = cell?.Editor as SourceGrid.Cells.Editors.EditorControlBase;
-        if (editor is null || !editor.IsEditing || !editor.UseCellViewProperties)
+        if (cell is null ||
+            cell.Editor is not SourceGrid.Cells.Editors.EditorControlBase editor ||
+            !editor.IsEditing ||
+            !editor.UseCellViewProperties)
         {
             return;
         }
 
-        var backColor = cell!.View.BackColor;
+        var backColor = cell.View.BackColor;
         var foreColor = cell.View.ForeColor;
         if (cell.View is BootstrapSourceGridCellView)
         {
