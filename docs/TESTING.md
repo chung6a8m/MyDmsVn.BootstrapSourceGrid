@@ -120,6 +120,11 @@ Mandatory rules:
 - keep `Application.DoEvents()` finite and only at known synchronization points;
 - use bounded hang diagnostics for raw GUI test runs.
 
+Tests that deliberately exercise `GridVirtual.OnUserException` must attach
+`WinFormsTestGuard.CaptureUserExceptions(...)` before triggering the failure.
+The capture marks SourceGrid's event handled, records the exception for assertions,
+and prevents the vendor fallback `ErrorDialog` from opening.
+
 Recommended command:
 
 ```powershell
@@ -178,6 +183,11 @@ Test styling does not alter:
 Create representative row/column spans and verify:
 
 - covered positions still resolve according to SourceGrid behavior;
+- F2 editing from a covered position uses the canonical span owner and preserves
+  commit/cancel behavior without changing non-edit key selection semantics;
+- the demo spanned cell owns an editor supporting F2, AnyKey, and DoubleClick;
+- F2, AnyKey, and double-click activation through a covered hit-test coordinate
+  show the editor control with the canonical span-owner context;
 - themed Views render on span owner without creating duplicate semantic cells;
 - theme switch does not mutate span definitions.
 

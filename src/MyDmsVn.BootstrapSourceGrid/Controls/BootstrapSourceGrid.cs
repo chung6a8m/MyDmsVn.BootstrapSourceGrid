@@ -2,7 +2,9 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Threading;
+using System.Windows.Forms;
 using MyDmsVn.Bootstrap5WinFormUI.Theme;
+using MyDmsVn.BootstrapSourceGrid.Editors;
 using MyDmsVn.BootstrapSourceGrid.Internal;
 using MyDmsVn.BootstrapSourceGrid.Theming;
 
@@ -125,6 +127,55 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     }
 
     /// <inheritdoc />
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    {
+        if (keyData == Keys.Home || keyData == Keys.End)
+        {
+            var args = new KeyEventArgs(keyData);
+            OnKeyDown(args);
+            if (args.Handled)
+            {
+                return true;
+            }
+        }
+
+        return base.ProcessCmdKey(ref msg, keyData);
+    }
+
+    /// <inheritdoc />
+    public override void ProcessSpecialGridKey(KeyEventArgs e)
+    {
+        if (!e.Handled &&
+            e.KeyData == (Keys.Tab | Keys.Shift) &&
+            (SpecialKeys & SourceGrid.GridSpecialKeys.Tab) == SourceGrid.GridSpecialKeys.Tab)
+        {
+            e.Handled = ProcessReverseTab();
+            return;
+        }
+
+        if (!e.Handled &&
+            ((e.KeyData == Keys.Home && TryMoveToRowBoundary(first: true)) ||
+             (e.KeyData == Keys.End && TryMoveToRowBoundary(first: false))))
+        {
+            e.Handled = true;
+            return;
+        }
+
+        base.ProcessSpecialGridKey(e);
+    }
+
+    /// <inheritdoc />
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        if (!e.Handled && e.KeyCode == Keys.F2)
+        {
+            FocusCanonicalActivePosition();
+        }
+
+        base.OnKeyDown(e);
+    }
+
+    /// <inheritdoc />
     protected override void Dispose(bool disposing)
     {
         if (disposing)
@@ -207,11 +258,6 @@ public class BootstrapSourceGrid : SourceGrid.Grid
         var theme = BootstrapThemeManager.CurrentTheme;
         _themeSnapshot = BootstrapSourceGridThemeAdapter.CreateSnapshot(theme);
         _dpiMetrics = BootstrapSourceGridDpiMetrics.FromTheme(theme, CurrentDpi);
-        if (_useThemeFont)
-        {
-            ApplyThemeFont(_themeSnapshot.BodyFont);
-        }
-
         BackColor = _themeSnapshot.CellBackColor;
         ForeColor = _themeSnapshot.CellForeColor;
         _styleApplicator.ApplyTheme(_themeSnapshot, _dpiMetrics);
@@ -219,6 +265,12 @@ public class BootstrapSourceGrid : SourceGrid.Grid
             (SourceGrid.Selection.SelectionBase)Selection,
             _themeSnapshot,
             _dpiMetrics);
+        if (_useThemeFont)
+        {
+            ApplyThemeFont(_themeSnapshot.BodyFont);
+        }
+
+        BootstrapSourceGridEditorStyler.RefreshActiveEditor(this);
     }
 
     internal void RefreshDpiMetrics(int dpi)
@@ -284,5 +336,92 @@ public class BootstrapSourceGrid : SourceGrid.Grid
         var font = _themeFont;
         _themeFont = null;
         font?.Dispose();
+    }
+
+    private bool ProcessReverseTab()
+    {
+        var active = Selection.ActivePosition;
+        if (!active.IsEmpty())
+        {
+            var context = new SourceGrid.CellContext(this, active);
+            if (context.Cell is not null &&
+                context.IsEditing() &&
+                !context.EndEdit(false))
+            {
+                return true;
+            }
+        }
+
+        if (!Selection.MoveActiveCell(0, -1, -1, int.MaxValue))
+        {
+            FindForm()?.SelectNextControl(this, false, true, true, true);
+        }
+
+        return true;
+    }
+
+    private bool TryMoveToRowBoundary(bool first)
+    {
+        var active = Selection.ActivePosition;
+        if (active.IsEmpty())
+        {
+            return false;
+        }
+
+        var context = new SourceGrid.CellContext(this, active);
+        if (context.Cell is not null && context.IsEditing())
+        {
+            return false;
+        }
+
+        var column = first ? 0 : ColumnsCount - 1;
+        var limit = first ? ColumnsCount : -1;
+        var step = first ? 1 : -1;
+        var previousTarget = SourceGrid.Position.Empty;
+        for (; column != limit; column += step)
+        {
+            if (!Columns.IsColumnVisible(column))
+            {
+                continue;
+            }
+
+            var target = PositionToStartPosition(
+                new SourceGrid.Position(active.Row, column));
+            if (target.IsEmpty() || target == previousTarget)
+            {
+                continue;
+            }
+
+            previousTarget = target;
+            if (!Columns.IsColumnVisible(target.Column))
+            {
+                continue;
+            }
+
+            if (!Selection.CanReceiveFocus(target))
+            {
+                continue;
+            }
+
+            Selection.Focus(target, true);
+            return true;
+        }
+
+        return false;
+    }
+
+    private void FocusCanonicalActivePosition()
+    {
+        var active = Selection.ActivePosition;
+        if (active.IsEmpty())
+        {
+            return;
+        }
+
+        var canonical = PositionToStartPosition(active);
+        if (!canonical.IsEmpty() && canonical != active)
+        {
+            Selection.Focus(canonical, true);
+        }
     }
 }

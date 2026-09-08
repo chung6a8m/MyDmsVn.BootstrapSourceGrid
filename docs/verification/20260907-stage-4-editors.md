@@ -1,0 +1,32 @@
+# Stage 4 editor verification
+
+Verified against SourceGrid `f4e457b43582bf01892f50bdc74aa480531e5944` on both `net48` and `net8.0-windows`.
+
+| Editor type | View color propagation | Font | Border | Commit | Cancel | Theme switch active | Result / limitation |
+|---|---|---|---|---|---|---|---|
+| `string` factory / `Editors.TextBox` | Back/foreground propagate | Inherits grid font | SourceGrid `DevAgeTextBox` remains `BorderStyle.None` | Pass | Pass | Pass | Supported; no replacement editor. |
+| `int` factory / `Editors.TextBox` | Back/foreground propagate | Inherits grid font | SourceGrid `DevAgeTextBox` remains `BorderStyle.None` | Pass | Pass | Pass | Supported through the factory converter. |
+| `DateTime` factory / `Editors.TextBoxUITypeEditor` | Outer editor control propagates | Inherits grid font | Native SourceGrid button/drop-down visuals remain unchanged | Pass | Pass | Pass | Supported; OS/native inner visuals are not repainted by the integration. |
+| `bool` factory / `Editors.ComboBox` | Editor control propagates | Inherits grid font | Native combo border/drop-down remains unchanged | Pass | Pass | Pass | Supported as the factory-provided boolean editor. |
+| enum factory / `Editors.ComboBox` | Editor control propagates | Inherits grid font | Native combo border/drop-down remains unchanged | Pass | Pass | Pass | Supported representative list/drop-down editor. |
+| Explicit `Editors.DateTimePicker` | Editor control propagates | Inherits grid font | OS-native picker border/calendar remains unchanged | Pass | Pass | Pass | Supported when explicitly assigned; native subparts are intentionally not replaced. |
+
+## Boundaries
+
+- BootstrapSourceGrid does not replace SourceGrid editor classes or their commit/cancel/focus lifecycle.
+- `EditorBase.UseCellViewProperties` is the ownership switch. When false, runtime theme changes leave consumer editor colors and font untouched.
+- SourceGrid checkbox cells use their existing cell View/controller and do not create an active WinForms editor control. They remain native and are outside the active-editor refresh bridge.
+- SourceGrid does not expose Home/End in `GridSpecialKeys` at the pinned baseline.
+  BootstrapSourceGrid handles bare Home/End through a narrow command-key override
+  when no editor is active; editor-active Home/End remains native to the editor.
+  Targets are canonicalized so a spanned final cell focuses its logical start.
+- BootstrapSourceGrid handles Shift+Tab in `ProcessSpecialGridKey` so backward
+  navigation does not fall through SourceGrid's Shift range-extension branch,
+  while retaining SourceGrid controller and virtual special-key dispatch.
+- F2 activation canonicalizes a covered span coordinate before creating the
+  SourceGrid edit context; commit and cancel operate on the span owner. Other
+  keys preserve SourceGrid's existing active-position and controller context.
+- The demo's two-column span uses the typed string-cell constructor, so its
+  SourceGrid editor supports F2, AnyKey, and DoubleClick. Automated hit-test
+  coverage enters through the covered column and verifies a visible editor with
+  the canonical span-owner `EditPosition` for all three activation modes.

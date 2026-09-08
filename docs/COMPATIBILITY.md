@@ -52,6 +52,22 @@ The integration must not silently redefine:
 
 Styling changes must be regression-tested around these behaviors when the changed code can influence them.
 
+Stage 4 intentionally hardens three command-key behaviors for
+`BootstrapSourceGrid` after explicit product-owner approval:
+
+- Shift+Tab commits a valid active edit, moves to the previous focusable cell,
+  and resets selection to that cell instead of extending a range. SourceGrid's
+  controller and `ProcessSpecialGridKey` dispatch still run before this behavior.
+- Home and End, while not editing, move to the first and last focusable visible
+  cell in the active row, skipping hidden or unselectable columns and resolving
+  spanned cells to their canonical start position.
+- Home and End remain editor-owned while a cell editor is active.
+- F2 edit activation canonicalizes a covered span coordinate before SourceGrid
+  resolves the cell editor and edit context. Other keys retain SourceGrid's
+  existing selection and controller context.
+
+All other command keys continue through SourceGrid's existing processing path.
+
 ## 5. Consumer customization compatibility
 
 Consumer customizations take precedence over integration defaults when they are explicit.
