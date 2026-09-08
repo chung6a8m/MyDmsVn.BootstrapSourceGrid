@@ -2,6 +2,8 @@
 
 Date: 2026-09-09
 
+> **Automation note:** GitHub Actions is disabled for this repository, so the previously added Windows workflow was removed on 2026-09-09. The results below come from the authoritative local validation gate. Until Actions is re-enabled and a workflow is restored, the absence of a GitHub CI result is expected and is not a release-gate failure.
+
 ## Source graph and automated gate
 
 Verified vendor pins:
@@ -70,4 +72,4 @@ Detailed package evidence and unblock requirements are in [UPSTREAM.md](../UPSTR
 
 ## Verdict
 
-Demo, documentation, package metadata, Windows CI, API review, and the complete source/submodule validation gate are implemented. The source-distributed MVP is ready for review under temporary strategy 2B. Stage 5 cannot be declared fully complete and no public NuGet publication is authorized until the D-017 dependency/license/clean-consumer gate and remaining required manual environment checks pass.
+Demo, documentation, package metadata, API review, and the complete local source/submodule validation gate are implemented. GitHub CI is intentionally unavailable while Actions is disabled. The source-distributed MVP is ready for review under temporary strategy 2B. Stage 5 cannot be declared fully complete and no public NuGet publication is authorized until the D-017 dependency/license/clean-consumer gate and remaining required manual environment checks pass.

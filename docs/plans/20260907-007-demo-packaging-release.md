@@ -6,7 +6,7 @@
 
 **Architecture:** Development/pre-release continues to build against exact vendor submodule commits. The integration assembly remains separate. The repository/package license is MIT (D-016). Public NuGet publication uses exact matching/resolvable vendor NuGet packages (D-017 / strategy 2A); pinned submodules plus `ProjectReference` remain the temporary development model (strategy 2B). Do not silently embed/copy vendor source or binaries into the package to bypass dependency packaging.
 
-**Tech Stack:** WinForms demo, SDK-style NuGet pack, Windows CI, Markdown docs, dual-target test matrix.
+**Tech Stack:** WinForms demo, SDK-style NuGet pack, local Windows validation while GitHub Actions is disabled, Markdown docs, dual-target test matrix.
 
 **Spec:** PRD FR-13 and MVP acceptance gates; UPSTREAM; COMPATIBILITY; TESTING; decisions D-005/D-006/D-010/D-011/D-016/D-017.
 
@@ -340,6 +340,8 @@ If vendor packages are still unavailable, do not mark this task complete and do 
 
 ### Task 5: Add Windows CI validation
 
+> **Temporarily superseded (2026-09-09):** GitHub Actions is disabled for this repository, and `.github/workflows/ci.yml` has been removed. Until the owner re-enables Actions, the equivalent local commands documented in `AGENTS.md` and `docs/TESTING.md` are the required validation gate. Future implementation/review sessions must not require a GitHub CI check to pass. Restore this task only when Actions is enabled again.
+
 **Files:**
 - Create: `.github/workflows/ci.yml`
 - Optionally create: `scripts/Test-All.ps1`
@@ -504,7 +506,7 @@ Expected: no uncommitted release changes and no vendor dirt.
 - [ ] Consumer/package/release docs are complete.
 - [ ] Package metadata is correct for `MyDmsVn.BootstrapSourceGrid` and declares MIT.
 - [ ] Public API remains thin and SourceGrid-compatible.
-- [ ] CI validates dual-target build/tests without modal hangs.
+- [ ] Local automation validates dual-target build/tests without modal hangs while GitHub Actions remains disabled; restore CI validation only after Actions is re-enabled.
 - [ ] Development source mode remains pinned/reproducible through submodules + ProjectReference.
 - [ ] Public NuGet dependency graph uses verified exact vendor packages per D-017.
 - [ ] Vendor license/notice obligations are verified for the public dependency graph.
