@@ -27,6 +27,7 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     private BootstrapSourceGridDpiMetrics _dpiMetrics;
     private readonly BootstrapSourceGridStyleApplicator _styleApplicator;
     private readonly BootstrapSourceGridSelectionStyle _selectionStyle;
+    private readonly BootstrapSourceGridEditorRegistry _editorRegistry;
 
     /// <summary>
     /// Initializes a new Bootstrap-themed SourceGrid.
@@ -42,6 +43,7 @@ public class BootstrapSourceGrid : SourceGrid.Grid
             _themeSnapshot,
             _dpiMetrics);
         _selectionStyle = new BootstrapSourceGridSelectionStyle();
+        _editorRegistry = new BootstrapSourceGridEditorRegistry();
         _initialized = true;
         BootstrapThemeManager.ThemeChanged += OnThemeChanged;
         _themeSubscribed = true;
@@ -56,6 +58,8 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     internal bool IsThemeSubscribed => _themeSubscribed;
 
     internal Font? OwnedThemeFont => _themeFont;
+
+    internal BootstrapSourceGridEditorRegistry EditorRegistry => _editorRegistry;
 
     internal int CurrentDpi => IsHandleCreated && DeviceDpi > 0
         ? DeviceDpi
@@ -180,6 +184,8 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     {
         if (disposing)
         {
+            _editorRegistry.Dispose();
+
             if (_themeSubscribed)
             {
                 BootstrapThemeManager.ThemeChanged -= OnThemeChanged;

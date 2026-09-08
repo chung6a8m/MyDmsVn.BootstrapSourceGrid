@@ -14,9 +14,13 @@ internal class BootstrapTextBoxProbeEditor : SourceGrid.Cells.Editors.EditorCont
 
     internal BootstrapTextBox BootstrapControl => (BootstrapTextBox)Control;
 
+    internal bool IsEditorDisposed { get; private set; }
+
+    internal bool IsControlDisposed => ((DisposalTrackingBootstrapTextBox)Control).DisposeCalled;
+
     protected override Control CreateControl()
     {
-        return new BootstrapTextBox();
+        return new DisposalTrackingBootstrapTextBox();
     }
 
     public override void SetEditValue(object editValue)
@@ -32,5 +36,30 @@ internal class BootstrapTextBoxProbeEditor : SourceGrid.Cells.Editors.EditorCont
     protected override void OnSendCharToEditor(char key)
     {
         BootstrapControl.Text = key.ToString();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            IsEditorDisposed = true;
+        }
+
+        base.Dispose(disposing);
+    }
+
+    private sealed class DisposalTrackingBootstrapTextBox : BootstrapTextBox
+    {
+        internal bool DisposeCalled { get; private set; }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                DisposeCalled = true;
+            }
+
+            base.Dispose(disposing);
+        }
     }
 }

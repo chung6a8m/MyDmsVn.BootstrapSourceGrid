@@ -74,6 +74,43 @@ public sealed class BootstrapEditorOwnershipTests
         }
     }
 
+    [Test]
+    public void RegisteredEditorUsedByCell_IsDisposedWithGrid()
+    {
+        var form = new Form();
+        var grid = new BootstrapSourceGridControl();
+        var editor = grid.EditorRegistry.Register(new BootstrapTextBoxProbeEditor());
+        var cell = new SourceGrid.Cells.Cell("before") { Editor = editor };
+        grid.Redim(1, 1);
+        grid[0, 0] = cell;
+        form.Controls.Add(grid);
+        form.Show();
+
+        var context = new SourceGrid.CellContext(grid, new SourceGrid.Position(0, 0), cell);
+        grid.GetCell(0, 0).View.Measure(context, Size.Empty);
+        context.StartEdit();
+        Assert.That(context.EndEdit(true), Is.True);
+
+        grid.Dispose();
+
+        Assert.That(editor.IsControlDisposed, Is.True);
+        Assert.That(editor.IsEditorDisposed, Is.True);
+        form.Dispose();
+    }
+
+    [Test]
+    public void RegisteredEditorNeverStarted_IsDisposedWithGrid()
+    {
+        var grid = new BootstrapSourceGridControl();
+        var editor = grid.EditorRegistry.Register(new BootstrapTextBoxProbeEditor());
+
+        Assert.That(editor.Grid, Is.Null);
+        grid.Dispose();
+
+        Assert.That(editor.IsControlDisposed, Is.True);
+        Assert.That(editor.IsEditorDisposed, Is.True);
+    }
+
     private static void EditAndCommit(
         BootstrapSourceGridControl grid,
         SourceGrid.Cells.Cell cell,
