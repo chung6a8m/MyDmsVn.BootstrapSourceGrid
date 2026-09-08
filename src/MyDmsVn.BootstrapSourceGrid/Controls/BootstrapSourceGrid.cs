@@ -116,9 +116,8 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     protected override void OnHandleCreated(EventArgs e)
     {
         base.OnHandleCreated(e);
-        if (Interlocked.Exchange(ref _themeRefreshPending, 0) != 0)
+        if (ApplyPendingThemeChange())
         {
-            ApplyThemeChange();
             return;
         }
 
@@ -149,46 +148,47 @@ public class BootstrapSourceGrid : SourceGrid.Grid
             return;
         }
 
-        if (DeferThemeChangeUntilHandleCreated())
+        if (Thread.CurrentThread.ManagedThreadId == _owningThreadId)
         {
+            Interlocked.Exchange(ref _themeRefreshPending, 0);
+            ApplyThemeChange();
             return;
-        }
-
-        if (InvokeRequired)
-        {
-            try
-            {
-                BeginInvoke((Action)ApplyThemeChange);
-            }
-            catch (InvalidOperationException) when (IsDisposed || Disposing)
-            {
-                // Disposal can race a queued application-level theme change.
-            }
-            catch (InvalidOperationException)
-            {
-                Interlocked.Exchange(ref _themeRefreshPending, 1);
-            }
-
-            return;
-        }
-
-        ApplyThemeChange();
-    }
-
-    private bool DeferThemeChangeUntilHandleCreated()
-    {
-        if (IsHandleCreated || Thread.CurrentThread.ManagedThreadId == _owningThreadId)
-        {
-            return false;
         }
 
         Interlocked.Exchange(ref _themeRefreshPending, 1);
         if (!IsHandleCreated)
         {
-            return true;
+            return;
         }
 
-        return Interlocked.Exchange(ref _themeRefreshPending, 0) == 0;
+        try
+        {
+            PostThemeChange(() => ApplyPendingThemeChange());
+        }
+        catch (InvalidOperationException) when (IsDisposed || Disposing)
+        {
+            // Disposal can race a queued application-level theme change.
+        }
+        catch (InvalidOperationException)
+        {
+            // The pending bit was armed before posting so a replacement handle can drain it.
+        }
+    }
+
+    internal virtual void PostThemeChange(Action callback)
+    {
+        BeginInvoke(callback);
+    }
+
+    private bool ApplyPendingThemeChange()
+    {
+        if (Interlocked.Exchange(ref _themeRefreshPending, 0) == 0)
+        {
+            return false;
+        }
+
+        ApplyThemeChange();
+        return true;
     }
 
     private void ApplyThemeChange()

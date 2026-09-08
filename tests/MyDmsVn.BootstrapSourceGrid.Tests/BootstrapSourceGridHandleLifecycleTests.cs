@@ -69,6 +69,60 @@ public sealed class BootstrapSourceGridHandleLifecycleTests
     }
 
     [Test]
+    public void WorkerThemeChangeDuringHandleRecreationCannotBeLost()
+    {
+        var originalTheme = BootstrapThemeManager.CurrentTheme;
+        var light = BootstrapTheme.CreateDefault(BootstrapThemeMode.Light);
+        var dark = BootstrapTheme.CreateDefault(BootstrapThemeMode.Dark);
+
+        try
+        {
+            BootstrapThemeManager.CurrentTheme = light;
+            using (var form = new Form())
+            using (var grid = new ThrowingPostBootstrapSourceGrid())
+            {
+                form.Controls.Add(grid);
+                form.Show();
+                _ = grid.Handle;
+                var owningThreadId = Thread.CurrentThread.ManagedThreadId;
+                Exception? workerException = null;
+                grid.ResetThemeApplicationCount();
+
+                var worker = new Thread(() =>
+                {
+                    try
+                    {
+                        BootstrapThemeManager.CurrentTheme = dark;
+                    }
+                    catch (Exception exception)
+                    {
+                        workerException = exception;
+                    }
+                });
+                worker.Start();
+
+                Assert.That(
+                    grid.PostAttempted.Wait(TimeSpan.FromSeconds(5)),
+                    Is.True,
+                    "Theme worker did not reach the cross-thread post.");
+                grid.RecreateGridHandle();
+                grid.AllowPostFailure.Set();
+
+                Assert.That(worker.Join(TimeSpan.FromSeconds(5)), Is.True, "Theme worker did not finish.");
+                Assert.That(workerException, Is.Null);
+                Assert.That(grid.CurrentThemeSnapshot.SelectionBackColor, Is.EqualTo(dark.Colors.Primary));
+                Assert.That(grid.ThemeApplicationCount, Is.EqualTo(1));
+                Assert.That(grid.LastThemeApplicationThreadId, Is.EqualTo(owningThreadId));
+                form.Close();
+            }
+        }
+        finally
+        {
+            BootstrapThemeManager.CurrentTheme = originalTheme;
+        }
+    }
+
+    [Test]
     public void RepeatedHandleRecreationKeepsOneThemeCallbackAndUsableGrid()
     {
         var originalTheme = BootstrapThemeManager.CurrentTheme;
@@ -183,7 +237,7 @@ public sealed class BootstrapSourceGridHandleLifecycleTests
         }
     }
 
-    private sealed class TrackingBootstrapSourceGrid : BootstrapSourceGridControl
+    private class TrackingBootstrapSourceGrid : BootstrapSourceGridControl
     {
         internal int ThemeApplicationCount { get; private set; }
 
@@ -205,6 +259,35 @@ public sealed class BootstrapSourceGridHandleLifecycleTests
             ThemeApplicationCount++;
             LastThemeApplicationThreadId = Thread.CurrentThread.ManagedThreadId;
             base.ApplyBootstrapTheme();
+        }
+    }
+
+    private sealed class ThrowingPostBootstrapSourceGrid : TrackingBootstrapSourceGrid
+    {
+        internal ManualResetEventSlim PostAttempted { get; } = new ManualResetEventSlim();
+
+        internal ManualResetEventSlim AllowPostFailure { get; } = new ManualResetEventSlim();
+
+        internal override void PostThemeChange(Action callback)
+        {
+            PostAttempted.Set();
+            if (!AllowPostFailure.Wait(TimeSpan.FromSeconds(5)))
+            {
+                throw new TimeoutException("Handle recreation did not complete.");
+            }
+
+            throw new InvalidOperationException("Simulated BeginInvoke failure during handle recreation.");
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                PostAttempted.Dispose();
+                AllowPostFailure.Dispose();
+            }
+
+            base.Dispose(disposing);
         }
     }
 }
