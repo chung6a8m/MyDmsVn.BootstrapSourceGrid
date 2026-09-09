@@ -30,7 +30,9 @@ public sealed class BootstrapTextBoxEditor : SourceGrid.Cells.Editors.EditorCont
     /// <inheritdoc />
     public override void SetEditValue(object editValue)
     {
-        BootstrapControl.Text = editValue?.ToString() ?? string.Empty;
+        BootstrapControl.Text = IsStringConversionSupported()
+            ? ValueToString(editValue)
+            : ValueToDisplayString(editValue);
         ((BootstrapSourceGridTextBoxControl)Control).SelectAllForGridEdit();
     }
 

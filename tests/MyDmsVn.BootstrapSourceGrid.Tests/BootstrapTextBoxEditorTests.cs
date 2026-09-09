@@ -1,5 +1,7 @@
 using System;
+using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -230,6 +232,26 @@ public sealed class BootstrapTextBoxEditorTests
             Assert.That(context.EndEdit(false), Is.True);
             Assert.That(fixture.Cells[0].Value, Is.TypeOf<int>());
             Assert.That(fixture.Cells[0].Value, Is.EqualTo(42));
+        }
+    }
+
+    [Test]
+    public void EditStartUsesSourceGridTypeConverterAndUnchangedTextRoundTrips()
+    {
+        var originalValue = new ConvertedValue(42);
+        using (var fixture = new TextEditorFixture(
+            originalValue,
+            new ConvertedValue(84),
+            typeof(ConvertedValue)))
+        {
+            fixture.Editor.TypeConverter = new ConvertedValueTypeConverter();
+
+            var context = fixture.StartEdit(0);
+
+            Assert.That(fixture.Editor.BootstrapControl.Text, Is.EqualTo("converted:42"));
+            Assert.That(context.EndEdit(false), Is.True);
+            Assert.That(fixture.Cells[0].Value, Is.TypeOf<ConvertedValue>());
+            Assert.That(((ConvertedValue)fixture.Cells[0].Value).Number, Is.EqualTo(42));
         }
     }
 
@@ -467,6 +489,61 @@ public sealed class BootstrapTextBoxEditorTests
             var args = new KeyEventArgs(keys);
             ProcessSpecialGridKey(args);
             return args;
+        }
+    }
+
+    private sealed class ConvertedValue
+    {
+        internal ConvertedValue(int number)
+        {
+            Number = number;
+        }
+
+        internal int Number { get; }
+
+        public override string ToString()
+        {
+            return $"raw:{Number}";
+        }
+    }
+
+    private sealed class ConvertedValueTypeConverter : TypeConverter
+    {
+        public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
+        {
+            return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+        }
+
+        public override bool CanConvertTo(ITypeDescriptorContext? context, Type? destinationType)
+        {
+            return destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
+        }
+
+        public override object? ConvertFrom(
+            ITypeDescriptorContext? context,
+            CultureInfo? culture,
+            object value)
+        {
+            if (value is string text && text.StartsWith("converted:", StringComparison.Ordinal))
+            {
+                return new ConvertedValue(int.Parse(text.Substring("converted:".Length), CultureInfo.InvariantCulture));
+            }
+
+            return base.ConvertFrom(context, culture, value);
+        }
+
+        public override object? ConvertTo(
+            ITypeDescriptorContext? context,
+            CultureInfo? culture,
+            object? value,
+            Type destinationType)
+        {
+            if (destinationType == typeof(string) && value is ConvertedValue converted)
+            {
+                return $"converted:{converted.Number}";
+            }
+
+            return base.ConvertTo(context, culture, value, destinationType);
         }
     }
 }
