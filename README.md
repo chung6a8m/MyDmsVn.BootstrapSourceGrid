@@ -125,12 +125,12 @@ columns, including lookup search/navigation and runtime theme switching scenario
 
 ## Documentation
 
-Start here for active work:
+Start here for current work:
 
 1. [`AGENTS.md`](./AGENTS.md) — mandatory operating rules.
 2. [`AI_CONTEXT.md`](./AI_CONTEXT.md) — compact project model.
-3. [`docs/EDITOR_REPLACEMENT.md`](./docs/EDITOR_REPLACEMENT.md) — active editor architecture.
-4. [`docs/DEVELOPMENT_PLAN.md`](./docs/DEVELOPMENT_PLAN.md) — active stage map.
+3. [`docs/EDITOR_REPLACEMENT.md`](./docs/EDITOR_REPLACEMENT.md) — implemented editor architecture.
+4. [`docs/DEVELOPMENT_PLAN.md`](./docs/DEVELOPMENT_PLAN.md) — current development status.
 5. [`docs/plans/`](./docs/plans/) — active task plans only.
 
 Canonical reference documents:

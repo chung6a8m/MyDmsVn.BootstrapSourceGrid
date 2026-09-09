@@ -63,7 +63,7 @@ Create only helpers proven necessary by the stage spike; do not preserve an empt
 
 ### Stage 0 — Editor architecture and ownership spike
 
-Plan: `docs/plans/20260909-002-editor-replacement-architecture-and-ownership.md`
+Plan: `docs/archive/20260909-bootstrap-editor-replacement/20260909-002-editor-replacement-architecture-and-ownership.md`
 
 Acceptance:
 
@@ -77,7 +77,7 @@ Acceptance:
 
 ### Stage 1 — BootstrapTextBox reference adapter
 
-Plan: `docs/plans/20260909-003-bootstrap-text-box-editor.md`
+Plan: `docs/archive/20260909-bootstrap-editor-replacement/20260909-003-bootstrap-text-box-editor.md`
 
 Acceptance:
 
@@ -89,7 +89,7 @@ Acceptance:
 
 ### Stage 2 — BootstrapFormattedTextBox adapter
 
-Plan: `docs/plans/20260909-004-bootstrap-formatted-text-box-editor.md`
+Plan: `docs/archive/20260909-bootstrap-editor-replacement/20260909-004-bootstrap-formatted-text-box-editor.md`
 
 Acceptance:
 
@@ -101,7 +101,7 @@ Acceptance:
 
 ### Stage 3 — BootstrapLookupBox adapter
 
-Plan: `docs/plans/20260909-005-bootstrap-lookup-box-editor.md`
+Plan: `docs/archive/20260909-bootstrap-editor-replacement/20260909-005-bootstrap-lookup-box-editor.md`
 
 Acceptance:
 
@@ -114,7 +114,7 @@ Acceptance:
 
 ### Stage 4 — Registry, hardening, demo, and expansion pattern
 
-Plan: `docs/plans/20260909-006-editor-registry-hardening-and-expansion.md`
+Plan: `docs/archive/20260909-bootstrap-editor-replacement/20260909-006-editor-registry-hardening-and-expansion.md`
 
 Acceptance:
 

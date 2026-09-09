@@ -52,13 +52,13 @@ The first roadmap is complete. It delivered:
 
 The completed roadmap is archived and should not be loaded during normal active work.
 
-## Active initiative — Bootstrap-native editors
+## Bootstrap-native editors
 
 Canonical design: `docs/EDITOR_REPLACEMENT.md`.
 
-Active master roadmap: `docs/plans/20260909-001-bootstrap-editor-replacement-master-roadmap.md`.
+The completed implementation roadmap is archived under `docs/archive/20260909-bootstrap-editor-replacement/` and is not part of the normal read order.
 
-Initial targets:
+Implemented adapters:
 
 1. `BootstrapTextBox`
 2. `BootstrapFormattedTextBox`
