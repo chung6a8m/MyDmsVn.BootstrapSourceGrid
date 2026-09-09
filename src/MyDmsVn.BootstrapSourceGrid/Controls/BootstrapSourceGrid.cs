@@ -43,7 +43,7 @@ public class BootstrapSourceGrid : SourceGrid.Grid
             _themeSnapshot,
             _dpiMetrics);
         _selectionStyle = new BootstrapSourceGridSelectionStyle();
-        _editorRegistry = new BootstrapSourceGridEditorRegistry();
+        _editorRegistry = new BootstrapSourceGridEditorRegistry(this);
         _initialized = true;
         BootstrapThemeManager.ThemeChanged += OnThemeChanged;
         _themeSubscribed = true;
@@ -58,6 +58,16 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     internal bool IsThemeSubscribed => _themeSubscribed;
 
     internal Font? OwnedThemeFont => _themeFont;
+
+    /// <summary>
+    /// Gets the registry that creates Bootstrap editor adapters owned by this grid.
+    /// </summary>
+    /// <remarks>
+    /// Create one editor per column or configuration and assign that shared instance to
+    /// multiple cells in this grid. This grid owns disposal. Do not use an editor created
+    /// here with another grid.
+    /// </remarks>
+    public BootstrapSourceGridEditorRegistry BootstrapEditors => _editorRegistry;
 
     internal BootstrapSourceGridEditorRegistry EditorRegistry => _editorRegistry;
 

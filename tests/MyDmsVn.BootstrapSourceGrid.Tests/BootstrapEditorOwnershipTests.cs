@@ -198,7 +198,7 @@ public sealed class BootstrapEditorOwnershipTests
     public void RegisteredBootstrapTextBoxEditorNeverStarted_IsDisposedWithGrid()
     {
         var grid = new BootstrapSourceGridControl();
-        var editor = grid.EditorRegistry.Register(new BootstrapTextBoxEditor(typeof(string)));
+        var editor = grid.BootstrapEditors.CreateTextBox(typeof(string));
 
         Assert.That(editor.Grid, Is.Null);
         grid.Dispose();
@@ -211,7 +211,7 @@ public sealed class BootstrapEditorOwnershipTests
     {
         var form = new Form();
         var grid = new BootstrapSourceGridControl();
-        var editor = grid.EditorRegistry.Register(new BootstrapTextBoxEditor(typeof(string)));
+        var editor = grid.BootstrapEditors.CreateTextBox(typeof(string));
         var cell = new SourceGrid.Cells.Cell("before") { Editor = editor };
         grid.Redim(1, 1);
         grid[0, 0] = cell;
@@ -233,7 +233,7 @@ public sealed class BootstrapEditorOwnershipTests
     public void RegisteredBootstrapFormattedTextBoxEditorNeverStarted_IsDisposedWithGrid()
     {
         var grid = new BootstrapSourceGridControl();
-        var editor = grid.EditorRegistry.Register(new BootstrapFormattedTextBoxEditor(typeof(string)));
+        var editor = grid.BootstrapEditors.CreateFormattedTextBox(typeof(string));
 
         Assert.That(editor.Grid, Is.Null);
         grid.Dispose();
@@ -246,7 +246,7 @@ public sealed class BootstrapEditorOwnershipTests
     {
         var form = new Form();
         var grid = new BootstrapSourceGridControl();
-        var editor = grid.EditorRegistry.Register(new BootstrapFormattedTextBoxEditor(typeof(string)));
+        var editor = grid.BootstrapEditors.CreateFormattedTextBox(typeof(string));
         var cell = new SourceGrid.Cells.Cell("before") { Editor = editor };
         grid.Redim(1, 1);
         grid[0, 0] = cell;
@@ -268,7 +268,7 @@ public sealed class BootstrapEditorOwnershipTests
     public void RegisteredBootstrapLookupBoxEditorNeverStarted_IsDisposedWithGrid()
     {
         var grid = new BootstrapSourceGridControl();
-        var editor = grid.EditorRegistry.Register(new BootstrapLookupBoxEditor(typeof(int)));
+        var editor = grid.BootstrapEditors.CreateLookupBox(typeof(int));
 
         Assert.That(editor.Grid, Is.Null);
         grid.Dispose();
@@ -281,7 +281,7 @@ public sealed class BootstrapEditorOwnershipTests
     {
         var form = new Form();
         var grid = new BootstrapSourceGridControl();
-        var editor = grid.EditorRegistry.Register(new BootstrapLookupBoxEditor(typeof(int)));
+        var editor = grid.BootstrapEditors.CreateLookupBox(typeof(int));
         editor.BootstrapControl.DisplayMember = nameof(LookupItem.Name);
         editor.BootstrapControl.ValueMember = nameof(LookupItem.Id);
         editor.BootstrapControl.DataSource = new BindingList<LookupItem>
@@ -325,6 +325,68 @@ public sealed class BootstrapEditorOwnershipTests
                 registerNull,
                 Throws.ArgumentNullException.With.Property("ParamName").EqualTo("editor"));
         }
+    }
+
+    [Test]
+    public void DisposedRegistryRejectsInternalRegistration()
+    {
+        using (var grid = new BootstrapSourceGridControl())
+        {
+            var editor = new BootstrapTextBoxProbeEditor();
+            try
+            {
+                grid.BootstrapEditors.Dispose();
+
+                Assert.That(
+                    (System.Action)(() => grid.EditorRegistry.Register(editor)),
+                    Throws.TypeOf<System.ObjectDisposedException>()
+                        .With.Property("ObjectName")
+                        .EqualTo(nameof(BootstrapSourceGridEditorRegistry)));
+            }
+            finally
+            {
+                editor.Control.Dispose();
+                editor.Dispose();
+            }
+        }
+    }
+
+    [Test]
+    public void LargeAssignmentDisposesUsedAndUnusedRegistryControlsExactlyOnce()
+    {
+        var grid = new BootstrapSourceGridControl();
+        var used = grid.BootstrapEditors.CreateTextBox(typeof(string));
+        var unusedFormatted = grid.BootstrapEditors.CreateFormattedTextBox(typeof(decimal));
+        var unusedLookup = grid.BootstrapEditors.CreateLookupBox(typeof(int));
+        var controls = new[]
+        {
+            used.Control,
+            unusedFormatted.Control,
+            unusedLookup.Control,
+        };
+        var disposeCounts = new int[controls.Length];
+        for (var index = 0; index < controls.Length; index++)
+        {
+            var capturedIndex = index;
+            controls[index].Disposed += (_, _) => disposeCounts[capturedIndex]++;
+        }
+
+        grid.Redim(10_000, 1);
+        for (var row = 0; row < grid.RowsCount; row++)
+        {
+            grid[row, 0] = new SourceGrid.Cells.Cell(row.ToString()) { Editor = used };
+        }
+
+        grid.Dispose();
+        grid.Dispose();
+
+        Assert.Multiple((System.Action)(() =>
+        {
+            Assert.That(controls[0].IsDisposed, Is.True);
+            Assert.That(controls[1].IsDisposed, Is.True);
+            Assert.That(controls[2].IsDisposed, Is.True);
+            Assert.That(disposeCounts, Is.EqualTo(new[] { 1, 1, 1 }));
+        }));
     }
 
     private static void EditAndCommit(

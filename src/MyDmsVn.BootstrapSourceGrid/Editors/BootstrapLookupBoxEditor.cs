@@ -2,6 +2,7 @@ using System;
 using System.Windows.Forms;
 using MyDmsVn.Bootstrap5WinFormUI.Controls;
 using MyDmsVn.BootstrapSourceGrid.Editors.Internal;
+using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
 
 namespace MyDmsVn.BootstrapSourceGrid.Editors;
 
@@ -10,14 +11,18 @@ namespace MyDmsVn.BootstrapSourceGrid.Editors;
 /// </summary>
 public sealed class BootstrapLookupBoxEditor : SourceGrid.Cells.Editors.EditorControlBase
 {
-    internal BootstrapLookupBoxEditor(Type valueType)
-        : base(valueType)
+    internal BootstrapLookupBoxEditor(BootstrapSourceGridControl owner, Type valueType)
+        : base(ValidateOwner(owner, valueType))
     {
+        Owner = owner;
         UseCellViewProperties = false;
         var control = (BootstrapSourceGridLookupBoxControl)Control;
+        control.OwnerEditCompletionRequested = CompleteGridEdit;
         control.OwnerNavigationRequested = ContinueGridNavigation;
         control.SelectionCommitted += OnSelectionCommitted;
     }
+
+    internal BootstrapSourceGridControl Owner { get; }
 
     /// <summary>
     /// Gets the Bootstrap lookup box used while a cell is being edited.
@@ -78,5 +83,26 @@ public sealed class BootstrapLookupBoxEditor : SourceGrid.Cells.Editors.EditorCo
         var args = new KeyEventArgs(reverse ? Keys.Shift | Keys.Tab : Keys.Tab);
         Grid.ProcessSpecialGridKey(args);
         return args.Handled;
+    }
+
+    private bool CompleteGridEdit(bool cancel)
+    {
+        if (!IsEditing)
+        {
+            return false;
+        }
+
+        EditCellContext.EndEdit(cancel);
+        return true;
+    }
+
+    private static Type ValidateOwner(BootstrapSourceGridControl owner, Type valueType)
+    {
+        if (owner is null)
+        {
+            throw new ArgumentNullException(nameof(owner));
+        }
+
+        return valueType;
     }
 }

@@ -15,7 +15,7 @@ Before product-code changes, always read:
 5. the relevant section of `docs/UPSTREAM_API_SEAMS.md`;
 6. the exact pinned vendor source/tests touched by the task.
 
-For the current editor initiative, the active spec is `docs/EDITOR_REPLACEMENT.md` and the roadmap is `docs/plans/20260909-001-bootstrap-editor-replacement-master-roadmap.md`.
+For Bootstrap editor work, the canonical spec is `docs/EDITOR_REPLACEMENT.md`. The completed implementation roadmap is archived under `docs/archive/20260909-bootstrap-editor-replacement/`.
 
 Read other canonical documents only when their topic is relevant:
 
@@ -83,9 +83,9 @@ Do not create a second theme system or hard-code Bootstrap colors when theme tok
 
 If this integration creates a `Font`/GDI object, it owns/disposes it. Never dispose consumer-owned resources.
 
-## 5. Active editor initiative rules
+## 5. Bootstrap editor integration rules
 
-The completed MVP kept native SourceGrid editors. The active post-MVP initiative may add Bootstrap editor adapters under these constraints:
+Bootstrap editor adapters follow these constraints:
 
 ```text
 SourceGrid lifecycle + thin adapter + Bootstrap control

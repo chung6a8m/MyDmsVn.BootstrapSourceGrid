@@ -78,7 +78,7 @@ partial class MainForm
         _interactionHelp.Dock = DockStyle.Fill;
         _interactionHelp.Name = "interactionHelp";
         _interactionHelp.Padding = new Padding(8, 6, 8, 6);
-        _interactionHelp.Text = "Try: Tab/Shift+Tab, arrows, Home/End, PageUp/PageDown, F2 or typing to edit, Enter to commit, Esc to cancel, click a header to sort, select a range, scroll, and switch theme while selected or editing.";
+        _interactionHelp.Text = "Editors are shared per column/configuration. Try: F2 or typing; Enter to commit; Esc to cancel; Tab/Shift+Tab; lookup Up/Down/PageUp/PageDown, mouse selection, outside click, and the read-only DisplayMember column; application deactivation; header sort, range selection, scrolling, and Light/Dark switching while editing or the lookup popup is open.";
 
         _grid.Dock = DockStyle.Fill;
         _grid.Name = "BootstrapSourceGrid";

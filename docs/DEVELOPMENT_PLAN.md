@@ -4,21 +4,21 @@
 
 The initial BootstrapSourceGrid MVP roadmap is complete and archived. For historical context, see [Archive](./archive/).
 
-## Active initiative — Bootstrap editor replacement
+## Completed initiative — Bootstrap editor replacement
 
 Goal: add Bootstrap-native SourceGrid editor adapters without replacing SourceGrid's editor lifecycle.
 
 Canonical design: [`EDITOR_REPLACEMENT.md`](./EDITOR_REPLACEMENT.md)
 
-Master roadmap: [`plans/20260909-001-bootstrap-editor-replacement-master-roadmap.md`](./plans/20260909-001-bootstrap-editor-replacement-master-roadmap.md)
+Archived roadmap: [`archive/20260909-bootstrap-editor-replacement/`](./archive/20260909-bootstrap-editor-replacement/)
 
 Stages:
 
-1. [`20260909-002-editor-replacement-architecture-and-ownership.md`](./plans/20260909-002-editor-replacement-architecture-and-ownership.md) — verify lifecycle, sharing, sizing, disposal, and ownership.
-2. [`20260909-003-bootstrap-text-box-editor.md`](./plans/20260909-003-bootstrap-text-box-editor.md) — reference `BootstrapTextBox` adapter.
-3. [`20260909-004-bootstrap-formatted-text-box-editor.md`](./plans/20260909-004-bootstrap-formatted-text-box-editor.md) — `RawValue` adapter and formatting/conversion contract.
-4. [`20260909-005-bootstrap-lookup-box-editor.md`](./plans/20260909-005-bootstrap-lookup-box-editor.md) — `SelectedValue`, popup/focus, and keyboard interaction contract.
-5. [`20260909-006-editor-registry-hardening-and-expansion.md`](./plans/20260909-006-editor-registry-hardening-and-expansion.md) — public grid-owned registry, hardening, demo, docs, and future editor pattern.
+1. Architecture and ownership — lifecycle, sharing, sizing, disposal, and grid ownership verified.
+2. `BootstrapTextBox` — reference adapter implemented.
+3. `BootstrapFormattedTextBox` — `RawValue` adaptation and SourceGrid conversion contract implemented.
+4. `BootstrapLookupBox` — `SelectedValue`, popup/focus, and keyboard interaction contract implemented.
+5. Registry and hardening — public grid-owned registry, allocation/disposal proofs, demo, docs, and future editor pattern implemented.
 
 ## Cross-stage invariants
 

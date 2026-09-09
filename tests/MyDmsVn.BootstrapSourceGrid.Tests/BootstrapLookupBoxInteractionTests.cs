@@ -157,6 +157,43 @@ public sealed class BootstrapLookupBoxInteractionTests
     }
 
     [Test]
+    public void NativeEditorEnterWithPopupClosedCommitsSourceGridEdit()
+    {
+        using (var fixture = new LookupInteractionFixture())
+        {
+            fixture.StartEdit();
+            fixture.Editor.BootstrapControl.SelectValue(7);
+
+            var key = fixture.DispatchNativeEditorKeyDown(Keys.Enter);
+
+            Assert.That(key.Handled, Is.True);
+            Assert.That(key.SuppressKeyPress, Is.True);
+            Assert.That(fixture.Editor.IsEditing, Is.False);
+            Assert.That(fixture.Cell.Value, Is.EqualTo(7));
+            Assert.That(fixture.ValueChangedCount, Is.EqualTo(1));
+        }
+    }
+
+    [Test]
+    public void NativeEditorEscapeWithPopupClosedCancelsSourceGridEdit()
+    {
+        using (var fixture = new LookupInteractionFixture())
+        {
+            fixture.StartEdit();
+            fixture.Editor.BootstrapControl.SelectValue(7);
+
+            var key = fixture.DispatchNativeEditorKeyDown(Keys.Escape);
+
+            Assert.That(key.Handled, Is.True);
+            Assert.That(key.SuppressKeyPress, Is.True);
+            Assert.That(fixture.Editor.IsEditing, Is.False);
+            Assert.That(fixture.Cell.Value, Is.EqualTo(42));
+            Assert.That(fixture.Editor.BootstrapControl.SelectedValue, Is.EqualTo(42));
+            Assert.That(fixture.ValueChangedCount, Is.Zero);
+        }
+    }
+
+    [Test]
     public void TabCommitsOnceAndMovesToNextEditableCell()
     {
         using (var fixture = new LookupInteractionFixture())
@@ -450,7 +487,7 @@ public sealed class BootstrapLookupBoxInteractionTests
                 Dock = DockStyle.Top,
                 Height = 80,
             };
-            Editor = Grid.EditorRegistry.Register(new BootstrapLookupBoxEditor(typeof(int)));
+            Editor = Grid.BootstrapEditors.CreateLookupBox(typeof(int));
             Editor.BootstrapControl.DisplayMember = nameof(LookupItem.Name);
             Editor.BootstrapControl.ValueMember = nameof(LookupItem.Id);
             Editor.BootstrapControl.DataSource = new BindingList<LookupItem>
@@ -521,6 +558,16 @@ public sealed class BootstrapLookupBoxInteractionTests
                 BindingFlags.Instance | BindingFlags.NonPublic)!;
             var handledByLookup = (bool)processCmdKey.Invoke(Editor.BootstrapControl, arguments)!;
             return handledByLookup || Grid.DispatchCommandKey(keyData);
+        }
+
+        internal KeyEventArgs DispatchNativeEditorKeyDown(Keys keyData)
+        {
+            var arguments = new KeyEventArgs(keyData);
+            var onEditorKeyDown = Editor.BootstrapControl.GetType().GetMethod(
+                "OnEditorKeyDown",
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+            onEditorKeyDown.Invoke(Editor.BootstrapControl, new object[] { arguments });
+            return arguments;
         }
 
         public void Dispose()

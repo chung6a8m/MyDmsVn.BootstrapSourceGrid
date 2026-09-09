@@ -189,7 +189,7 @@ public sealed class BootstrapLookupBoxEditorTests
 
     private static BootstrapLookupBoxEditor CreateEditor(BootstrapSourceGridControl grid, Type valueType)
     {
-        var editor = grid.EditorRegistry.Register(new BootstrapLookupBoxEditor(valueType));
+        var editor = grid.BootstrapEditors.CreateLookupBox(valueType);
         editor.BootstrapControl.DisplayMember = nameof(LookupItem.Name);
         editor.BootstrapControl.ValueMember = nameof(LookupItem.Id);
         editor.BootstrapControl.DataSource = new BindingList<LookupItem>
@@ -211,7 +211,7 @@ public sealed class BootstrapLookupBoxEditorTests
         {
             Form = new Form { ClientSize = new Size(260, 100) };
             Grid = new BootstrapSourceGridControl { Dock = DockStyle.Fill };
-            Editor = Grid.EditorRegistry.Register(new BootstrapLookupBoxEditor(valueType ?? typeof(int)));
+            Editor = Grid.BootstrapEditors.CreateLookupBox(valueType ?? typeof(int));
             Editor.BootstrapControl.DisplayMember = nameof(LookupItem.Name);
             Editor.BootstrapControl.ValueMember = nameof(LookupItem.Id);
             Editor.BootstrapControl.DataSource = new BindingList<LookupItem>(

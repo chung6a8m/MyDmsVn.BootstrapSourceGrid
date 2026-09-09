@@ -14,13 +14,13 @@ net48;net8.0-windows
 
 Public NuGet publication remains blocked by the vendor package/source-equivalence gate documented in [`docs/RELEASE.md`](./docs/RELEASE.md). Current supported consumption is source checkout with pinned vendor submodules and `ProjectReference`.
 
-The active post-MVP initiative is Bootstrap-native SourceGrid editor integration for:
+Bootstrap-native SourceGrid editor integration is implemented for:
 
 - `BootstrapTextBox`
 - `BootstrapFormattedTextBox`
 - `BootstrapLookupBox`
 
-This initiative preserves SourceGrid's edit lifecycle and uses grid-owned shared adapters rather than one composite Bootstrap control per cell. See [`docs/EDITOR_REPLACEMENT.md`](./docs/EDITOR_REPLACEMENT.md) and the active roadmap under [`docs/plans/`](./docs/plans/).
+The integration preserves SourceGrid's edit lifecycle and uses grid-owned shared adapters rather than one composite Bootstrap control per cell. See [`docs/EDITOR_REPLACEMENT.md`](./docs/EDITOR_REPLACEMENT.md).
 
 For historical context, see [Archive](./docs/archive/).
 
@@ -70,6 +70,37 @@ BootstrapThemeManager.CurrentTheme =
 
 Consumer-assigned SourceGrid Views remain authoritative. Consumer-assigned `grid.Font` also opts that grid instance out of integration-owned theme-font replacement.
 
+## Bootstrap editors
+
+Create one editor per grid/column/configuration, configure its strongly typed Bootstrap
+control, and assign the shared editor to the applicable cells:
+
+```csharp
+var editor = grid.BootstrapEditors.CreateTextBox(typeof(string));
+editor.BootstrapControl.PlaceholderText = "Customer name";
+
+for (var row = 1; row < grid.RowsCount; row++)
+{
+    grid[row, 1].Editor = editor;
+}
+```
+
+`BootstrapSourceGrid` owns and disposes every editor created by `BootstrapEditors`, including
+editors that are never started. Do not share an editor with another grid. On the pinned
+SourceGrid baseline this is a supported-use restriction, not a guaranteed fail-before-attach
+runtime exception; strict enforcement requires the pre-attach seam described in
+[`docs/UPSTREAM_API_SEAMS.md`](./docs/UPSTREAM_API_SEAMS.md).
+
+Logical values returned to SourceGrid are:
+
+```text
+BootstrapTextBox          -> Text
+BootstrapFormattedTextBox -> RawValue
+BootstrapLookupBox        -> SelectedValue
+```
+
+SourceGrid performs final conversion and validation for all three.
+
 ## Build from source
 
 ```powershell
@@ -89,16 +120,18 @@ GitHub Actions is temporarily disabled for this repository as of 2026-09-09; loc
 dotnet run --project samples/MyDmsVn.BootstrapSourceGrid.Demo/MyDmsVn.BootstrapSourceGrid.Demo.csproj -f net8.0-windows
 ```
 
-The current demo covers the completed MVP. The active editor roadmap will extend it with shared Bootstrap text, formatted, and lookup editor scenarios after those stages are implemented.
+The demo covers the completed MVP plus shared Bootstrap text, formatted, and lookup editor
+columns, including a read-only lookup DisplayMember companion column, lookup search/navigation,
+closed-popup Enter/Escape, and runtime theme switching scenarios.
 
 ## Documentation
 
-Start here for active work:
+Start here for current work:
 
 1. [`AGENTS.md`](./AGENTS.md) — mandatory operating rules.
 2. [`AI_CONTEXT.md`](./AI_CONTEXT.md) — compact project model.
-3. [`docs/EDITOR_REPLACEMENT.md`](./docs/EDITOR_REPLACEMENT.md) — active editor architecture.
-4. [`docs/DEVELOPMENT_PLAN.md`](./docs/DEVELOPMENT_PLAN.md) — active stage map.
+3. [`docs/EDITOR_REPLACEMENT.md`](./docs/EDITOR_REPLACEMENT.md) — implemented editor architecture.
+4. [`docs/DEVELOPMENT_PLAN.md`](./docs/DEVELOPMENT_PLAN.md) — current development status.
 5. [`docs/plans/`](./docs/plans/) — active task plans only.
 
 Canonical reference documents:

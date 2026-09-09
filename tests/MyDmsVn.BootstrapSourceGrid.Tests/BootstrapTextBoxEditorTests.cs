@@ -50,7 +50,7 @@ public sealed class BootstrapTextBoxEditorTests
     {
         using (var grid = new BootstrapSourceGridControl())
         {
-            var editor = grid.EditorRegistry.Register(new BootstrapTextBoxEditor(typeof(string)));
+            var editor = grid.BootstrapEditors.CreateTextBox(typeof(string));
 
             editor.SetEditValue("replacement");
 
@@ -419,7 +419,7 @@ public sealed class BootstrapTextBoxEditorTests
                 Height = 60,
             };
             var declaredType = valueType ?? typeof(string);
-            Editor = Grid.EditorRegistry.Register(new BootstrapTextBoxEditor(declaredType));
+            Editor = Grid.BootstrapEditors.CreateTextBox(declaredType);
             Cells = new[]
             {
                 new SourceGrid.Cells.Cell(firstValue, declaredType) { Editor = Editor },

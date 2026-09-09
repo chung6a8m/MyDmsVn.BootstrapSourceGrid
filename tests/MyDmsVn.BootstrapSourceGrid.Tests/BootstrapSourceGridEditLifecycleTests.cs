@@ -124,7 +124,7 @@ public sealed class BootstrapSourceGridEditLifecycleTests
             var controls = form.Controls.Find("BootstrapSourceGrid", true);
             Assert.That(controls, Has.Length.EqualTo(1));
             var grid = (BootstrapSourceGridControl)controls[0];
-            var cell = (SourceGrid.Cells.Cell)grid[3, 7];
+            var cell = (SourceGrid.Cells.Cell)grid[3, 8];
 
             Assert.That(cell.ColumnSpan, Is.EqualTo(2));
             Assert.That(cell.Editor, Is.Not.Null);

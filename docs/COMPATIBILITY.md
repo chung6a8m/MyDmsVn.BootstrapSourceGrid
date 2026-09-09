@@ -79,6 +79,15 @@ Examples:
 - consumer editor/controller replacement remains valid;
 - consumer row heights/column widths are SourceGrid/application-owned and must not be blindly rescaled by Bootstrap code.
 
+Bootstrap-native editors are opt-in through the grid-owned `BootstrapEditors` registry. The
+integration does not replace SourceGrid's global editor factory or overwrite a consumer-assigned
+custom editor. Create one adapter per grid/column/configuration and share it only within the
+creating grid; cross-grid reuse is unsupported and is not guaranteed to fail before SourceGrid
+attachment on the pinned baseline.
+
+The adapters return `Text`, `RawValue`, and `SelectedValue` for text, formatted, and lookup
+controls respectively. SourceGrid retains final declared-type conversion and validation.
+
 ## 6. Theme compatibility
 
 The integration follows `BootstrapThemeManager.CurrentTheme` and `ThemeChanged`.
@@ -165,6 +174,7 @@ Forbidden patterns include:
 - allocating theme/GDI objects per cell on every paint when reusable objects are possible;
 - calling full-form invalidation for a grid-only visual change;
 - attaching duplicate theme handlers per cell.
+- creating one composite Bootstrap editor or control per cell by default.
 
 ## 14. Compatibility validation matrix
 

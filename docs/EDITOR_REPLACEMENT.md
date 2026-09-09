@@ -2,9 +2,9 @@
 
 ## 1. Status and goal
 
-This is the active post-MVP editor initiative for `MyDmsVn.BootstrapSourceGrid`.
+This document records the implemented post-MVP editor architecture for `MyDmsVn.BootstrapSourceGrid`.
 
-The completed MVP deliberately kept SourceGrid's built-in editors and only aligned their appearance. The next objective is to add Bootstrap-native editing controls without replacing SourceGrid's edit lifecycle.
+The completed MVP deliberately kept SourceGrid's built-in editors and only aligned their appearance. The editor initiative added Bootstrap-native editing controls without replacing SourceGrid's edit lifecycle.
 
 Initial target controls:
 
@@ -101,7 +101,7 @@ Cross-grid reuse is unsupported, but the pinned SourceGrid attach sequence provi
 
 ## 7. Registry and public API direction
 
-The integration will expose a grid-owned registry after the three vertical slices prove the common adapter contract:
+The integration exposes a grid-owned registry after the three vertical slices proved the common adapter contract:
 
 ```csharp
 public BootstrapSourceGridEditorRegistry BootstrapEditors { get; }
@@ -218,6 +218,13 @@ The lookup stage must explicitly test and lock behavior for:
 
 The key risk is SourceGrid's `Control.Validated` auto-end-edit behavior interacting with popup/focus transitions. The adapter must solve event ordering at the integration boundary rather than modifying lookup popup internals unless a proven vendor bug exists.
 
+The pinned `BootstrapLookupBox` forwards key-down events from its focused native text editor and
+consumes closed-popup Enter/Escape for its standalone lookup behavior. The SourceGrid integration
+subclass must bridge that forwarded path back to SourceGrid: closed-popup Escape cancels the cell
+edit, while closed-popup Enter first lets the lookup resolve pending text and commits the cell only
+when resolution did not keep/open the popup. Popup-open navigation and cancellation remain owned by
+the Bootstrap lookup control.
+
 ## 12. Sizing and layout
 
 Bootstrap inputs have theme-driven preferred/minimum heights, while SourceGrid places the editor inside cell bounds.
@@ -241,7 +248,7 @@ If a cell is smaller than the Bootstrap control's preferred height, the document
 
 ## 14. Performance and disposal gates
 
-Before the registry API is considered stable, tests must prove:
+The registry API is stabilized by tests that prove:
 
 - a large grid does not create one Bootstrap editor control per cell;
 - one shared editor can edit many cells sequentially in one grid;
@@ -249,6 +256,10 @@ Before the registry API is considered stable, tests must prove:
 - theme subscriptions owned by Bootstrap controls are released on disposal;
 - no editor is accidentally kept alive by the registry after grid disposal;
 - a cross-grid reuse attempt is rejected or otherwise prevented by the final implementation contract.
+
+For the pinned no-vendor-change outcome, prevention means the public API and ownership model keep
+creation grid-scoped and document cross-grid reuse as unsupported. It does not mean a runtime guard
+throws after SourceGrid has already attached the control.
 
 ## 15. Delivery stages
 
@@ -258,7 +269,21 @@ Before the registry API is considered stable, tests must prove:
 4. **Stage 3 — BootstrapLookupBox**: prove complex popup/focus/keyboard integration.
 5. **Stage 4 — Registry, hardening, docs, expansion pattern**: expose the public grid-owned registry and prepare the repeatable pattern for `BootstrapComboBox` and later editors.
 
-The active master roadmap is `plans/20260909-001-bootstrap-editor-replacement-master-roadmap.md`.
+The completed implementation roadmap is retained under `archive/` for historical context.
+
+### Future expansion pattern
+
+Future Bootstrap editor work such as `BootstrapComboBox`, date/time, or numeric inputs must follow:
+
+```text
+prove value contract
+prove SourceGrid lifecycle/first-key behavior
+use grid-owned shared lifetime
+lock popup/focus semantics if applicable
+add registry creator only after adapter is stable
+```
+
+Those controls are not implemented by the initial editor initiative.
 
 ## 16. Definition of done
 

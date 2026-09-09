@@ -14,9 +14,10 @@ Keep context narrow. Read only:
 6. relevant sections of `UPSTREAM_API_SEAMS.md`
 7. exact pinned vendor source/tests touched by the task
 
-Current active spec: [`EDITOR_REPLACEMENT.md`](./EDITOR_REPLACEMENT.md).
+Current Bootstrap editor architecture: [`EDITOR_REPLACEMENT.md`](./EDITOR_REPLACEMENT.md).
 
-Current master roadmap: [`plans/20260909-001-bootstrap-editor-replacement-master-roadmap.md`](./plans/20260909-001-bootstrap-editor-replacement-master-roadmap.md).
+There is currently no active implementation roadmap. The completed editor roadmap is archived under
+[`archive/20260909-bootstrap-editor-replacement/`](./archive/20260909-bootstrap-editor-replacement/).
 
 Do not read archived plans during normal work. For historical context, see [Archive](./archive/).
 
@@ -24,12 +25,12 @@ Do not read archived plans during normal work. For historical context, see [Arch
 
 - [`DECISIONS.md`](./DECISIONS.md) — approved architectural decisions.
 - [`ARCHITECTURE.md`](./ARCHITECTURE.md) — stable ownership/integration architecture.
-- [`EDITOR_REPLACEMENT.md`](./EDITOR_REPLACEMENT.md) — active post-MVP editor architecture.
+- [`EDITOR_REPLACEMENT.md`](./EDITOR_REPLACEMENT.md) — implemented Bootstrap editor architecture.
 - [`UPSTREAM_API_SEAMS.md`](./UPSTREAM_API_SEAMS.md) — exact APIs/seams verified at pinned vendor commits.
 - [`UPSTREAM.md`](./UPSTREAM.md) — vendor pins, dependency strategy, and upgrade policy.
 - [`COMPATIBILITY.md`](./COMPATIBILITY.md) — frameworks, API, Designer, DPI, and behavior compatibility.
 - [`TESTING.md`](./TESTING.md) — automated/manual validation rules.
-- [`DEVELOPMENT_PLAN.md`](./DEVELOPMENT_PLAN.md) — compact active stage map.
+- [`DEVELOPMENT_PLAN.md`](./DEVELOPMENT_PLAN.md) — compact development status and completed stage map.
 - [`PRD.md`](./PRD.md) — completed MVP requirements; use scoped specs for post-MVP initiatives.
 - [`RELEASE.md`](./RELEASE.md) — packaging/publication gates.
 - [`PENDING_DECISIONS.md`](./PENDING_DECISIONS.md) — unresolved owner decisions/audit trail.

@@ -79,7 +79,7 @@ public sealed class BootstrapEditorSizingTests
         using (var form = new Form())
         using (var grid = new BootstrapSourceGridControl())
         {
-            var editor = grid.EditorRegistry.Register(new BootstrapTextBoxEditor(typeof(string)));
+            var editor = grid.BootstrapEditors.CreateTextBox(typeof(string));
             var cell = new SourceGrid.Cells.Cell("before") { Editor = editor };
             grid.Redim(1, 1);
             grid.Rows[0].Height = 12;
@@ -116,7 +116,7 @@ public sealed class BootstrapEditorSizingTests
         using (var form = new Form())
         using (var grid = new BootstrapSourceGridControl())
         {
-            var editor = grid.EditorRegistry.Register(new BootstrapFormattedTextBoxEditor(typeof(string)));
+            var editor = grid.BootstrapEditors.CreateFormattedTextBox(typeof(string));
             var cell = new SourceGrid.Cells.Cell("before") { Editor = editor };
             grid.Redim(1, 1);
             grid.Rows[0].Height = 12;
@@ -153,7 +153,7 @@ public sealed class BootstrapEditorSizingTests
         using (var form = new Form())
         using (var grid = new BootstrapSourceGridControl())
         {
-            var editor = grid.EditorRegistry.Register(new BootstrapLookupBoxEditor(typeof(string)));
+            var editor = grid.BootstrapEditors.CreateLookupBox(typeof(string));
             var cell = new SourceGrid.Cells.Cell("before") { Editor = editor };
             grid.Redim(1, 1);
             grid.Rows[0].Height = 12;

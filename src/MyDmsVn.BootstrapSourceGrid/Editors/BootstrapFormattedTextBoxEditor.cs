@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using MyDmsVn.Bootstrap5WinFormUI.Controls;
 using MyDmsVn.Bootstrap5WinFormUI.Formatting;
 using MyDmsVn.BootstrapSourceGrid.Editors.Internal;
+using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
 
 namespace MyDmsVn.BootstrapSourceGrid.Editors;
 
@@ -12,11 +13,14 @@ namespace MyDmsVn.BootstrapSourceGrid.Editors;
 /// </summary>
 public sealed class BootstrapFormattedTextBoxEditor : SourceGrid.Cells.Editors.EditorControlBase
 {
-    internal BootstrapFormattedTextBoxEditor(Type valueType)
-        : base(valueType)
+    internal BootstrapFormattedTextBoxEditor(BootstrapSourceGridControl owner, Type valueType)
+        : base(ValidateOwner(owner, valueType))
     {
+        Owner = owner;
         UseCellViewProperties = false;
     }
+
+    internal BootstrapSourceGridControl Owner { get; }
 
     /// <summary>
     /// Gets the Bootstrap formatted text box used while a cell is being edited.
@@ -86,5 +90,15 @@ public sealed class BootstrapFormattedTextBoxEditor : SourceGrid.Cells.Editors.E
     private CultureInfo GetConversionCulture()
     {
         return CultureInfo ?? System.Globalization.CultureInfo.CurrentCulture;
+    }
+
+    private static Type ValidateOwner(BootstrapSourceGridControl owner, Type valueType)
+    {
+        if (owner is null)
+        {
+            throw new ArgumentNullException(nameof(owner));
+        }
+
+        return valueType;
     }
 }
