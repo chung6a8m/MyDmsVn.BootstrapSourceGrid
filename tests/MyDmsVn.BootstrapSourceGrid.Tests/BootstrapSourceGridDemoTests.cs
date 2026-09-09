@@ -32,12 +32,13 @@ public sealed class BootstrapSourceGridDemoTests
             Assert.That(help.Text, Does.Contain("sort"));
 
             Assert.That(grid.RowsCount, Is.GreaterThanOrEqualTo(32));
-            Assert.That(grid.ColumnsCount, Is.GreaterThanOrEqualTo(9));
+            Assert.That(grid.ColumnsCount, Is.GreaterThanOrEqualTo(10));
             Assert.That(grid.Selection.EnableMultiSelection, Is.True);
             Assert.That(((SourceGrid.Cells.ColumnHeader)grid[0, 1]).AutomaticSortEnabled, Is.True);
-            Assert.That(((SourceGrid.Cells.Cell)grid[1, 8]).Editor!.EnableEdit, Is.False);
-            Assert.That(grid[3, 7].ColumnSpan, Is.EqualTo(2));
-            Assert.That(grid[2, 8].View, Is.Not.SameAs(SourceGrid.Cells.Views.Cell.Default));
+            Assert.That(((SourceGrid.Cells.Cell)grid[1, 7]).Editor, Is.Null);
+            Assert.That(((SourceGrid.Cells.Cell)grid[1, 9]).Editor!.EnableEdit, Is.False);
+            Assert.That(grid[3, 8].ColumnSpan, Is.EqualTo(2));
+            Assert.That(grid[2, 9].View, Is.Not.SameAs(SourceGrid.Cells.Views.Cell.Default));
         }
     }
 
@@ -85,12 +86,12 @@ public sealed class BootstrapSourceGridDemoTests
             {
                 ShowForm(form);
                 var grid = FindControl<BootstrapSourceGridControl>(form, "BootstrapSourceGrid");
-                var consumerView = grid[2, 8].View;
+                var consumerView = grid[2, 9].View;
 
                 FindControl<Button>(form, "darkThemeButton").PerformClick();
 
                 Assert.That(FindControl<BootstrapSourceGridControl>(form, "BootstrapSourceGrid"), Is.SameAs(grid));
-                Assert.That(grid[2, 8].View, Is.SameAs(consumerView));
+                Assert.That(grid[2, 9].View, Is.SameAs(consumerView));
                 Assert.That(BootstrapThemeManager.CurrentTheme.Mode, Is.EqualTo(BootstrapThemeMode.Dark));
             }
         }
@@ -135,6 +136,39 @@ public sealed class BootstrapSourceGridDemoTests
                 Assert.That(grid[1, 3].Editor, Is.SameAs(formatted));
                 Assert.That(grid[1, 6].Editor, Is.SameAs(lookup));
             }));
+        }
+    }
+
+    [Test]
+    public void LookupDisplayColumnTracksOnlyTheCommittedLogicalValue()
+    {
+        using (var form = new MyDmsVn.BootstrapSourceGrid.Demo.MainForm())
+        {
+            ShowForm(form);
+            var grid = FindControl<BootstrapSourceGridControl>(form, "BootstrapSourceGrid");
+            var position = new SourceGrid.Position(1, 6);
+            var lookupCell = (SourceGrid.Cells.Cell)grid[position];
+            var displayCell = (SourceGrid.Cells.Cell)grid[1, 7];
+            var editor = (BootstrapLookupBoxEditor)lookupCell.Editor!;
+
+            Assert.Multiple((Action)(() =>
+            {
+                Assert.That(((SourceGrid.Cells.ColumnHeader)grid[0, 7]).Value, Is.EqualTo("Lookup display"));
+                Assert.That(lookupCell.Value, Is.EqualTo(1));
+                Assert.That(displayCell.Value, Is.EqualTo("Northwind Traders"));
+                Assert.That(displayCell.Editor, Is.Null);
+            }));
+
+            Assert.That(grid.Selection.Focus(position, true), Is.True);
+            var context = new SourceGrid.CellContext(grid, position, lookupCell);
+            grid.GetCell(position).View.Measure(context, Size.Empty);
+            context.StartEdit();
+            editor.BootstrapControl.SelectValue(3);
+
+            Assert.That(displayCell.Value, Is.EqualTo("Northwind Traders"));
+            Assert.That(context.EndEdit(false), Is.True);
+            Assert.That(lookupCell.Value, Is.EqualTo(3));
+            Assert.That(displayCell.Value, Is.EqualTo("Adventure Works"));
         }
     }
 

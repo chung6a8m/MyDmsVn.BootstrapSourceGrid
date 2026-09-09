@@ -11,10 +11,12 @@ internal static class DemoGridContent
         BootstrapSourceGridControl grid,
         BootstrapTextBoxEditor textEditor,
         BootstrapFormattedTextBoxEditor formattedEditor,
-        BootstrapLookupBoxEditor lookupEditor)
+        BootstrapLookupBoxEditor lookupEditor,
+        DemoLookupItem[] lookupItems,
+        SourceGrid.Cells.Controllers.CustomEvents lookupValueEvents)
     {
         const int rows = 40;
-        const int columns = 9;
+        const int columns = 10;
         grid.Redim(rows, columns);
         grid.FixedRows = 1;
         grid.FixedColumns = 1;
@@ -26,8 +28,9 @@ internal static class DemoGridContent
         grid[0, 4] = new SourceGrid.Cells.ColumnHeader("DateTime factory");
         grid[0, 5] = new SourceGrid.Cells.ColumnHeader("Boolean factory");
         grid[0, 6] = new SourceGrid.Cells.ColumnHeader("Bootstrap lookup");
-        grid[0, 7] = new SourceGrid.Cells.ColumnHeader("DateTimePicker");
-        grid[0, 8] = new SourceGrid.Cells.ColumnHeader("Notes / scenarios");
+        grid[0, 7] = new SourceGrid.Cells.ColumnHeader("Lookup display");
+        grid[0, 8] = new SourceGrid.Cells.ColumnHeader("DateTimePicker");
+        grid[0, 9] = new SourceGrid.Cells.ColumnHeader("Notes / scenarios");
 
         for (var row = 1; row < rows; row++)
         {
@@ -45,14 +48,24 @@ internal static class DemoGridContent
                 new DateTime(2026, 9, 1).AddDays(row),
                 typeof(DateTime));
             grid[row, 5] = new SourceGrid.Cells.Cell((row & 1) == 0, typeof(bool));
-            grid[row, 6] = new SourceGrid.Cells.Cell(((row - 1) % 12) + 1, typeof(int))
+            var lookupItem = lookupItems[(row - 1) % lookupItems.Length];
+            var lookupId = lookupItem.Id;
+            var lookupCell = new SourceGrid.Cells.Cell(lookupId, typeof(int))
             {
                 Editor = lookupEditor,
+            };
+            lookupCell.AddController(lookupValueEvents);
+            grid[row, 6] = lookupCell;
+            grid[row, 7] = new SourceGrid.Cells.Cell(
+                lookupItem.Name,
+                typeof(string))
+            {
+                Editor = null,
             };
 
             if (row == 3)
             {
-                grid[row, 7] = new SourceGrid.Cells.Cell(
+                grid[row, 8] = new SourceGrid.Cells.Cell(
                     "Two-column editable span",
                     typeof(string))
                 {
@@ -61,16 +74,16 @@ internal static class DemoGridContent
             }
             else
             {
-                grid[row, 7] = new SourceGrid.Cells.Cell(
+                grid[row, 8] = new SourceGrid.Cells.Cell(
                     new DateTime(2026, 9, 1).AddDays(row),
                     new SourceGrid.Cells.Editors.DateTimePicker());
-                grid[row, 8] = new SourceGrid.Cells.Cell(
+                grid[row, 9] = new SourceGrid.Cells.Cell(
                     "Theme, selection, and scrolling row",
                     typeof(string));
             }
         }
 
-        var readOnlyCell = (SourceGrid.Cells.Cell)grid[1, 8];
+        var readOnlyCell = (SourceGrid.Cells.Cell)grid[1, 9];
         readOnlyCell.Value = "Read-only: editor disabled";
         readOnlyCell.Editor!.EnableEdit = false;
 
@@ -79,8 +92,8 @@ internal static class DemoGridContent
             BackColor = Color.LemonChiffon,
             ForeColor = Color.DarkSlateBlue,
         };
-        grid[2, 8].Value = "Consumer custom View (theme opt-out)";
-        grid[2, 8].View = customView;
+        grid[2, 9].Value = "Consumer custom View (theme opt-out)";
+        grid[2, 9].View = customView;
 
         grid.Rows[0].Height = 32;
         grid.Columns[0].Width = 54;
@@ -90,8 +103,9 @@ internal static class DemoGridContent
         grid.Columns[4].Width = 150;
         grid.Columns[5].Width = 130;
         grid.Columns[6].Width = 170;
-        grid.Columns[7].Width = 150;
-        grid.Columns[8].Width = 250;
+        grid.Columns[7].Width = 170;
+        grid.Columns[8].Width = 150;
+        grid.Columns[9].Width = 250;
     }
 
 }

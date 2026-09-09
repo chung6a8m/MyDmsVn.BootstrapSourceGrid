@@ -121,7 +121,8 @@ dotnet run --project samples/MyDmsVn.BootstrapSourceGrid.Demo/MyDmsVn.BootstrapS
 ```
 
 The demo covers the completed MVP plus shared Bootstrap text, formatted, and lookup editor
-columns, including lookup search/navigation and runtime theme switching scenarios.
+columns, including a read-only lookup DisplayMember companion column, lookup search/navigation,
+closed-popup Enter/Escape, and runtime theme switching scenarios.
 
 ## Documentation
 

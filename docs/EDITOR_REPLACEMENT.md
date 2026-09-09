@@ -218,6 +218,13 @@ The lookup stage must explicitly test and lock behavior for:
 
 The key risk is SourceGrid's `Control.Validated` auto-end-edit behavior interacting with popup/focus transitions. The adapter must solve event ordering at the integration boundary rather than modifying lookup popup internals unless a proven vendor bug exists.
 
+The pinned `BootstrapLookupBox` forwards key-down events from its focused native text editor and
+consumes closed-popup Enter/Escape for its standalone lookup behavior. The SourceGrid integration
+subclass must bridge that forwarded path back to SourceGrid: closed-popup Escape cancels the cell
+edit, while closed-popup Enter first lets the lookup resolve pending text and commits the cell only
+when resolution did not keep/open the popup. Popup-open navigation and cancellation remain owned by
+the Bootstrap lookup control.
+
 ## 12. Sizing and layout
 
 Bootstrap inputs have theme-driven preferred/minimum heights, while SourceGrid places the editor inside cell bounds.

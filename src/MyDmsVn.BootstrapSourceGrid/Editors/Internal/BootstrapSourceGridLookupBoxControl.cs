@@ -6,6 +6,8 @@ namespace MyDmsVn.BootstrapSourceGrid.Editors.Internal;
 
 internal sealed class BootstrapSourceGridLookupBoxControl : BootstrapLookupBox
 {
+    internal Func<bool, bool>? OwnerEditCompletionRequested { get; set; }
+
     internal Func<bool, bool>? OwnerNavigationRequested { get; set; }
 
     internal void ReplaceWithFirstEditCharacter(char value)
@@ -36,6 +38,31 @@ internal sealed class BootstrapSourceGridLookupBoxControl : BootstrapLookupBox
         }
 
         return base.ProcessCmdKey(ref msg, keyData);
+    }
+
+    protected override void OnEditorKeyDown(KeyEventArgs e)
+    {
+        if (e.Handled || IsDropDownOpen || e.Modifiers != Keys.None)
+        {
+            base.OnEditorKeyDown(e);
+            return;
+        }
+
+        var key = e.KeyCode;
+        if (key == Keys.Escape && OwnerEditCompletionRequested?.Invoke(true) == true)
+        {
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            return;
+        }
+
+        base.OnEditorKeyDown(e);
+        if (key == Keys.Enter && !IsDropDownOpen && !HasPendingText &&
+            OwnerEditCompletionRequested?.Invoke(false) == true)
+        {
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+        }
     }
 
     private bool ResolvePendingLookupForGridNavigation(ref Message msg)

@@ -17,6 +17,7 @@ public sealed class BootstrapLookupBoxEditor : SourceGrid.Cells.Editors.EditorCo
         Owner = owner;
         UseCellViewProperties = false;
         var control = (BootstrapSourceGridLookupBoxControl)Control;
+        control.OwnerEditCompletionRequested = CompleteGridEdit;
         control.OwnerNavigationRequested = ContinueGridNavigation;
         control.SelectionCommitted += OnSelectionCommitted;
     }
@@ -82,6 +83,17 @@ public sealed class BootstrapLookupBoxEditor : SourceGrid.Cells.Editors.EditorCo
         var args = new KeyEventArgs(reverse ? Keys.Shift | Keys.Tab : Keys.Tab);
         Grid.ProcessSpecialGridKey(args);
         return args.Handled;
+    }
+
+    private bool CompleteGridEdit(bool cancel)
+    {
+        if (!IsEditing)
+        {
+            return false;
+        }
+
+        EditCellContext.EndEdit(cancel);
+        return true;
     }
 
     private static Type ValidateOwner(BootstrapSourceGridControl owner, Type valueType)

@@ -14,6 +14,8 @@ public sealed partial class MainForm : Form
     private readonly BootstrapTextBoxEditor _textEditor;
     private readonly BootstrapFormattedTextBoxEditor _formattedEditor;
     private readonly BootstrapLookupBoxEditor _lookupEditor;
+    private readonly DemoLookupItem[] _lookupItems;
+    private readonly SourceGrid.Cells.Controllers.CustomEvents _lookupValueEvents = new();
 
     public MainForm()
     {
@@ -27,10 +29,18 @@ public sealed partial class MainForm : Form
         _formattedEditor.BootstrapControl.NumeralOptions.DecimalScale = 2;
         _formattedEditor.BootstrapControl.NumeralOptions.Prefix = "$";
 
+        _lookupItems = DemoLookupItem.CreateSampleData();
+        _lookupValueEvents.ValueChanged += OnLookupValueChanged;
         _lookupEditor = _grid.BootstrapEditors.CreateLookupBox(typeof(int));
-        ConfigureLookup(_lookupEditor.BootstrapControl);
+        ConfigureLookup(_lookupEditor.BootstrapControl, _lookupItems);
 
-        DemoGridContent.Populate(_grid, _textEditor, _formattedEditor, _lookupEditor);
+        DemoGridContent.Populate(
+            _grid,
+            _textEditor,
+            _formattedEditor,
+            _lookupEditor,
+            _lookupItems,
+            _lookupValueEvents);
         _textEditor.Control.Validated += OnEditorValidated;
         _formattedEditor.Control.Validated += OnEditorValidated;
         _lookupEditor.Control.Validated += OnEditorValidated;
@@ -54,6 +64,7 @@ public sealed partial class MainForm : Form
             _textEditor.Control.Validated -= OnEditorValidated;
             _formattedEditor.Control.Validated -= OnEditorValidated;
             _lookupEditor.Control.Validated -= OnEditorValidated;
+            _lookupValueEvents.ValueChanged -= OnLookupValueChanged;
             _components.Dispose();
             _consumerFont?.Dispose();
             _consumerFont = null;
@@ -64,7 +75,13 @@ public sealed partial class MainForm : Form
 
     private void OnResetGridClick(object? sender, EventArgs e)
     {
-        DemoGridContent.Populate(_grid, _textEditor, _formattedEditor, _lookupEditor);
+        DemoGridContent.Populate(
+            _grid,
+            _textEditor,
+            _formattedEditor,
+            _lookupEditor,
+            _lookupItems,
+            _lookupValueEvents);
         _grid.Selection.Focus(new SourceGrid.Position(1, 1), true);
         UpdateDiagnostics();
     }
@@ -101,6 +118,27 @@ public sealed partial class MainForm : Form
     private void OnGridDpiChangedAfterParent(object? sender, EventArgs e)
     {
         UpdateDiagnostics();
+    }
+
+    private void OnLookupValueChanged(object? sender, EventArgs e)
+    {
+        if (sender is not SourceGrid.CellContext context || context.Position.Row <= 0)
+        {
+            return;
+        }
+
+        var lookupValue = _grid[context.Position.Row, 6].Value;
+        var displayValue = string.Empty;
+        foreach (var item in _lookupItems)
+        {
+            if (Equals(item.Id, lookupValue))
+            {
+                displayValue = item.Name;
+                break;
+            }
+        }
+
+        _grid[context.Position.Row, 7].Value = displayValue;
     }
 
     private void OnEditorValidated(object? sender, EventArgs e)
@@ -151,11 +189,11 @@ public sealed partial class MainForm : Form
         return value is null ? "null" : $"{value} ({value.GetType().Name})";
     }
 
-    private static void ConfigureLookup(BootstrapLookupBox lookup)
+    private static void ConfigureLookup(BootstrapLookupBox lookup, DemoLookupItem[] lookupItems)
     {
         lookup.DisplayMember = nameof(DemoLookupItem.Name);
         lookup.ValueMember = nameof(DemoLookupItem.Id);
-        lookup.DataSource = DemoLookupItem.CreateSampleData();
+        lookup.DataSource = lookupItems;
         lookup.Columns.Add(new BootstrapLookupColumnDefinition
         {
             DataPropertyName = nameof(DemoLookupItem.Id),

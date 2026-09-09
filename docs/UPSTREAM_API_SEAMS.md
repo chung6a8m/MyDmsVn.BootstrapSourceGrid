@@ -255,6 +255,13 @@ Useful selection/edit APIs include `SelectItem`, `SelectValue`, `ClearSelection`
 
 `SelectionCommitted` distinguishes `Keyboard`, `Mouse`, `ExactMatch`, `CommitAndAdd`, `Programmatic`, and `Clear`. The public `ClearSelection()` path emits `Clear`, including programmatic clearing, so the SourceGrid adapter must not treat either `Programmatic` or `Clear` as a user selection that automatically ends the cell edit.
 
+`BootstrapTextBox` forwards its native text editor's key-down event through the protected virtual
+`OnEditorKeyDown` seam. `BootstrapLookupBox` overrides that seam and consumes Escape plus handled
+Enter behavior itself. Consequently, returning `false` from the composite control's `ProcessCmdKey`
+is insufficient for SourceGrid when focus is inside the native child. The integration subclass must
+intercept closed-popup Escape before the lookup override and bridge closed-popup Enter after pending
+text resolution succeeds; it must delegate popup-open key behavior unchanged.
+
 Adapter value contract:
 
 ```text

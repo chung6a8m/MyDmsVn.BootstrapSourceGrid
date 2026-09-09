@@ -120,7 +120,9 @@ Use the demo application for behaviors that are expensive or brittle to assert p
 - custom SourceGrid Views coexisting with Bootstrap defaults.
 - shared Bootstrap text, formatted, and lookup editor columns;
 - Enter/Escape/Tab/Shift+Tab and lookup arrows/PageUp/PageDown;
+- closed-popup lookup Enter/Escape through the focused native editor key path;
 - lookup mouse selection, outside click, and application deactivation;
+- the read-only lookup DisplayMember companion column after committed value changes;
 - runtime theme changes while an editor or lookup popup is active.
 
 ## 4. Unattended WinForms safety
