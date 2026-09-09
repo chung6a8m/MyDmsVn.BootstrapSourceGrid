@@ -1,5 +1,7 @@
 using System;
+using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.Threading;
 using System.Windows.Forms;
 using MyDmsVn.Bootstrap5WinFormUI.Formatting;
@@ -103,6 +105,114 @@ public sealed class BootstrapFormattedTextBoxEditorTests
         }
     }
 
+    [Test]
+    public void NoneModeRoundTripsRawInputThroughSourceGridConversion()
+    {
+        using (var fixture = new FormattedEditorFixture(1, 2, typeof(int)))
+        {
+            fixture.Editor.BootstrapControl.FormatMode = BootstrapInputFormatMode.None;
+            var context = fixture.StartEdit(0);
+            fixture.Editor.BootstrapControl.RawValue = "42";
+
+            Assert.That(context.EndEdit(false), Is.True);
+            Assert.That(fixture.Cells[0].Value, Is.TypeOf<int>());
+            Assert.That(fixture.Cells[0].Value, Is.EqualTo(42));
+        }
+    }
+
+    [Test]
+    public void GeneralModeCommitsRawValueInsteadOfDecoratedDisplayText()
+    {
+        using (var fixture = new FormattedEditorFixture(12, 34, typeof(int)))
+        {
+            fixture.Editor.BootstrapControl.FormatMode = BootstrapInputFormatMode.General;
+            fixture.Editor.BootstrapControl.GeneralOptions.Blocks = new[] { 2, 2 };
+            var context = fixture.StartEdit(0);
+            fixture.Editor.BootstrapControl.RawValue = "1234";
+
+            Assert.That(fixture.Editor.BootstrapControl.Text, Is.EqualTo("12 34"));
+            Assert.That(context.EndEdit(false), Is.True);
+            Assert.That(fixture.Cells[0].Value, Is.TypeOf<int>());
+            Assert.That(fixture.Cells[0].Value, Is.EqualTo(1234));
+        }
+    }
+
+    [Test]
+    public void NumeralModeFormatsDisplayAndCommitsCanonicalDecimal()
+    {
+        using (var fixture = new FormattedEditorFixture(1.5m, 2.5m, typeof(decimal)))
+        {
+            fixture.Editor.CultureInfo = CultureInfo.InvariantCulture;
+            fixture.Editor.BootstrapControl.FormatMode = BootstrapInputFormatMode.Numeral;
+            var context = fixture.StartEdit(0);
+            fixture.Editor.BootstrapControl.RawValue = "1234567.89";
+
+            Assert.That(fixture.Editor.BootstrapControl.Text, Is.EqualTo("1,234,567.89"));
+            Assert.That(fixture.Editor.BootstrapControl.RawValue, Is.EqualTo("1234567.89"));
+            Assert.That(context.EndEdit(false), Is.True);
+            Assert.That(fixture.Cells[0].Value, Is.TypeOf<decimal>());
+            Assert.That(fixture.Cells[0].Value, Is.EqualTo(1234567.89m));
+        }
+    }
+
+    [Test]
+    public void DateModeUsesSourceGridConverterForCanonicalRawValue()
+    {
+        var original = new DateTime(2026, 8, 31);
+        var edited = new DateTime(2026, 9, 1);
+        using (var fixture = new FormattedEditorFixture(original, edited, typeof(DateTime)))
+        {
+            fixture.Editor.TypeConverter = new CanonicalDateTypeConverter();
+            fixture.Editor.BootstrapControl.FormatMode = BootstrapInputFormatMode.Date;
+            var context = fixture.StartEdit(0);
+
+            Assert.That(fixture.Editor.BootstrapControl.RawValue, Is.EqualTo("31082026"));
+            Assert.That(fixture.Editor.BootstrapControl.Text, Is.EqualTo("31/08/2026"));
+            fixture.Editor.BootstrapControl.RawValue = "01092026";
+            Assert.That(context.EndEdit(false), Is.True);
+            Assert.That(fixture.Cells[0].Value, Is.TypeOf<DateTime>());
+            Assert.That(fixture.Cells[0].Value, Is.EqualTo(edited));
+        }
+    }
+
+    [Test]
+    public void TimeModeUsesSourceGridConverterForCanonicalRawValue()
+    {
+        var original = new TimeSpan(12, 30, 0);
+        var edited = new TimeSpan(23, 59, 0);
+        using (var fixture = new FormattedEditorFixture(original, edited, typeof(TimeSpan)))
+        {
+            fixture.Editor.TypeConverter = new CanonicalTimeTypeConverter();
+            fixture.Editor.BootstrapControl.FormatMode = BootstrapInputFormatMode.Time;
+            var context = fixture.StartEdit(0);
+
+            Assert.That(fixture.Editor.BootstrapControl.RawValue, Is.EqualTo("1230"));
+            Assert.That(fixture.Editor.BootstrapControl.Text, Is.EqualTo("12:30"));
+            fixture.Editor.BootstrapControl.RawValue = "2359";
+            Assert.That(context.EndEdit(false), Is.True);
+            Assert.That(fixture.Cells[0].Value, Is.TypeOf<TimeSpan>());
+            Assert.That(fixture.Cells[0].Value, Is.EqualTo(edited));
+        }
+    }
+
+    [Test]
+    public void InvalidRawValueRemainsUnderSourceGridValidation()
+    {
+        using (var fixture = new FormattedEditorFixture(1, 2, typeof(int)))
+        {
+            var editExceptionCount = 0;
+            fixture.Editor.EditException += (_, _) => editExceptionCount++;
+            fixture.Editor.BootstrapControl.FormatMode = BootstrapInputFormatMode.None;
+            var context = fixture.StartEdit(0);
+            fixture.Editor.BootstrapControl.RawValue = "not-a-number";
+
+            Assert.That(context.EndEdit(false), Is.False);
+            Assert.That(fixture.Editor.IsEditing, Is.True);
+            Assert.That(fixture.Cells[0].Value, Is.EqualTo(1));
+            Assert.That(editExceptionCount, Is.EqualTo(1));
+        }
+    }
+
     private sealed class FormattedEditorFixture : IDisposable
     {
         internal FormattedEditorFixture(object firstValue, object secondValue, Type? valueType = null)
@@ -162,6 +272,88 @@ public sealed class BootstrapFormattedTextBoxEditorTests
             Form.Close();
             Form.Dispose();
             Grid.Dispose();
+        }
+    }
+
+    private sealed class CanonicalDateTypeConverter : TypeConverter
+    {
+        public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
+        {
+            return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+        }
+
+        public override bool CanConvertTo(ITypeDescriptorContext? context, Type? destinationType)
+        {
+            return destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
+        }
+
+        public override object? ConvertFrom(
+            ITypeDescriptorContext? context,
+            CultureInfo? culture,
+            object value)
+        {
+            if (value is string rawValue)
+            {
+                return DateTime.ParseExact(rawValue, "ddMMyyyy", CultureInfo.InvariantCulture);
+            }
+
+            return base.ConvertFrom(context, culture, value);
+        }
+
+        public override object? ConvertTo(
+            ITypeDescriptorContext? context,
+            CultureInfo? culture,
+            object? value,
+            Type destinationType)
+        {
+            if (destinationType == typeof(string) && value is DateTime date)
+            {
+                return date.ToString("ddMMyyyy", CultureInfo.InvariantCulture);
+            }
+
+            return base.ConvertTo(context, culture, value, destinationType);
+        }
+    }
+
+    private sealed class CanonicalTimeTypeConverter : TypeConverter
+    {
+        public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
+        {
+            return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+        }
+
+        public override bool CanConvertTo(ITypeDescriptorContext? context, Type? destinationType)
+        {
+            return destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
+        }
+
+        public override object? ConvertFrom(
+            ITypeDescriptorContext? context,
+            CultureInfo? culture,
+            object value)
+        {
+            if (value is string rawValue && rawValue.Length == 4)
+            {
+                var hours = int.Parse(rawValue.Substring(0, 2), CultureInfo.InvariantCulture);
+                var minutes = int.Parse(rawValue.Substring(2, 2), CultureInfo.InvariantCulture);
+                return new TimeSpan(hours, minutes, 0);
+            }
+
+            return base.ConvertFrom(context, culture, value);
+        }
+
+        public override object? ConvertTo(
+            ITypeDescriptorContext? context,
+            CultureInfo? culture,
+            object? value,
+            Type destinationType)
+        {
+            if (destinationType == typeof(string) && value is TimeSpan time)
+            {
+                return $"{time.Hours:00}{time.Minutes:00}";
+            }
+
+            return base.ConvertTo(context, culture, value, destinationType);
         }
     }
 }
