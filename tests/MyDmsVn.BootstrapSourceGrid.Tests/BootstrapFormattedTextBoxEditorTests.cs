@@ -454,7 +454,7 @@ public sealed class BootstrapFormattedTextBoxEditorTests
                 Dock = DockStyle.Fill,
             };
             var declaredType = valueType ?? typeof(string);
-            Editor = Grid.EditorRegistry.Register(new BootstrapFormattedTextBoxEditor(declaredType));
+            Editor = Grid.BootstrapEditors.CreateFormattedTextBox(declaredType);
             Cells = new[]
             {
                 new SourceGrid.Cells.Cell(firstValue, declaredType) { Editor = Editor },

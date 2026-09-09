@@ -2,6 +2,7 @@ using System;
 using System.Windows.Forms;
 using MyDmsVn.Bootstrap5WinFormUI.Controls;
 using MyDmsVn.BootstrapSourceGrid.Editors.Internal;
+using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
 
 namespace MyDmsVn.BootstrapSourceGrid.Editors;
 
@@ -10,14 +11,17 @@ namespace MyDmsVn.BootstrapSourceGrid.Editors;
 /// </summary>
 public sealed class BootstrapLookupBoxEditor : SourceGrid.Cells.Editors.EditorControlBase
 {
-    internal BootstrapLookupBoxEditor(Type valueType)
+    internal BootstrapLookupBoxEditor(BootstrapSourceGridControl owner, Type valueType)
         : base(valueType)
     {
+        Owner = owner;
         UseCellViewProperties = false;
         var control = (BootstrapSourceGridLookupBoxControl)Control;
         control.OwnerNavigationRequested = ContinueGridNavigation;
         control.SelectionCommitted += OnSelectionCommitted;
     }
+
+    internal BootstrapSourceGridControl Owner { get; }
 
     /// <summary>
     /// Gets the Bootstrap lookup box used while a cell is being edited.

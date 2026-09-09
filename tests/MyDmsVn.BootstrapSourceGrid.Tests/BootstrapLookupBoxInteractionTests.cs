@@ -450,7 +450,7 @@ public sealed class BootstrapLookupBoxInteractionTests
                 Dock = DockStyle.Top,
                 Height = 80,
             };
-            Editor = Grid.EditorRegistry.Register(new BootstrapLookupBoxEditor(typeof(int)));
+            Editor = Grid.BootstrapEditors.CreateLookupBox(typeof(int));
             Editor.BootstrapControl.DisplayMember = nameof(LookupItem.Name);
             Editor.BootstrapControl.ValueMember = nameof(LookupItem.Id);
             Editor.BootstrapControl.DataSource = new BindingList<LookupItem>

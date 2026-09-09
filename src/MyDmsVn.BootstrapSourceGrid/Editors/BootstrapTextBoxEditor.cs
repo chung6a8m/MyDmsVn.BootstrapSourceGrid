@@ -2,6 +2,7 @@ using System;
 using System.Windows.Forms;
 using MyDmsVn.Bootstrap5WinFormUI.Controls;
 using MyDmsVn.BootstrapSourceGrid.Editors.Internal;
+using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
 
 namespace MyDmsVn.BootstrapSourceGrid.Editors;
 
@@ -10,11 +11,14 @@ namespace MyDmsVn.BootstrapSourceGrid.Editors;
 /// </summary>
 public sealed class BootstrapTextBoxEditor : SourceGrid.Cells.Editors.EditorControlBase
 {
-    internal BootstrapTextBoxEditor(Type valueType)
+    internal BootstrapTextBoxEditor(BootstrapSourceGridControl owner, Type valueType)
         : base(valueType)
     {
+        Owner = owner;
         UseCellViewProperties = false;
     }
+
+    internal BootstrapSourceGridControl Owner { get; }
 
     /// <summary>
     /// Gets the Bootstrap text box used while a cell is being edited.

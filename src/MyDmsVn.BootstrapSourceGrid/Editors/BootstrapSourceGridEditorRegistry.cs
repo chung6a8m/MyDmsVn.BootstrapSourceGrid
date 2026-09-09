@@ -1,11 +1,71 @@
 using System;
 using System.Collections.Generic;
+using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
 
 namespace MyDmsVn.BootstrapSourceGrid.Editors;
 
-internal sealed class BootstrapSourceGridEditorRegistry : IDisposable
+/// <summary>
+/// Creates and owns Bootstrap editor adapters for one <see cref="BootstrapSourceGridControl"/>.
+/// </summary>
+/// <remarks>
+/// Create one editor per column or configuration and share it between cells in the owning
+/// grid. The owning grid disposes every editor created by this registry. An editor created
+/// by one grid must not be used by another grid.
+/// </remarks>
+public sealed class BootstrapSourceGridEditorRegistry : IDisposable
 {
     private readonly List<SourceGrid.Cells.Editors.EditorControlBase> _ownedEditors = new();
+    private readonly BootstrapSourceGridControl _owner;
+
+    internal BootstrapSourceGridEditorRegistry(BootstrapSourceGridControl owner)
+    {
+        _owner = owner ?? throw new ArgumentNullException(nameof(owner));
+    }
+
+    /// <summary>
+    /// Creates a grid-owned Bootstrap text-box editor for the specified value type.
+    /// </summary>
+    /// <param name="valueType">The SourceGrid value type converted when editing commits.</param>
+    /// <returns>A shared editor owned by this registry's grid.</returns>
+    public BootstrapTextBoxEditor CreateTextBox(Type valueType)
+    {
+        if (valueType is null)
+        {
+            throw new ArgumentNullException(nameof(valueType));
+        }
+
+        return Register(new BootstrapTextBoxEditor(_owner, valueType));
+    }
+
+    /// <summary>
+    /// Creates a grid-owned Bootstrap formatted-text-box editor for the specified value type.
+    /// </summary>
+    /// <param name="valueType">The SourceGrid value type converted when editing commits.</param>
+    /// <returns>A shared editor owned by this registry's grid.</returns>
+    public BootstrapFormattedTextBoxEditor CreateFormattedTextBox(Type valueType)
+    {
+        if (valueType is null)
+        {
+            throw new ArgumentNullException(nameof(valueType));
+        }
+
+        return Register(new BootstrapFormattedTextBoxEditor(_owner, valueType));
+    }
+
+    /// <summary>
+    /// Creates a grid-owned Bootstrap lookup-box editor for the specified value type.
+    /// </summary>
+    /// <param name="valueType">The SourceGrid value type converted when editing commits.</param>
+    /// <returns>A shared editor owned by this registry's grid.</returns>
+    public BootstrapLookupBoxEditor CreateLookupBox(Type valueType)
+    {
+        if (valueType is null)
+        {
+            throw new ArgumentNullException(nameof(valueType));
+        }
+
+        return Register(new BootstrapLookupBoxEditor(_owner, valueType));
+    }
 
     internal T Register<T>(T editor)
         where T : SourceGrid.Cells.Editors.EditorControlBase
@@ -19,6 +79,7 @@ internal sealed class BootstrapSourceGridEditorRegistry : IDisposable
         return editor;
     }
 
+    /// <inheritdoc />
     public void Dispose()
     {
         foreach (var editor in _ownedEditors)
