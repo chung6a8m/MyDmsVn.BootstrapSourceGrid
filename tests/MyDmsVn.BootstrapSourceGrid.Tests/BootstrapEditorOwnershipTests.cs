@@ -2,6 +2,7 @@ using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
 using MyDmsVn.BootstrapSourceGrid.Tests.EditorProbes;
+using MyDmsVn.BootstrapSourceGrid.Editors;
 using NUnit.Framework;
 using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
 
@@ -189,6 +190,41 @@ public sealed class BootstrapEditorOwnershipTests
 
         Assert.That(editor.IsControlDisposed, Is.True);
         Assert.That(editor.IsEditorDisposed, Is.True);
+    }
+
+    [Test]
+    public void RegisteredBootstrapTextBoxEditorNeverStarted_IsDisposedWithGrid()
+    {
+        var grid = new BootstrapSourceGridControl();
+        var editor = grid.EditorRegistry.Register(new BootstrapTextBoxEditor(typeof(string)));
+
+        Assert.That(editor.Grid, Is.Null);
+        grid.Dispose();
+
+        Assert.That(editor.BootstrapControl.IsDisposed, Is.True);
+    }
+
+    [Test]
+    public void RegisteredBootstrapTextBoxEditorUsedByCell_IsDisposedWithGrid()
+    {
+        var form = new Form();
+        var grid = new BootstrapSourceGridControl();
+        var editor = grid.EditorRegistry.Register(new BootstrapTextBoxEditor(typeof(string)));
+        var cell = new SourceGrid.Cells.Cell("before") { Editor = editor };
+        grid.Redim(1, 1);
+        grid[0, 0] = cell;
+        form.Controls.Add(grid);
+        form.Show();
+        Assert.That(grid.Selection.Focus(new SourceGrid.Position(0, 0), true), Is.True);
+        var context = new SourceGrid.CellContext(grid, new SourceGrid.Position(0, 0), cell);
+        grid.GetCell(0, 0).View.Measure(context, Size.Empty);
+        context.StartEdit();
+        Assert.That(context.EndEdit(true), Is.True);
+
+        grid.Dispose();
+
+        Assert.That(editor.BootstrapControl.IsDisposed, Is.True);
+        form.Dispose();
     }
 
     [Test]
