@@ -139,6 +139,31 @@ public sealed class BootstrapSourceGridDemoTests
     }
 
     [Test]
+    public void DiagnosticsRefreshAfterSourceGridCommitsTheEditedValue()
+    {
+        using (var form = new MyDmsVn.BootstrapSourceGrid.Demo.MainForm())
+        {
+            ShowForm(form);
+            var grid = FindControl<BootstrapSourceGridControl>(form, "BootstrapSourceGrid");
+            var diagnostics = FindControl<Label>(form, "diagnosticsLabel");
+            var position = new SourceGrid.Position(1, 2);
+            var cell = (SourceGrid.Cells.Cell)grid[position];
+            var editor = (BootstrapTextBoxEditor)cell.Editor!;
+            Assert.That(grid.Selection.Focus(position, true), Is.True);
+            var context = new SourceGrid.CellContext(grid, position, cell);
+            grid.GetCell(position).View.Measure(context, Size.Empty);
+            context.StartEdit();
+            editor.BootstrapControl.Text = "Committed diagnostics";
+
+            Assert.That(context.EndEdit(false), Is.True);
+            Application.DoEvents();
+
+            Assert.That(cell.Value, Is.EqualTo("Committed diagnostics"));
+            Assert.That(diagnostics.Text, Does.Contain("Committed diagnostics (String)"));
+        }
+    }
+
+    [Test]
     public void ConsumerFontButtonOptsOutOfLaterThemeFontReplacement()
     {
         var originalTheme = BootstrapThemeManager.CurrentTheme;

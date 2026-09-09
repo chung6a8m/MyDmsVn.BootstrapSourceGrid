@@ -105,7 +105,12 @@ public sealed partial class MainForm : Form
 
     private void OnEditorValidated(object? sender, EventArgs e)
     {
-        UpdateDiagnostics();
+        if (IsDisposed || Disposing || !IsHandleCreated)
+        {
+            return;
+        }
+
+        BeginInvoke((MethodInvoker)UpdateDiagnostics);
     }
 
     private void UpdateDiagnostics()
