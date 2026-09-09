@@ -12,7 +12,7 @@ namespace MyDmsVn.BootstrapSourceGrid.Editors;
 public sealed class BootstrapLookupBoxEditor : SourceGrid.Cells.Editors.EditorControlBase
 {
     internal BootstrapLookupBoxEditor(BootstrapSourceGridControl owner, Type valueType)
-        : base(valueType)
+        : base(ValidateOwner(owner, valueType))
     {
         Owner = owner;
         UseCellViewProperties = false;
@@ -82,5 +82,15 @@ public sealed class BootstrapLookupBoxEditor : SourceGrid.Cells.Editors.EditorCo
         var args = new KeyEventArgs(reverse ? Keys.Shift | Keys.Tab : Keys.Tab);
         Grid.ProcessSpecialGridKey(args);
         return args.Handled;
+    }
+
+    private static Type ValidateOwner(BootstrapSourceGridControl owner, Type valueType)
+    {
+        if (owner is null)
+        {
+            throw new ArgumentNullException(nameof(owner));
+        }
+
+        return valueType;
     }
 }

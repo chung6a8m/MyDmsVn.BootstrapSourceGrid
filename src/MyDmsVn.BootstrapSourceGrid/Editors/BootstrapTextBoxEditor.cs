@@ -12,7 +12,7 @@ namespace MyDmsVn.BootstrapSourceGrid.Editors;
 public sealed class BootstrapTextBoxEditor : SourceGrid.Cells.Editors.EditorControlBase
 {
     internal BootstrapTextBoxEditor(BootstrapSourceGridControl owner, Type valueType)
-        : base(valueType)
+        : base(ValidateOwner(owner, valueType))
     {
         Owner = owner;
         UseCellViewProperties = false;
@@ -50,5 +50,15 @@ public sealed class BootstrapTextBoxEditor : SourceGrid.Cells.Editors.EditorCont
     protected override void OnSendCharToEditor(char key)
     {
         ((BootstrapSourceGridTextBoxControl)Control).ReplaceWithFirstEditCharacter(key);
+    }
+
+    private static Type ValidateOwner(BootstrapSourceGridControl owner, Type valueType)
+    {
+        if (owner is null)
+        {
+            throw new ArgumentNullException(nameof(owner));
+        }
+
+        return valueType;
     }
 }

@@ -14,7 +14,7 @@ namespace MyDmsVn.BootstrapSourceGrid.Editors;
 public sealed class BootstrapFormattedTextBoxEditor : SourceGrid.Cells.Editors.EditorControlBase
 {
     internal BootstrapFormattedTextBoxEditor(BootstrapSourceGridControl owner, Type valueType)
-        : base(valueType)
+        : base(ValidateOwner(owner, valueType))
     {
         Owner = owner;
         UseCellViewProperties = false;
@@ -90,5 +90,15 @@ public sealed class BootstrapFormattedTextBoxEditor : SourceGrid.Cells.Editors.E
     private CultureInfo GetConversionCulture()
     {
         return CultureInfo ?? System.Globalization.CultureInfo.CurrentCulture;
+    }
+
+    private static Type ValidateOwner(BootstrapSourceGridControl owner, Type valueType)
+    {
+        if (owner is null)
+        {
+            throw new ArgumentNullException(nameof(owner));
+        }
+
+        return valueType;
     }
 }

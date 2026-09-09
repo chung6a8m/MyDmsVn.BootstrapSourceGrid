@@ -9,5 +9,10 @@ These are intentional scope boundaries for the first release, not defects in oth
 - **Concrete grid only:** The public control derives from concrete `SourceGrid.Grid`. MVP does not add `BootstrapSourceGridVirtual` or another virtual-grid integration type.
 - **Windows-only:** Both supported targets use native Windows Forms: `net48` and `net8.0-windows`.
 - **No Bootstrap wrappers:** Rows, columns, cells, ranges, selection, controllers, editors, spans, and scrolling continue to use SourceGrid APIs directly.
+- **Cross-grid Bootstrap editor reuse:** Editors created through `BootstrapEditors` are owned by
+  the creating grid and must not be assigned to another grid. At the pinned SourceGrid baseline,
+  no protected integration callback runs before SourceGrid attaches an editor control and mutates
+  its linked-control state, so this unsupported use is not guaranteed to fail before attachment.
+  Strict runtime enforcement requires a separately approved SourceGrid pre-attach seam.
 
 See [COMPATIBILITY.md](COMPATIBILITY.md) for the full supported behavior contract.
