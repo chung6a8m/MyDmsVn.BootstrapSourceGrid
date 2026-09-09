@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using MyDmsVn.Bootstrap5WinFormUI.Controls;
@@ -119,6 +120,83 @@ public sealed class BootstrapEditorRegistryTests
         Assert.That(
             create,
             Throws.ArgumentNullException.With.Property("ParamName").EqualTo("owner"));
+    }
+
+    [Test]
+    public void TenThousandCellsShareOneTextEditorControlForOneConfiguration()
+    {
+        using (var grid = new BootstrapSourceGridControl())
+        {
+            const int rows = 100;
+            const int columns = 100;
+            const int editorColumn = 37;
+            var editor = grid.BootstrapEditors.CreateTextBox(typeof(string));
+            var bootstrapControls = new HashSet<System.Windows.Forms.Control>();
+            grid.Redim(rows, columns);
+
+            for (var row = 0; row < rows; row++)
+            {
+                for (var column = 0; column < columns; column++)
+                {
+                    var cell = new SourceGrid.Cells.Cell($"{row}:{column}");
+                    if (column == editorColumn)
+                    {
+                        cell.Editor = editor;
+                        bootstrapControls.Add(((BootstrapTextBoxEditor)cell.Editor).Control);
+                    }
+
+                    grid[row, column] = cell;
+                }
+            }
+
+            Assert.Multiple((Action)(() =>
+            {
+                Assert.That(grid.RowsCount * grid.ColumnsCount, Is.EqualTo(10_000));
+                Assert.That(bootstrapControls, Has.Count.EqualTo(1));
+                Assert.That(bootstrapControls, Does.Contain(editor.BootstrapControl));
+            }));
+        }
+    }
+
+    [Test]
+    public void ThousandsOfCellsUseExactlyThreeExplicitConfigurationEditors()
+    {
+        using (var grid = new BootstrapSourceGridControl())
+        {
+            const int rows = 1_000;
+            const int columns = 3;
+            var text = grid.BootstrapEditors.CreateTextBox(typeof(string));
+            var formatted = grid.BootstrapEditors.CreateFormattedTextBox(typeof(decimal));
+            var lookup = grid.BootstrapEditors.CreateLookupBox(typeof(int));
+            var configuredEditors = new SourceGrid.Cells.Editors.EditorBase[]
+            {
+                text,
+                formatted,
+                lookup,
+            };
+            var assignedEditors = new HashSet<SourceGrid.Cells.Editors.EditorBase>();
+            var assignedControls = new HashSet<System.Windows.Forms.Control>();
+            grid.Redim(rows, columns);
+
+            for (var row = 0; row < rows; row++)
+            {
+                for (var column = 0; column < columns; column++)
+                {
+                    var editor = configuredEditors[column];
+                    grid[row, column] = new SourceGrid.Cells.Cell { Editor = editor };
+                    assignedEditors.Add(grid[row, column].Editor);
+                    assignedControls.Add(((SourceGrid.Cells.Editors.EditorControlBase)
+                        grid[row, column].Editor).Control);
+                }
+            }
+
+            Assert.Multiple((Action)(() =>
+            {
+                Assert.That(grid.RowsCount * grid.ColumnsCount, Is.EqualTo(3_000));
+                Assert.That(assignedEditors, Is.EquivalentTo(configuredEditors));
+                Assert.That(assignedControls, Has.Count.EqualTo(3));
+            }));
+        }
     }
 
     private static void AssertPublicCreateMethod(string name, Type returnType)
