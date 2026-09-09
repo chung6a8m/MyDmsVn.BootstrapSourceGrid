@@ -123,7 +123,7 @@ and product/test projects use project references to the appropriate vendor proje
 
 Pinned commits:
 
-- Bootstrap5WinFormUI: `95077df0c8bad8593143c2190606d2f444bfc653`
+- Bootstrap5WinFormUI: `d71546726cccffe27c4a96ceff47b8bdb396853c`
 - SourceGrid: `f4e457b43582bf01892f50bdc74aa480531e5944`
 
 **Rationale:** This combines direct project-reference development with exact commit reproducibility and avoids copying vendor code.

@@ -53,7 +53,9 @@ public sealed class BootstrapLookupBoxEditor : SourceGrid.Cells.Editors.EditorCo
         object? sender,
         BootstrapLookupSelectionCommittedEventArgs e)
     {
-        if (!IsEditing || e.Reason == BootstrapLookupCommitReason.Programmatic)
+        if (!IsEditing ||
+            e.Reason == BootstrapLookupCommitReason.Programmatic ||
+            e.Reason == BootstrapLookupCommitReason.Clear)
         {
             return;
         }

@@ -1,11 +1,13 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using MyDmsVn.Bootstrap5WinFormUI.Controls;
+using MyDmsVn.Bootstrap5WinFormUI.Theme;
 using MyDmsVn.BootstrapSourceGrid.Editors;
 using NUnit.Framework;
 using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
@@ -359,6 +361,47 @@ public sealed class BootstrapLookupBoxInteractionTests
             Assert.That(fixture.Cell.Value, Is.EqualTo(42));
             Assert.That(fixture.Editor.BootstrapControl.SelectedValue, Is.EqualTo(7));
             Assert.That(fixture.ValueChangedCount, Is.Zero);
+        }
+    }
+
+    [Test]
+    public void ThemeSwitchWhilePopupIsOpenKeepsLookupUsableWithoutViewInjection()
+    {
+        var originalTheme = BootstrapThemeManager.CurrentTheme;
+        try
+        {
+            BootstrapThemeManager.CurrentTheme = BootstrapTheme.CreateDefault(BootstrapThemeMode.Light);
+            using (var fixture = new LookupInteractionFixture())
+            {
+                fixture.StartEdit();
+                fixture.Editor.BootstrapControl.Text = string.Empty;
+                fixture.Editor.BootstrapControl.OpenDropDown();
+                var popupSurface = fixture.Editor.BootstrapControl.ResultsGrid.Parent!.Parent!.Parent!;
+
+                var dark = BootstrapTheme.CreateDefault(BootstrapThemeMode.Dark);
+                BootstrapThemeManager.CurrentTheme = dark;
+                Application.DoEvents();
+
+                var nativeEditor = fixture.Editor.BootstrapControl.Controls
+                    .OfType<TextBox>()
+                    .Single();
+                Assert.That(fixture.Editor.UseCellViewProperties, Is.False);
+                Assert.That(fixture.Editor.IsEditing, Is.True);
+                Assert.That(fixture.Editor.BootstrapControl.IsDropDownOpen, Is.True);
+                Assert.That(nativeEditor.BackColor, Is.EqualTo(dark.Colors.Surface));
+                Assert.That(nativeEditor.ForeColor, Is.EqualTo(dark.Colors.Text));
+                Assert.That(popupSurface.BackColor, Is.EqualTo(dark.Colors.Surface));
+
+                fixture.DispatchEditorCommandKey(Keys.Down);
+                fixture.DispatchEditorCommandKey(Keys.Enter);
+
+                Assert.That(fixture.Editor.IsEditing, Is.False);
+                Assert.That(fixture.Cell.Value, Is.EqualTo(7));
+            }
+        }
+        finally
+        {
+            BootstrapThemeManager.CurrentTheme = originalTheme;
         }
     }
 

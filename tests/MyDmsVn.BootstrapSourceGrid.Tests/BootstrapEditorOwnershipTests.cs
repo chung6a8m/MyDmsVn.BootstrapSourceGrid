@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using System.Drawing;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using MyDmsVn.BootstrapSourceGrid.Tests.EditorProbes;
@@ -263,6 +265,53 @@ public sealed class BootstrapEditorOwnershipTests
     }
 
     [Test]
+    public void RegisteredBootstrapLookupBoxEditorNeverStarted_IsDisposedWithGrid()
+    {
+        var grid = new BootstrapSourceGridControl();
+        var editor = grid.EditorRegistry.Register(new BootstrapLookupBoxEditor(typeof(int)));
+
+        Assert.That(editor.Grid, Is.Null);
+        grid.Dispose();
+
+        Assert.That(editor.BootstrapControl.IsDisposed, Is.True);
+    }
+
+    [Test]
+    public void RegisteredBootstrapLookupBoxEditorWithPopup_IsFullyDisposedWithGrid()
+    {
+        var form = new Form();
+        var grid = new BootstrapSourceGridControl();
+        var editor = grid.EditorRegistry.Register(new BootstrapLookupBoxEditor(typeof(int)));
+        editor.BootstrapControl.DisplayMember = nameof(LookupItem.Name);
+        editor.BootstrapControl.ValueMember = nameof(LookupItem.Id);
+        editor.BootstrapControl.DataSource = new BindingList<LookupItem>
+        {
+            new LookupItem(42, "Northwind"),
+        };
+        var cell = new SourceGrid.Cells.Cell(42, typeof(int)) { Editor = editor };
+        grid.Redim(1, 1);
+        grid[0, 0] = cell;
+        form.Controls.Add(grid);
+        form.Show();
+        Assert.That(grid.Selection.Focus(new SourceGrid.Position(0, 0), true), Is.True);
+        var context = new SourceGrid.CellContext(grid, new SourceGrid.Position(0, 0), cell);
+        grid.GetCell(0, 0).View.Measure(context, Size.Empty);
+        context.StartEdit();
+        editor.BootstrapControl.OpenDropDown();
+        Application.DoEvents();
+        var controller = GetLookupController(editor.BootstrapControl);
+        var popup = GetPrivateField<Control>(controller, "_dropDown");
+        editor.BootstrapControl.CloseDropDown();
+
+        grid.Dispose();
+
+        Assert.That(editor.BootstrapControl.IsDisposed, Is.True);
+        Assert.That(popup.IsDisposed, Is.True);
+        Assert.That(GetPrivateField<bool>(controller, "_messageFilterInstalled"), Is.False);
+        form.Dispose();
+    }
+
+    [Test]
     public void RegisterRejectsNullEditor()
     {
         using (var grid = new BootstrapSourceGridControl())
@@ -292,5 +341,33 @@ public sealed class BootstrapEditorOwnershipTests
         editor.BootstrapControl.Text = editedValue;
         Assert.That(context.EndEdit(false), Is.True);
         Assert.That(editor.IsEditing, Is.False);
+    }
+
+    private static object GetLookupController(
+        MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapLookupBox lookup)
+    {
+        return typeof(MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapLookupBox)
+            .GetField("_dropDownController", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(lookup)!;
+    }
+
+    private static T GetPrivateField<T>(object instance, string fieldName)
+    {
+        return (T)instance.GetType()
+            .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(instance)!;
+    }
+
+    private sealed class LookupItem
+    {
+        internal LookupItem(int id, string name)
+        {
+            Id = id;
+            Name = name;
+        }
+
+        public int Id { get; }
+
+        public string Name { get; }
     }
 }

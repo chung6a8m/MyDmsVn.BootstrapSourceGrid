@@ -116,6 +116,77 @@ public sealed class BootstrapLookupBoxEditorTests
         }
     }
 
+    [Test]
+    public void SharedEditorInitializesSelectionFromEachCell()
+    {
+        using (var fixture = new LookupEditorFixture(42, 42))
+        {
+            var firstContext = fixture.StartEdit(0);
+            fixture.Editor.BootstrapControl.SelectValue(7);
+            Assert.That(firstContext.EndEdit(false), Is.True);
+
+            var secondContext = fixture.StartEdit(1);
+            try
+            {
+                Assert.That(fixture.Editor.BootstrapControl.SelectedValue, Is.EqualTo(42));
+                Assert.That(fixture.Editor.BootstrapControl.Text, Is.EqualTo("Northwind"));
+                Assert.That(fixture.Cells[0].Value, Is.EqualTo(7));
+                Assert.That(fixture.Cells[1].Value, Is.EqualTo(42));
+                Assert.That(fixture.Cells[0].Editor, Is.SameAs(fixture.Editor));
+                Assert.That(fixture.Cells[1].Editor, Is.SameAs(fixture.Editor));
+            }
+            finally
+            {
+                secondContext.EndEdit(true);
+            }
+        }
+    }
+
+    [Test]
+    public void NullCellValueDoesNotCommitWhileEditorIsInitializing()
+    {
+        using (var fixture = new LookupEditorFixture(null!, 7))
+        {
+            var context = fixture.StartEdit(0);
+            try
+            {
+                Assert.That(fixture.Editor.IsEditing, Is.True);
+                Assert.That(fixture.Editor.BootstrapControl.SelectedValue, Is.Null);
+                Assert.That(fixture.Cells[0].Value, Is.Null);
+            }
+            finally
+            {
+                context.EndEdit(true);
+            }
+        }
+    }
+
+    [Test]
+    public void ProgrammaticClearSelectionDoesNotCommitActiveEdit()
+    {
+        using (var fixture = new LookupEditorFixture(
+            "42",
+            "7",
+            typeof(string),
+            new LookupItem("42", "Northwind"),
+            new LookupItem("7", "Contoso")))
+        {
+            var context = fixture.StartEdit(0);
+            fixture.Editor.BootstrapControl.ClearSelection();
+
+            try
+            {
+                Assert.That(fixture.Editor.IsEditing, Is.True);
+                Assert.That(fixture.Editor.BootstrapControl.SelectedValue, Is.Null);
+                Assert.That(fixture.Cells[0].Value, Is.EqualTo("42"));
+            }
+            finally
+            {
+                context.EndEdit(true);
+            }
+        }
+    }
+
     private static BootstrapLookupBoxEditor CreateEditor(BootstrapSourceGridControl grid, Type valueType)
     {
         var editor = grid.EditorRegistry.Register(new BootstrapLookupBoxEditor(valueType));

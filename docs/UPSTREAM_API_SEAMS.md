@@ -4,7 +4,7 @@ Exact integration facts verified against the pinned vendor baselines. Use this d
 
 ## 1. Baselines
 
-- Bootstrap5WinFormUI: `95077df0c8bad8593143c2190606d2f444bfc653`
+- Bootstrap5WinFormUI: `d71546726cccffe27c4a96ceff47b8bdb396853c`
 - SourceGrid: `f4e457b43582bf01892f50bdc74aa480531e5944`
 
 ## 2. Bootstrap theme seams
@@ -29,6 +29,8 @@ Relevant semantic tokens include `Surface`, `SurfaceSecondary`, `Text`, `MutedTe
 Bootstrap-owned integration metrics currently map from `SpacingXS`, `BorderWidth`, and `FocusBorderWidth`. Do not rescale SourceGrid/application-owned row heights, column widths, or scrollbars.
 
 The pinned `BootstrapDataGridView` remains the reference pattern for theme-owned Font lifetime: construct theme font, replace only owned fonts on theme change, opt out on consumer Font assignment, unsubscribe/dispose owned resources.
+
+`BootstrapTextBox.ApplyThemeFont()` preserves its existing owned `Font` when the next theme has an equivalent body typography token. This is required because WinForms may retain that same `Font` reference on composite child labels when an equality-based property assignment is ignored; disposing it would leave popup and placeholder labels holding a disposed GDI object. The pinned regression test switches the default lookup theme from Light to Dark with its popup open and verifies every lookup/popup label font remains usable.
 
 ## 3. SourceGrid control and cell/View seams
 
@@ -250,6 +252,8 @@ validation/events
 ```
 
 Useful selection/edit APIs include `SelectItem`, `SelectValue`, `ClearSelection`, and `CancelPendingEdit`.
+
+`SelectionCommitted` distinguishes `Keyboard`, `Mouse`, `ExactMatch`, `CommitAndAdd`, `Programmatic`, and `Clear`. The public `ClearSelection()` path emits `Clear`, including programmatic clearing, so the SourceGrid adapter must not treat either `Programmatic` or `Clear` as a user selection that automatically ends the cell edit.
 
 Adapter value contract:
 

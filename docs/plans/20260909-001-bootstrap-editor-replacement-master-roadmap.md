@@ -15,7 +15,7 @@
 - Public grid: `MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid`.
 - Base type: `SourceGrid.Grid`.
 - TFMs: `net48;net8.0-windows`.
-- Bootstrap baseline: `95077df0c8bad8593143c2190606d2f444bfc653`.
+- Bootstrap baseline: `d71546726cccffe27c4a96ceff47b8bdb396853c`.
 - SourceGrid baseline: `f4e457b43582bf01892f50bdc74aa480531e5944`.
 - SourceGrid owns start/commit/cancel, final validation/conversion, editor placement, and grid navigation.
 - Bootstrap controls own their own theme/font/background/border/focus visuals.

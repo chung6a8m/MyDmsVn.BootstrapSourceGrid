@@ -9,7 +9,7 @@ This repository integrates two independently maintained vendors. This document p
 ### Bootstrap framework
 
 - Repository: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI`
-- Baseline commit: `95077df0c8bad8593143c2190606d2f444bfc653`
+- Baseline commit: `d71546726cccffe27c4a96ceff47b8bdb396853c`
 - Role: theme, colors, metrics, typography, rendering helpers, DPI helpers, design conventions
 - Required TFM compatibility: `net48;net8.0-windows`
 
@@ -50,7 +50,7 @@ Expected setup:
 
 ```powershell
 git submodule add https://github.com/chung6a8m/MyDmsVn.Bootstrap5WinFormUI.git vendor/Bootstrap5WinFormUI
-git -C vendor/Bootstrap5WinFormUI checkout 95077df0c8bad8593143c2190606d2f444bfc653
+git -C vendor/Bootstrap5WinFormUI checkout d71546726cccffe27c4a96ceff47b8bdb396853c
 
 git submodule add https://github.com/chung6a8m/sourcegrid.git vendor/sourcegrid
 git -C vendor/sourcegrid checkout f4e457b43582bf01892f50bdc74aa480531e5944
