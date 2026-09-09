@@ -4,8 +4,10 @@ using System.Drawing;
 using System.Globalization;
 using System.Threading;
 using System.Windows.Forms;
+using MyDmsVn.Bootstrap5WinFormUI.Controls;
 using MyDmsVn.Bootstrap5WinFormUI.Formatting;
 using MyDmsVn.BootstrapSourceGrid.Editors;
+using MyDmsVn.BootstrapSourceGrid.Editors.Internal;
 using NUnit.Framework;
 using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
 
@@ -211,6 +213,123 @@ public sealed class BootstrapFormattedTextBoxEditorTests
             Assert.That(fixture.Cells[0].Value, Is.EqualTo(1));
             Assert.That(editExceptionCount, Is.EqualTo(1));
         }
+    }
+
+    [Test]
+    public void BeginEditSelectsEntireFormattedDisplay()
+    {
+        using (var fixture = new FormattedEditorFixture("12345678", "87654321"))
+        {
+            fixture.Editor.BootstrapControl.FormatMode = BootstrapInputFormatMode.General;
+            fixture.Editor.BootstrapControl.GeneralOptions.Blocks = new[] { 4, 4 };
+            var context = fixture.StartEdit(0);
+
+            try
+            {
+                var nativeEditor = GetNativeEditor(fixture.Editor.BootstrapControl);
+
+                Assert.That(nativeEditor.SelectionStart, Is.Zero);
+                Assert.That(nativeEditor.SelectionLength, Is.EqualTo("1234 5678".Length));
+            }
+            finally
+            {
+                context.EndEdit(true);
+            }
+        }
+    }
+
+    [TestCase(BootstrapInputFormatMode.General, "12345678", '9', "9", "9")]
+    [TestCase(BootstrapInputFormatMode.Numeral, "1234567.89", '9', "9", "9")]
+    [TestCase(BootstrapInputFormatMode.Date, "31082026", '1', "1", "1")]
+    [TestCase(BootstrapInputFormatMode.Time, "1230", '2', "2", "2")]
+    public void FirstCharacterUsesFormattedCaretMapping(
+        BootstrapInputFormatMode mode,
+        string initialRawValue,
+        char firstCharacter,
+        string expectedRawValue,
+        string expectedDisplayValue)
+    {
+        using (var fixture = new FormattedEditorFixture(initialRawValue, string.Empty))
+        {
+            fixture.Editor.BootstrapControl.FormatMode = mode;
+            fixture.Editor.BootstrapControl.GeneralOptions.Blocks = new[] { 4, 4 };
+            var context = fixture.StartEdit(0);
+
+            try
+            {
+                fixture.Editor.SendCharToEditor(firstCharacter);
+                var nativeEditor = GetNativeEditor(fixture.Editor.BootstrapControl);
+
+                Assert.That(fixture.Editor.BootstrapControl.RawValue, Is.EqualTo(expectedRawValue));
+                Assert.That(fixture.Editor.BootstrapControl.Text, Is.EqualTo(expectedDisplayValue));
+                Assert.That(nativeEditor.SelectionStart, Is.EqualTo(expectedDisplayValue.Length));
+                Assert.That(nativeEditor.SelectionLength, Is.Zero);
+            }
+            finally
+            {
+                context.EndEdit(true);
+            }
+        }
+    }
+
+    [Test]
+    public void FirstCharacterEditRemainsUndoableAndRedoableWithinSourceGridSession()
+    {
+        using (var fixture = new FormattedEditorFixture("12345678", string.Empty))
+        {
+            fixture.Editor.BootstrapControl.FormatMode = BootstrapInputFormatMode.General;
+            fixture.Editor.BootstrapControl.GeneralOptions.Blocks = new[] { 4, 4 };
+            var context = fixture.StartEdit(0);
+            fixture.Editor.SendCharToEditor('9');
+            var control = (BootstrapSourceGridFormattedTextBoxControl)fixture.Editor.Control;
+
+            control.ProcessFormattedEditCommand(Keys.Control | Keys.Z);
+
+            Assert.That(fixture.Editor.IsEditing, Is.True);
+            Assert.That(fixture.Editor.BootstrapControl.RawValue, Is.EqualTo("12345678"));
+            Assert.That(fixture.Editor.BootstrapControl.Text, Is.EqualTo("1234 5678"));
+
+            control.ProcessFormattedEditCommand(Keys.Control | Keys.Y);
+
+            Assert.That(fixture.Editor.IsEditing, Is.True);
+            Assert.That(fixture.Editor.BootstrapControl.RawValue, Is.EqualTo("9"));
+            Assert.That(fixture.Editor.BootstrapControl.Text, Is.EqualTo("9"));
+            context.EndEdit(true);
+        }
+    }
+
+    [Test]
+    public void CancelAfterMultipleFormattedChangesRestoresOriginalLogicalAndDisplayValues()
+    {
+        using (var fixture = new FormattedEditorFixture("12345678", string.Empty))
+        {
+            fixture.Editor.BootstrapControl.FormatMode = BootstrapInputFormatMode.General;
+            fixture.Editor.BootstrapControl.GeneralOptions.Blocks = new[] { 4, 4 };
+            var context = fixture.StartEdit(0);
+            fixture.Editor.SendCharToEditor('9');
+            var nativeEditor = GetNativeEditor(fixture.Editor.BootstrapControl);
+            nativeEditor.Select(nativeEditor.TextLength, 0);
+            nativeEditor.SelectedText = "8";
+
+            Assert.That(fixture.Editor.BootstrapControl.RawValue, Is.EqualTo("98"));
+            Assert.That(context.EndEdit(true), Is.True);
+            Assert.That(fixture.Cells[0].Value, Is.EqualTo("12345678"));
+            Assert.That(fixture.Editor.BootstrapControl.RawValue, Is.EqualTo("12345678"));
+            Assert.That(fixture.Editor.BootstrapControl.Text, Is.EqualTo("1234 5678"));
+        }
+    }
+
+    private static TextBox GetNativeEditor(BootstrapFormattedTextBox control)
+    {
+        foreach (Control child in control.Controls)
+        {
+            if (child is TextBox textBox)
+            {
+                return textBox;
+            }
+        }
+
+        throw new InvalidOperationException("BootstrapFormattedTextBox native editor was not found.");
     }
 
     private sealed class FormattedEditorFixture : IDisposable
