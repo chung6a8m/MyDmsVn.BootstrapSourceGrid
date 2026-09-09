@@ -6,6 +6,7 @@ using System.Threading;
 using System.Windows.Forms;
 using MyDmsVn.Bootstrap5WinFormUI.Controls;
 using MyDmsVn.Bootstrap5WinFormUI.Formatting;
+using MyDmsVn.Bootstrap5WinFormUI.Theme;
 using MyDmsVn.BootstrapSourceGrid.Editors;
 using MyDmsVn.BootstrapSourceGrid.Editors.Internal;
 using NUnit.Framework;
@@ -316,6 +317,87 @@ public sealed class BootstrapFormattedTextBoxEditorTests
             Assert.That(fixture.Cells[0].Value, Is.EqualTo("12345678"));
             Assert.That(fixture.Editor.BootstrapControl.RawValue, Is.EqualTo("12345678"));
             Assert.That(fixture.Editor.BootstrapControl.Text, Is.EqualTo("1234 5678"));
+        }
+    }
+
+    [Test]
+    public void ActiveEditFollowsRuntimeThemeWithoutCellViewPropertyInjection()
+    {
+        var originalTheme = BootstrapThemeManager.CurrentTheme;
+        using (var customFont = new Font(FontFamily.GenericMonospace, 17f, FontStyle.Bold))
+        {
+            try
+            {
+                BootstrapThemeManager.CurrentTheme = BootstrapTheme.CreateDefault(BootstrapThemeMode.Light);
+                using (var fixture = new FormattedEditorFixture("12345678", string.Empty))
+                {
+                    fixture.Editor.BootstrapControl.FormatMode = BootstrapInputFormatMode.General;
+                    fixture.Editor.BootstrapControl.GeneralOptions.Blocks = new[] { 4, 4 };
+                    var customView = new SourceGrid.Cells.Views.Cell
+                    {
+                        BackColor = Color.Red,
+                        ForeColor = Color.Lime,
+                        Font = customFont,
+                    };
+                    fixture.Cells[0].View = customView;
+                    var context = fixture.StartEdit(0);
+
+                    try
+                    {
+                        BootstrapThemeManager.CurrentTheme =
+                            BootstrapTheme.CreateDefault(BootstrapThemeMode.Dark);
+                        Application.DoEvents();
+                        var theme = BootstrapThemeManager.CurrentTheme;
+                        var nativeEditor = GetNativeEditor(fixture.Editor.BootstrapControl);
+
+                        Assert.That(fixture.Editor.UseCellViewProperties, Is.False);
+                        Assert.That(nativeEditor.BackColor, Is.EqualTo(theme.Colors.Surface));
+                        Assert.That(nativeEditor.ForeColor, Is.EqualTo(theme.Colors.Text));
+                        Assert.That(nativeEditor.BackColor, Is.Not.EqualTo(customView.BackColor));
+                        Assert.That(nativeEditor.ForeColor, Is.Not.EqualTo(customView.ForeColor));
+                        Assert.That(nativeEditor.Font.Name, Is.EqualTo(theme.Typography.Body.FontFamilyName));
+                        Assert.That(
+                            nativeEditor.Font.SizeInPoints,
+                            Is.EqualTo(theme.Typography.Body.SizeInPoints).Within(0.01f));
+                        Assert.That(nativeEditor.Font.Style, Is.EqualTo(theme.Typography.Body.Style));
+                    }
+                    finally
+                    {
+                        context.EndEdit(true);
+                    }
+                }
+            }
+            finally
+            {
+                BootstrapThemeManager.CurrentTheme = originalTheme;
+            }
+        }
+    }
+
+    [Test]
+    public void OneConfiguredEditorEditsMultipleCellsSequentiallyInOneGrid()
+    {
+        using (var fixture = new FormattedEditorFixture("12345678", "87654321"))
+        {
+            fixture.Editor.BootstrapControl.FormatMode = BootstrapInputFormatMode.General;
+            fixture.Editor.BootstrapControl.GeneralOptions.Blocks = new[] { 4, 4 };
+            var control = fixture.Editor.BootstrapControl;
+
+            var firstContext = fixture.StartEdit(0);
+            fixture.Editor.BootstrapControl.RawValue = "11112222";
+            Assert.That(firstContext.EndEdit(false), Is.True);
+
+            var secondContext = fixture.StartEdit(1);
+            fixture.Editor.BootstrapControl.RawValue = "33334444";
+            Assert.That(secondContext.EndEdit(false), Is.True);
+
+            Assert.That(fixture.Cells[0].Value, Is.EqualTo("11112222"));
+            Assert.That(fixture.Cells[1].Value, Is.EqualTo("33334444"));
+            Assert.That(fixture.Cells[0].Editor, Is.SameAs(fixture.Editor));
+            Assert.That(fixture.Cells[1].Editor, Is.SameAs(fixture.Editor));
+            Assert.That(fixture.Editor.BootstrapControl, Is.SameAs(control));
+            Assert.That(fixture.Editor.BootstrapControl.FormatMode, Is.EqualTo(BootstrapInputFormatMode.General));
+            Assert.That(fixture.Editor.BootstrapControl.GeneralOptions.Blocks, Is.EqualTo(new[] { 4, 4 }));
         }
     }
 
