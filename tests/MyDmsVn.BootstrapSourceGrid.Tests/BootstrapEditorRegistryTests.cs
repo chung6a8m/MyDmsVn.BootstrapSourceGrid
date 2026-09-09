@@ -75,6 +75,41 @@ public sealed class BootstrapEditorRegistryTests
         }
     }
 
+    [TestCase("CreateTextBox")]
+    [TestCase("CreateFormattedTextBox")]
+    [TestCase("CreateLookupBox")]
+    public void DisposedRegistryRejectsCreateMethods(string methodName)
+    {
+        using (var grid = new BootstrapSourceGridControl())
+        {
+            var registry = grid.BootstrapEditors;
+            registry.Dispose();
+            Assert.That((Action)(() => registry.Dispose()), Throws.Nothing);
+
+            Assert.That(
+                CreateEditorAction(registry, methodName),
+                Throws.TypeOf<ObjectDisposedException>()
+                    .With.Property("ObjectName")
+                    .EqualTo(nameof(BootstrapSourceGridEditorRegistry)));
+        }
+    }
+
+    [TestCase("CreateTextBox")]
+    [TestCase("CreateFormattedTextBox")]
+    [TestCase("CreateLookupBox")]
+    public void DisposedGridRejectsRegistryCreateMethods(string methodName)
+    {
+        var grid = new BootstrapSourceGridControl();
+        var registry = grid.BootstrapEditors;
+        grid.Dispose();
+
+        Assert.That(
+            CreateEditorAction(registry, methodName),
+            Throws.TypeOf<ObjectDisposedException>()
+                .With.Property("ObjectName")
+                .EqualTo(nameof(BootstrapSourceGridEditorRegistry)));
+    }
+
     [Test]
     public void RegistryConstructorRejectsNullOwner()
     {
@@ -215,6 +250,19 @@ public sealed class BootstrapEditorRegistryTests
         }
 
         Assert.That(method.ReturnType, Is.EqualTo(returnType));
+    }
+
+    private static Action CreateEditorAction(
+        BootstrapSourceGridEditorRegistry registry,
+        string methodName)
+    {
+        return methodName switch
+        {
+            "CreateTextBox" => () => registry.CreateTextBox(typeof(string)),
+            "CreateFormattedTextBox" => () => registry.CreateFormattedTextBox(typeof(decimal)),
+            "CreateLookupBox" => () => registry.CreateLookupBox(typeof(int)),
+            _ => throw new ArgumentOutOfRangeException(nameof(methodName)),
+        };
     }
 
     private static void AssertPublicProperty(Type ownerType, string name, Type propertyType)

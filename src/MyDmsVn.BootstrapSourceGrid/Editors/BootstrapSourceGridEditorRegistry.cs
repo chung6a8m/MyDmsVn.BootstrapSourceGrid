@@ -10,12 +10,14 @@ namespace MyDmsVn.BootstrapSourceGrid.Editors;
 /// <remarks>
 /// Create one editor per column or configuration and share it between cells in the owning
 /// grid. The owning grid disposes every editor created by this registry. An editor created
-/// by one grid must not be used by another grid.
+/// by one grid must not be used by another grid. Disposing either the registry or its owning
+/// grid permanently prevents this registry from creating or registering more editors.
 /// </remarks>
 public sealed class BootstrapSourceGridEditorRegistry : IDisposable
 {
     private readonly List<SourceGrid.Cells.Editors.EditorControlBase> _ownedEditors = new();
     private readonly BootstrapSourceGridControl _owner;
+    private bool _disposed;
 
     internal BootstrapSourceGridEditorRegistry(BootstrapSourceGridControl owner)
     {
@@ -27,8 +29,11 @@ public sealed class BootstrapSourceGridEditorRegistry : IDisposable
     /// </summary>
     /// <param name="valueType">The SourceGrid value type converted when editing commits.</param>
     /// <returns>A shared editor owned by this registry's grid.</returns>
+    /// <exception cref="ObjectDisposedException">The registry has been disposed.</exception>
     public BootstrapTextBoxEditor CreateTextBox(Type valueType)
     {
+        ThrowIfDisposed();
+
         if (valueType is null)
         {
             throw new ArgumentNullException(nameof(valueType));
@@ -42,8 +47,11 @@ public sealed class BootstrapSourceGridEditorRegistry : IDisposable
     /// </summary>
     /// <param name="valueType">The SourceGrid value type converted when editing commits.</param>
     /// <returns>A shared editor owned by this registry's grid.</returns>
+    /// <exception cref="ObjectDisposedException">The registry has been disposed.</exception>
     public BootstrapFormattedTextBoxEditor CreateFormattedTextBox(Type valueType)
     {
+        ThrowIfDisposed();
+
         if (valueType is null)
         {
             throw new ArgumentNullException(nameof(valueType));
@@ -57,8 +65,11 @@ public sealed class BootstrapSourceGridEditorRegistry : IDisposable
     /// </summary>
     /// <param name="valueType">The SourceGrid value type converted when editing commits.</param>
     /// <returns>A shared editor owned by this registry's grid.</returns>
+    /// <exception cref="ObjectDisposedException">The registry has been disposed.</exception>
     public BootstrapLookupBoxEditor CreateLookupBox(Type valueType)
     {
+        ThrowIfDisposed();
+
         if (valueType is null)
         {
             throw new ArgumentNullException(nameof(valueType));
@@ -70,6 +81,8 @@ public sealed class BootstrapSourceGridEditorRegistry : IDisposable
     internal T Register<T>(T editor)
         where T : SourceGrid.Cells.Editors.EditorControlBase
     {
+        ThrowIfDisposed();
+
         if (editor is null)
         {
             throw new ArgumentNullException(nameof(editor));
@@ -82,6 +95,13 @@ public sealed class BootstrapSourceGridEditorRegistry : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
         foreach (var editor in _ownedEditors)
         {
             editor.Control.Dispose();
@@ -89,5 +109,13 @@ public sealed class BootstrapSourceGridEditorRegistry : IDisposable
         }
 
         _ownedEditors.Clear();
+    }
+
+    private void ThrowIfDisposed()
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(BootstrapSourceGridEditorRegistry));
+        }
     }
 }

@@ -328,6 +328,30 @@ public sealed class BootstrapEditorOwnershipTests
     }
 
     [Test]
+    public void DisposedRegistryRejectsInternalRegistration()
+    {
+        using (var grid = new BootstrapSourceGridControl())
+        {
+            var editor = new BootstrapTextBoxProbeEditor();
+            try
+            {
+                grid.BootstrapEditors.Dispose();
+
+                Assert.That(
+                    (System.Action)(() => grid.EditorRegistry.Register(editor)),
+                    Throws.TypeOf<System.ObjectDisposedException>()
+                        .With.Property("ObjectName")
+                        .EqualTo(nameof(BootstrapSourceGridEditorRegistry)));
+            }
+            finally
+            {
+                editor.Control.Dispose();
+                editor.Dispose();
+            }
+        }
+    }
+
+    [Test]
     public void LargeAssignmentDisposesUsedAndUnusedRegistryControlsExactlyOnce()
     {
         var grid = new BootstrapSourceGridControl();

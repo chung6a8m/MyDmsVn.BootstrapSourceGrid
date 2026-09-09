@@ -11,11 +11,11 @@ The final repository gate completed successfully:
 - recursive submodule initialization exited `0`;
 - solution restore exited `0`;
 - the Release solution build succeeded with 0 warnings and 0 errors for `net48` and `net8.0-windows`;
-- 204 of 204 tests passed on `net48` and 204 of 204 tests passed on `net8.0-windows` with a five-minute hang timeout;
+- 211 of 211 tests passed on `net48` and 211 of 211 tests passed on `net8.0-windows` with a five-minute hang timeout;
 - Bootstrap5WinFormUI and SourceGrid vendor worktrees produced no status output;
 - `git diff --check` exited `0`.
 
-Focused tests additionally prove one shared editor control across 10,000 cells, exactly three explicitly configured editors across 3,000 cells, disposal of used and never-started registry controls, owner/type validation, and demo diagnostics after SourceGrid commit.
+Focused tests additionally prove one shared editor control across 10,000 cells, exactly three explicitly configured editors across 3,000 cells, disposal of used and never-started registry controls, terminal registry disposal after either direct registry disposal or grid disposal, owner/type validation, and demo diagnostics after SourceGrid commit.
 
 ## Manual WinForms smoke test
 
