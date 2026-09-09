@@ -10,7 +10,7 @@ Testing must prove both integration correctness and preservation of SourceGrid b
 
 ## 2. Test project
 
-Planned project:
+Test project:
 
 ```text
 tests/MyDmsVn.BootstrapSourceGrid.Tests/
@@ -96,6 +96,15 @@ For each default editor explicitly supported in MVP:
 
 Do not force a visual property if SourceGrid's editor does not expose a safe hook.
 
+For Bootstrap-native editor adapters, also test:
+
+- the public registry surface and non-public adapter constructors;
+- `Text`/`RawValue`/`SelectedValue` logical-value bridges;
+- same-grid sequential sharing and large-grid adapter/control counts;
+- disposal of used and never-started registry editors;
+- SourceGrid conversion, validation, commit, cancel, and navigation ownership;
+- lookup popup/focus/keyboard/mouse/deactivation ordering with bounded message pumping.
+
 ### Layer F — demo/manual verification
 
 Use the demo application for behaviors that are expensive or brittle to assert pixel-perfectly:
@@ -109,6 +118,10 @@ Use the demo application for behaviors that are expensive or brittle to assert p
 - Designer toolbox/drag-drop/property serialization;
 - long scrolling/rapid navigation;
 - custom SourceGrid Views coexisting with Bootstrap defaults.
+- shared Bootstrap text, formatted, and lookup editor columns;
+- Enter/Escape/Tab/Shift+Tab and lookup arrows/PageUp/PageDown;
+- lookup mouse selection, outside click, and application deactivation;
+- runtime theme changes while an editor or lookup popup is active.
 
 ## 4. Unattended WinForms safety
 

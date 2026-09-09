@@ -286,6 +286,20 @@ BootstrapSourceGrid
             -> eager Bootstrap control instances
 ```
 
+The implemented public entry point is one read-only registry per grid:
+
+```csharp
+BootstrapSourceGridEditorRegistry BootstrapSourceGrid.BootstrapEditors { get; }
+
+BootstrapTextBoxEditor CreateTextBox(Type valueType);
+BootstrapFormattedTextBoxEditor CreateFormattedTextBox(Type valueType);
+BootstrapLookupBoxEditor CreateLookupBox(Type valueType);
+```
+
+Adapter constructors are internal and receive the creating grid. The constructor argument is
+validated before eager `EditorControlBase` control creation. Registry creators reject a null
+`valueType` before constructing an adapter.
+
 The registry/grid must dispose adapters/controls that were created but never attached, because SourceGrid cannot own a control it never received through its linked-control path.
 
 Cross-grid adapter reuse is explicitly unsupported. The supported grid-owned registry creation flow will avoid encouraging it, but this baseline does not promise a deterministic fail-before-attach exception: the only callback available to an integration adapter runs after SourceGrid has already changed `mGrid`/`LinkedControls`. A post-attach guard would leave partially mutated SourceGrid state and must not be added. Deterministic fail-before-attach enforcement requires a separately approved SourceGrid pre-attach seam.

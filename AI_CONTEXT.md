@@ -139,9 +139,7 @@ Uses `SelectedValue` as logical value and owns datasource/display/value/search/r
 
 Lookup tests must lock Enter, Escape, Tab/Shift+Tab, arrows/Page navigation, mouse result selection, outside click, focus transfer, deactivation/Alt+Tab-equivalent behavior, theme switch while popup is open, unmatched text, validation failure, and disposal.
 
-## Current planned public API direction
-
-After the three adapter slices are proven:
+## Public editor API
 
 ```csharp
 public BootstrapSourceGridEditorRegistry BootstrapEditors { get; }
@@ -152,6 +150,26 @@ BootstrapLookupBoxEditor CreateLookupBox(Type valueType);
 ```
 
 Each adapter exposes a read-only strongly typed `BootstrapControl` property for normal Bootstrap-specific configuration. Constructors remain non-public so grid ownership is explicit.
+
+Create an editor once and share it within its owning grid:
+
+```csharp
+var editor = grid.BootstrapEditors.CreateTextBox(typeof(string));
+editor.BootstrapControl.PlaceholderText = "Customer name";
+
+for (var row = 1; row < grid.RowsCount; row++)
+{
+    grid[row, 1].Editor = editor;
+}
+```
+
+The grid owns disposal. Cross-grid reuse is unsupported. The pinned SourceGrid lifecycle has
+no protected callback before attachment, so no deterministic fail-before-attach exception is
+promised.
+
+Future Bootstrap editor adapters must first prove their logical value bridge, SourceGrid
+lifecycle and first-key behavior, grid-owned shared lifetime, and popup/focus ordering where
+applicable. Add a registry creator only after the adapter is stable.
 
 ## Testing rules
 

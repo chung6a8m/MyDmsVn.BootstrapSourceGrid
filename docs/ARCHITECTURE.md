@@ -139,7 +139,7 @@ Bootstrap5WinFormUI control
 - value transfer into/out of the Bootstrap control;
 - first-character/caret adaptation where required;
 - event-ordering glue when SourceGrid lifecycle and Bootstrap child/popup focus interact;
-- owner-grid enforcement.
+- explicit association with the grid-owned registry and deterministic owned-resource disposal.
 
 Bootstrap adapters default `UseCellViewProperties = false`; the legacy editor styler must not push SourceGrid cell View properties into them.
 
@@ -160,6 +160,16 @@ BootstrapSourceGrid
 
 Normally create one adapter per grid/column/configuration and assign that same editor to many cells.
 
+The public creation surface is:
+
+```csharp
+BootstrapSourceGridEditorRegistry BootstrapSourceGrid.BootstrapEditors { get; }
+
+BootstrapTextBoxEditor CreateTextBox(Type valueType);
+BootstrapFormattedTextBoxEditor CreateFormattedTextBox(Type valueType);
+BootstrapLookupBoxEditor CreateLookupBox(Type valueType);
+```
+
 Never:
 
 - create a Bootstrap editor automatically for every cell;
@@ -167,6 +177,10 @@ Never:
 - patch SourceGrid's static editor factory to make replacement global.
 
 The registry/grid disposes every adapter/control it creates, including editors never used to start an edit.
+
+Cross-grid reuse is unsupported. At the pinned SourceGrid baseline, no protected integration
+callback runs before attachment mutates `mGrid` and `LinkedControls`; therefore the integration
+does not add an unsafe post-attach guard or promise a fail-before-attach exception.
 
 ## 10. Initial Bootstrap editor value bridges
 
@@ -179,6 +193,11 @@ BootstrapLookupBox        -> SelectedValue
 These are edit-layer logical values only. SourceGrid remains responsible for converting/validating them into the declared cell type.
 
 Formatted display text and lookup display text are presentation, not substitutes for the logical value.
+
+Future Bootstrap editor integrations such as combo-box, date/time, or numeric inputs follow this
+sequence: prove the logical value contract; prove SourceGrid lifecycle and first-key behavior;
+use grid-owned shared lifetime; lock popup/focus semantics when applicable; then add the registry
+creator. Future controls are not implied by the initial three adapters.
 
 ## 11. Lookup focus/popup boundary
 
