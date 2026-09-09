@@ -159,6 +159,33 @@ public sealed class BootstrapFormattedTextBoxEditorTests
     }
 
     [Test]
+    public void NumeralModeUnchangedCommaDecimalValueRoundTripsWithoutCorruption()
+    {
+        var originalCulture = Thread.CurrentThread.CurrentCulture;
+        try
+        {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("vi-VN");
+            using (var fixture = new FormattedEditorFixture(1.5m, 2.5m, typeof(decimal)))
+            {
+                fixture.Editor.BootstrapControl.FormatMode = BootstrapInputFormatMode.Numeral;
+
+                var context = fixture.StartEdit(0);
+
+                Assert.That(fixture.Editor.CultureInfo, Is.Null);
+                Assert.That(fixture.Editor.BootstrapControl.RawValue, Is.EqualTo("1.5"));
+                Assert.That(fixture.Editor.BootstrapControl.Text, Is.EqualTo("1.5"));
+                Assert.That(context.EndEdit(false), Is.True);
+                Assert.That(fixture.Cells[0].Value, Is.TypeOf<decimal>());
+                Assert.That(fixture.Cells[0].Value, Is.EqualTo(1.5m));
+            }
+        }
+        finally
+        {
+            Thread.CurrentThread.CurrentCulture = originalCulture;
+        }
+    }
+
+    [Test]
     public void DateModeUsesSourceGridConverterForCanonicalRawValue()
     {
         var original = new DateTime(2026, 8, 31);

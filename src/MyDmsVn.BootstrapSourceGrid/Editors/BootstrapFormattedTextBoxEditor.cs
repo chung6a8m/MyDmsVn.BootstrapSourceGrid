@@ -1,6 +1,8 @@
 using System;
+using System.Globalization;
 using System.Windows.Forms;
 using MyDmsVn.Bootstrap5WinFormUI.Controls;
+using MyDmsVn.Bootstrap5WinFormUI.Formatting;
 using MyDmsVn.BootstrapSourceGrid.Editors.Internal;
 
 namespace MyDmsVn.BootstrapSourceGrid.Editors;
@@ -31,21 +33,58 @@ public sealed class BootstrapFormattedTextBoxEditor : SourceGrid.Cells.Editors.E
     /// <inheritdoc />
     public override void SetEditValue(object editValue)
     {
-        BootstrapControl.RawValue = IsStringConversionSupported()
+        var sourceGridValue = IsStringConversionSupported()
             ? ValueToString(editValue)
             : ValueToDisplayString(editValue);
+        BootstrapControl.RawValue = ConvertSourceGridValueToCanonicalRaw(sourceGridValue);
         ((BootstrapSourceGridFormattedTextBoxControl)Control).SelectAllForGridEdit();
     }
 
     /// <inheritdoc />
     public override object GetEditedValue()
     {
-        return BootstrapControl.RawValue;
+        return ConvertCanonicalRawToSourceGridValue(BootstrapControl.RawValue);
     }
 
     /// <inheritdoc />
     protected override void OnSendCharToEditor(char key)
     {
         ((BootstrapSourceGridFormattedTextBoxControl)Control).ReplaceWithFirstEditCharacter(key);
+    }
+
+    private string ConvertSourceGridValueToCanonicalRaw(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return value ?? string.Empty;
+        }
+
+        if (BootstrapControl.FormatMode != BootstrapInputFormatMode.Numeral)
+        {
+            return value;
+        }
+
+        var decimalSeparator = GetConversionCulture().NumberFormat.NumberDecimalSeparator;
+        return decimalSeparator == "."
+            ? value
+            : value.Replace(decimalSeparator, ".");
+    }
+
+    private string ConvertCanonicalRawToSourceGridValue(string rawValue)
+    {
+        if (BootstrapControl.FormatMode != BootstrapInputFormatMode.Numeral)
+        {
+            return rawValue;
+        }
+
+        var decimalSeparator = GetConversionCulture().NumberFormat.NumberDecimalSeparator;
+        return decimalSeparator == "."
+            ? rawValue
+            : rawValue.Replace(".", decimalSeparator);
+    }
+
+    private CultureInfo GetConversionCulture()
+    {
+        return CultureInfo ?? System.Globalization.CultureInfo.CurrentCulture;
     }
 }
