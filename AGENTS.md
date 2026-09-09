@@ -38,7 +38,7 @@ Do not change without explicit user approval:
 - TFMs: `net48;net8.0-windows`
 - UI: native Windows Forms
 - License: MIT
-- Bootstrap baseline: `d71546726cccffe27c4a96ceff47b8bdb396853c`
+- Bootstrap baseline: `cceba3c969e28726935793a1c6ca3772bed60a35`
 - SourceGrid baseline: `f4e457b43582bf01892f50bdc74aa480531e5944`
 - Development dependency model: pinned Git submodules + `ProjectReference`
 - Public NuGet model: exact verified vendor packages; publication remains gated

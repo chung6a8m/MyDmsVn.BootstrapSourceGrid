@@ -4,7 +4,7 @@ Exact integration facts verified against the pinned vendor baselines. Use this d
 
 ## 1. Baselines
 
-- Bootstrap5WinFormUI: `d71546726cccffe27c4a96ceff47b8bdb396853c`
+- Bootstrap5WinFormUI: `cceba3c969e28726935793a1c6ca3772bed60a35`
 - SourceGrid: `f4e457b43582bf01892f50bdc74aa480531e5944`
 
 ## 2. Bootstrap theme seams
@@ -30,7 +30,7 @@ Bootstrap-owned integration metrics currently map from `SpacingXS`, `BorderWidth
 
 The pinned `BootstrapDataGridView` remains the reference pattern for theme-owned Font lifetime: construct theme font, replace only owned fonts on theme change, opt out on consumer Font assignment, unsubscribe/dispose owned resources.
 
-`BootstrapTextBox.ApplyThemeFont()` preserves its existing owned `Font` when the next theme has an equivalent body typography token. This is required because WinForms may retain that same `Font` reference on composite child labels when an equality-based property assignment is ignored; disposing it would leave popup and placeholder labels holding a disposed GDI object. The pinned regression test switches the default lookup theme from Light to Dark with its popup open and verifies every lookup/popup label font remains usable.
+`BootstrapTextBox.ApplyThemeFont()` and the lookup popup's `BootstrapDataGridView` preserve their existing owned `Font` when the next theme has an equivalent requested body typography token. They compare the immutable requested token rather than `Font.Name`, because `System.Drawing` can resolve an unavailable family to a different installed font name. WinForms may retain the same resolved `Font` reference on composite child labels when an equality-based property assignment is ignored; disposing it would leave popup and placeholder labels holding a disposed GDI object. Pinned regression tests cover both the default Light-to-Dark switch and an unavailable requested family while the popup is open.
 
 ## 3. SourceGrid control and cell/View seams
 
