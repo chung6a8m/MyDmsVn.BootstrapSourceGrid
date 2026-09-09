@@ -2,8 +2,10 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+using MyDmsVn.Bootstrap5WinFormUI.Controls;
 using MyDmsVn.BootstrapSourceGrid.Editors;
 using NUnit.Framework;
 using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
@@ -222,6 +224,173 @@ public sealed class BootstrapLookupBoxInteractionTests
         }
     }
 
+    [Test]
+    public void MouseResultSelectionCommitsSelectedValueExactlyOnce()
+    {
+        using (var fixture = new LookupInteractionFixture())
+        {
+            fixture.StartEdit();
+            fixture.Editor.BootstrapControl.Text = string.Empty;
+            fixture.Editor.BootstrapControl.OpenDropDown();
+
+            ClickResultRow(fixture.Editor.BootstrapControl.ResultsGrid, 1);
+
+            Assert.That(fixture.Editor.IsEditing, Is.False);
+            Assert.That(fixture.Editor.BootstrapControl.IsDropDownOpen, Is.False);
+            Assert.That(fixture.Cell.Value, Is.EqualTo(7));
+            Assert.That(fixture.ValueChangedCount, Is.EqualTo(1));
+            Assert.That(fixture.Grid.Selection.ActivePosition, Is.EqualTo(new SourceGrid.Position(0, 0)));
+        }
+    }
+
+    [Test]
+    public void OutsideFocusCommitsOnceAndClosesPopup()
+    {
+        using (var fixture = new LookupInteractionFixture())
+        {
+            fixture.StartEdit();
+            fixture.Editor.BootstrapControl.SelectValue(7);
+            fixture.Editor.BootstrapControl.OpenDropDown();
+
+            Assert.That(fixture.FocusTarget.Focus(), Is.True);
+            Application.DoEvents();
+
+            Assert.That(fixture.Editor.IsEditing, Is.False);
+            Assert.That(fixture.Editor.BootstrapControl.IsDropDownOpen, Is.False);
+            Assert.That(fixture.Cell.Value, Is.EqualTo(7));
+            Assert.That(fixture.ValueChangedCount, Is.EqualTo(1));
+        }
+    }
+
+    [Test]
+    public void ApplicationDeactivationClosesPopupAndLeavesEditDefined()
+    {
+        using (var fixture = new LookupInteractionFixture())
+        {
+            fixture.StartEdit();
+            fixture.Editor.BootstrapControl.OpenDropDown();
+            var popup = GetLookupPopup(fixture.Editor.BootstrapControl);
+
+            SendMessage(popup.Handle, 0x001C, IntPtr.Zero, IntPtr.Zero);
+            Application.DoEvents();
+
+            Assert.That(fixture.Editor.BootstrapControl.IsDropDownOpen, Is.False);
+            Assert.That(fixture.Editor.IsEditing, Is.True);
+            Assert.That(fixture.Cell.Value, Is.EqualTo(42));
+            Assert.That(fixture.ValueChangedCount, Is.Zero);
+        }
+    }
+
+    [Test]
+    public void RestorePreviousSelectionPolicyKeepsOriginalLogicalValue()
+    {
+        using (var fixture = new LookupInteractionFixture())
+        {
+            fixture.StartEdit();
+            fixture.Editor.BootstrapControl.UnmatchedTextBehavior =
+                BootstrapLookupUnmatchedTextBehavior.RestorePreviousSelection;
+            fixture.Editor.BootstrapControl.Text = "Unknown";
+
+            Assert.That(fixture.DispatchEditorCommandKey(Keys.Tab), Is.True);
+
+            Assert.That(fixture.Editor.IsEditing, Is.False);
+            Assert.That(fixture.Cell.Value, Is.EqualTo(42));
+            Assert.That(fixture.Editor.BootstrapControl.SelectedValue, Is.EqualTo(42));
+            Assert.That(fixture.Editor.BootstrapControl.ValidationMessage, Is.Empty);
+        }
+    }
+
+    [Test]
+    public void KeepFocusPolicyBlocksSourceGridCommitForUnmatchedText()
+    {
+        using (var fixture = new LookupInteractionFixture())
+        {
+            fixture.StartEdit();
+            fixture.Editor.BootstrapControl.UnmatchedTextBehavior =
+                BootstrapLookupUnmatchedTextBehavior.KeepFocusWithValidationError;
+            fixture.Editor.BootstrapControl.Text = "Unknown";
+
+            Assert.That(fixture.DispatchEditorCommandKey(Keys.Tab), Is.True);
+
+            Assert.That(fixture.Editor.IsEditing, Is.True);
+            Assert.That(fixture.Editor.BootstrapControl.HasPendingText, Is.True);
+            Assert.That(fixture.Editor.BootstrapControl.ValidationMessage, Is.Not.Empty);
+            Assert.That(fixture.Editor.BootstrapControl.IsDropDownOpen, Is.True);
+            Assert.That(fixture.Cell.Value, Is.EqualTo(42));
+            Assert.That(fixture.ValueChangedCount, Is.Zero);
+        }
+    }
+
+    [Test]
+    public void CommitAndAddPolicyStoresCreatedSelectedValue()
+    {
+        using (var fixture = new LookupInteractionFixture())
+        {
+            fixture.StartEdit();
+            fixture.Editor.BootstrapControl.UnmatchedTextBehavior =
+                BootstrapLookupUnmatchedTextBehavior.CommitAndAdd;
+            fixture.Editor.BootstrapControl.CreateItemFromText += (_, e) =>
+                e.Item = new LookupItem(99, e.OriginalText.Trim());
+            fixture.Editor.BootstrapControl.Text = "Adventure Works";
+
+            Assert.That(fixture.DispatchEditorCommandKey(Keys.Tab), Is.True);
+
+            Assert.That(fixture.Editor.IsEditing, Is.False);
+            Assert.That(fixture.Cell.Value, Is.EqualTo(99));
+            Assert.That(fixture.Editor.BootstrapControl.SelectedValue, Is.EqualTo(99));
+            Assert.That(fixture.ValueChangedCount, Is.EqualTo(1));
+        }
+    }
+
+    [Test]
+    public void SourceGridValidationFailureKeepsLookupEditActive()
+    {
+        using (var fixture = new LookupInteractionFixture())
+        {
+#pragma warning disable CS0618
+            fixture.Editor.Validating += (_, e) => e.Cancel = Equals(e.NewValue, 7);
+#pragma warning restore CS0618
+            fixture.StartEdit();
+            fixture.Editor.BootstrapControl.SelectValue(7);
+
+            Assert.That(fixture.DispatchEditorCommandKey(Keys.Enter), Is.True);
+
+            Assert.That(fixture.Editor.IsEditing, Is.True);
+            Assert.That(fixture.Cell.Value, Is.EqualTo(42));
+            Assert.That(fixture.Editor.BootstrapControl.SelectedValue, Is.EqualTo(7));
+            Assert.That(fixture.ValueChangedCount, Is.Zero);
+        }
+    }
+
+    private static void ClickResultRow(DataGridView resultsGrid, int rowIndex)
+    {
+        var onCellMouseClick = typeof(DataGridView).GetMethod(
+            "OnCellMouseClick",
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
+        onCellMouseClick.Invoke(resultsGrid, new object[]
+        {
+            new DataGridViewCellMouseEventArgs(
+                0,
+                rowIndex,
+                4,
+                4,
+                new MouseEventArgs(MouseButtons.Left, 1, 4, 4, 0)),
+        });
+        Application.DoEvents();
+    }
+
+    private static Control GetLookupPopup(BootstrapLookupBox lookup)
+    {
+        var controllerField = typeof(BootstrapLookupBox).GetField(
+            "_dropDownController",
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var controller = controllerField.GetValue(lookup)!;
+        var popupField = controller.GetType().GetField(
+            "_dropDown",
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
+        return (Control)popupField.GetValue(controller)!;
+    }
+
     private sealed class LookupInteractionFixture : IDisposable
     {
         private readonly SourceGrid.Cells.Controllers.CustomEvents _events;
@@ -359,4 +528,11 @@ public sealed class BootstrapLookupBoxInteractionTests
 
         public string Name { get; }
     }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(
+        IntPtr handle,
+        uint message,
+        IntPtr wParam,
+        IntPtr lParam);
 }
