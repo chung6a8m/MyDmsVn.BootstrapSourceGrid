@@ -1,12 +1,17 @@
 using System;
 using System.Drawing;
+using MyDmsVn.BootstrapSourceGrid.Editors;
 using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
 
 namespace MyDmsVn.BootstrapSourceGrid.Demo;
 
 internal static class DemoGridContent
 {
-    internal static void Populate(BootstrapSourceGridControl grid)
+    internal static void Populate(
+        BootstrapSourceGridControl grid,
+        BootstrapTextBoxEditor textEditor,
+        BootstrapFormattedTextBoxEditor formattedEditor,
+        BootstrapLookupBoxEditor lookupEditor)
     {
         const int rows = 40;
         const int columns = 9;
@@ -16,11 +21,11 @@ internal static class DemoGridContent
         grid.Selection.EnableMultiSelection = true;
         grid[0, 0] = new SourceGrid.Cells.Header();
         grid[0, 1] = new SourceGrid.Cells.ColumnHeader("Name");
-        grid[0, 2] = new SourceGrid.Cells.ColumnHeader("TextBox");
-        grid[0, 3] = new SourceGrid.Cells.ColumnHeader("Numeric");
+        grid[0, 2] = new SourceGrid.Cells.ColumnHeader("Bootstrap text");
+        grid[0, 3] = new SourceGrid.Cells.ColumnHeader("Bootstrap formatted");
         grid[0, 4] = new SourceGrid.Cells.ColumnHeader("DateTime factory");
         grid[0, 5] = new SourceGrid.Cells.ColumnHeader("Boolean factory");
-        grid[0, 6] = new SourceGrid.Cells.ColumnHeader("Enum list");
+        grid[0, 6] = new SourceGrid.Cells.ColumnHeader("Bootstrap lookup");
         grid[0, 7] = new SourceGrid.Cells.ColumnHeader("DateTimePicker");
         grid[0, 8] = new SourceGrid.Cells.ColumnHeader("Notes / scenarios");
 
@@ -28,15 +33,22 @@ internal static class DemoGridContent
         {
             grid[row, 0] = new SourceGrid.Cells.RowHeader(row);
             grid[row, 1] = new SourceGrid.Cells.Cell($"Item {row:00}", typeof(string));
-            grid[row, 2] = new SourceGrid.Cells.Cell($"Edit {row}", typeof(string));
-            grid[row, 3] = new SourceGrid.Cells.Cell(row * 10, typeof(int));
+            grid[row, 2] = new SourceGrid.Cells.Cell($"Customer {row:00}", typeof(string))
+            {
+                Editor = textEditor,
+            };
+            grid[row, 3] = new SourceGrid.Cells.Cell(row * 1234.5m, typeof(decimal))
+            {
+                Editor = formattedEditor,
+            };
             grid[row, 4] = new SourceGrid.Cells.Cell(
                 new DateTime(2026, 9, 1).AddDays(row),
                 typeof(DateTime));
             grid[row, 5] = new SourceGrid.Cells.Cell((row & 1) == 0, typeof(bool));
-            grid[row, 6] = new SourceGrid.Cells.Cell(
-                (row & 1) == 0 ? DemoChoice.Ready : DemoChoice.Pending,
-                typeof(DemoChoice));
+            grid[row, 6] = new SourceGrid.Cells.Cell(((row - 1) % 12) + 1, typeof(int))
+            {
+                Editor = lookupEditor,
+            };
 
             if (row == 3)
             {
@@ -73,19 +85,48 @@ internal static class DemoGridContent
         grid.Rows[0].Height = 32;
         grid.Columns[0].Width = 54;
         grid.Columns[1].Width = 140;
-        grid.Columns[2].Width = 130;
-        grid.Columns[3].Width = 90;
+        grid.Columns[2].Width = 150;
+        grid.Columns[3].Width = 160;
         grid.Columns[4].Width = 150;
         grid.Columns[5].Width = 130;
-        grid.Columns[6].Width = 120;
+        grid.Columns[6].Width = 170;
         grid.Columns[7].Width = 150;
         grid.Columns[8].Width = 250;
     }
 
-    private enum DemoChoice
+}
+
+internal sealed class DemoLookupItem
+{
+    private DemoLookupItem(int id, string name, string region)
     {
-        Ready,
-        Pending,
-        Blocked,
+        Id = id;
+        Name = name;
+        Region = region;
+    }
+
+    public int Id { get; }
+
+    public string Name { get; }
+
+    public string Region { get; }
+
+    internal static DemoLookupItem[] CreateSampleData()
+    {
+        return new[]
+        {
+            new DemoLookupItem(1, "Northwind Traders", "Europe"),
+            new DemoLookupItem(2, "Contoso", "North America"),
+            new DemoLookupItem(3, "Adventure Works", "North America"),
+            new DemoLookupItem(4, "Tailspin Toys", "Asia"),
+            new DemoLookupItem(5, "Fabrikam", "Europe"),
+            new DemoLookupItem(6, "Woodgrove Bank", "Oceania"),
+            new DemoLookupItem(7, "Litware", "Asia"),
+            new DemoLookupItem(8, "Proseware", "Europe"),
+            new DemoLookupItem(9, "Wide World Importers", "Africa"),
+            new DemoLookupItem(10, "Humongous Insurance", "North America"),
+            new DemoLookupItem(11, "Consolidated Messenger", "Asia"),
+            new DemoLookupItem(12, "Fourth Coffee", "South America"),
+        };
     }
 }

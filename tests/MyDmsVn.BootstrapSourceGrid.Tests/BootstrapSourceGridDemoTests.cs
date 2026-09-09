@@ -2,7 +2,9 @@ using System;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using MyDmsVn.Bootstrap5WinFormUI.Formatting;
 using MyDmsVn.Bootstrap5WinFormUI.Theme;
+using MyDmsVn.BootstrapSourceGrid.Editors;
 using NUnit.Framework;
 using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
 
@@ -36,6 +38,40 @@ public sealed class BootstrapSourceGridDemoTests
             Assert.That(((SourceGrid.Cells.Cell)grid[1, 8]).Editor!.EnableEdit, Is.False);
             Assert.That(grid[3, 7].ColumnSpan, Is.EqualTo(2));
             Assert.That(grid[2, 8].View, Is.Not.SameAs(SourceGrid.Cells.Views.Cell.Default));
+        }
+    }
+
+    [Test]
+    public void MainFormUsesOneConfiguredBootstrapEditorPerDemoColumn()
+    {
+        using (var form = new MyDmsVn.BootstrapSourceGrid.Demo.MainForm())
+        {
+            var grid = FindControl<BootstrapSourceGridControl>(form, "BootstrapSourceGrid");
+            var help = FindControl<Label>(form, "interactionHelp");
+            var text = (BootstrapTextBoxEditor)grid[1, 2].Editor!;
+            var formatted = (BootstrapFormattedTextBoxEditor)grid[1, 3].Editor!;
+            var lookup = (BootstrapLookupBoxEditor)grid[1, 6].Editor!;
+
+            Assert.Multiple((Action)(() =>
+            {
+                Assert.That(grid[39, 2].Editor, Is.SameAs(text));
+                Assert.That(grid[39, 3].Editor, Is.SameAs(formatted));
+                Assert.That(grid[39, 6].Editor, Is.SameAs(lookup));
+                Assert.That(text.BootstrapControl.PlaceholderText, Is.EqualTo("Customer name"));
+                Assert.That(text.BootstrapControl.ShowClearButton, Is.True);
+                Assert.That(formatted.BootstrapControl.FormatMode, Is.EqualTo(BootstrapInputFormatMode.Numeral));
+                Assert.That(formatted.BootstrapControl.NumeralOptions.DecimalScale, Is.EqualTo(2));
+                Assert.That(grid[1, 3].Value, Is.TypeOf<decimal>());
+                Assert.That(lookup.BootstrapControl.DataSource, Is.Not.Null);
+                Assert.That(lookup.BootstrapControl.DisplayMember, Is.EqualTo("Name"));
+                Assert.That(lookup.BootstrapControl.ValueMember, Is.EqualTo("Id"));
+                Assert.That(lookup.BootstrapControl.Columns, Has.Count.EqualTo(3));
+                Assert.That(lookup.BootstrapControl.SearchMembers, Is.EquivalentTo(new[] { "Name", "Region" }));
+                Assert.That(grid[1, 6].Value, Is.TypeOf<int>());
+                Assert.That(help.Text, Does.Contain("shared per column/configuration"));
+                Assert.That(help.Text, Does.Contain("outside click"));
+                Assert.That(help.Text, Does.Contain("deactivation"));
+            }));
         }
     }
 
@@ -77,6 +113,28 @@ public sealed class BootstrapSourceGridDemoTests
 
             Assert.That(FindControl<BootstrapSourceGridControl>(form, "BootstrapSourceGrid"), Is.SameAs(grid));
             Assert.That(grid[1, 1].Value, Is.EqualTo("Item 01"));
+        }
+    }
+
+    [Test]
+    public void ResetReusesTheExistingSharedBootstrapEditors()
+    {
+        using (var form = new MyDmsVn.BootstrapSourceGrid.Demo.MainForm())
+        {
+            ShowForm(form);
+            var grid = FindControl<BootstrapSourceGridControl>(form, "BootstrapSourceGrid");
+            var text = grid[1, 2].Editor;
+            var formatted = grid[1, 3].Editor;
+            var lookup = grid[1, 6].Editor;
+
+            FindControl<Button>(form, "resetGridButton").PerformClick();
+
+            Assert.Multiple((Action)(() =>
+            {
+                Assert.That(grid[1, 2].Editor, Is.SameAs(text));
+                Assert.That(grid[1, 3].Editor, Is.SameAs(formatted));
+                Assert.That(grid[1, 6].Editor, Is.SameAs(lookup));
+            }));
         }
     }
 
