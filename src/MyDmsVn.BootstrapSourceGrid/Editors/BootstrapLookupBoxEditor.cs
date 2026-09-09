@@ -14,6 +14,9 @@ public sealed class BootstrapLookupBoxEditor : SourceGrid.Cells.Editors.EditorCo
         : base(valueType)
     {
         UseCellViewProperties = false;
+        var control = (BootstrapSourceGridLookupBoxControl)Control;
+        control.OwnerNavigationRequested = ContinueGridNavigation;
+        control.SelectionCommitted += OnSelectionCommitted;
     }
 
     /// <summary>
@@ -44,5 +47,34 @@ public sealed class BootstrapLookupBoxEditor : SourceGrid.Cells.Editors.EditorCo
     protected override void OnSendCharToEditor(char key)
     {
         ((BootstrapSourceGridLookupBoxControl)Control).ReplaceWithFirstEditCharacter(key);
+    }
+
+    private void OnSelectionCommitted(
+        object? sender,
+        BootstrapLookupSelectionCommittedEventArgs e)
+    {
+        if (!IsEditing || e.Reason == BootstrapLookupCommitReason.Programmatic)
+        {
+            return;
+        }
+
+        EditCellContext.EndEdit(false);
+    }
+
+    private bool ContinueGridNavigation(bool reverse)
+    {
+        if (IsEditing && !EditCellContext.EndEdit(false))
+        {
+            return true;
+        }
+
+        if (Grid is null)
+        {
+            return false;
+        }
+
+        var args = new KeyEventArgs(reverse ? Keys.Shift | Keys.Tab : Keys.Tab);
+        Grid.ProcessSpecialGridKey(args);
+        return args.Handled;
     }
 }
