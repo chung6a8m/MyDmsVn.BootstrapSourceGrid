@@ -17,7 +17,7 @@ License:        MIT
 
 Pinned vendors:
 
-- Bootstrap5WinFormUI `95077df0c8bad8593143c2190606d2f444bfc653`
+- Bootstrap5WinFormUI `cceba3c969e28726935793a1c6ca3772bed60a35`
 - SourceGrid `f4e457b43582bf01892f50bdc74aa480531e5944`
 
 Development uses pinned submodules + `ProjectReference`. Public NuGet publication remains gated until exact vendor packages are verified against approved source baselines and license/dependency requirements.

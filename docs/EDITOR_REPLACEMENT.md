@@ -48,7 +48,7 @@ This initiative does not:
 - Public control: `MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid`
 - Base type: `SourceGrid.Grid`
 - TFMs: `net48;net8.0-windows`
-- Bootstrap baseline: `95077df0c8bad8593143c2190606d2f444bfc653`
+- Bootstrap baseline: `cceba3c969e28726935793a1c6ca3772bed60a35`
 - SourceGrid baseline: `f4e457b43582bf01892f50bdc74aa480531e5944`
 - Vendor dependency direction remains one-way from this integration.
 - GUI tests are STA, bounded, deterministic, and non-modal.

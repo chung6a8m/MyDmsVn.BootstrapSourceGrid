@@ -26,7 +26,7 @@ For historical context, see [Archive](./docs/archive/).
 
 ## Fixed baselines
 
-- Bootstrap framework: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@95077df0c8bad8593143c2190606d2f444bfc653`
+- Bootstrap framework: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@cceba3c969e28726935793a1c6ca3772bed60a35`
 - SourceGrid: `chung6a8m/sourcegrid@f4e457b43582bf01892f50bdc74aa480531e5944`
 - Integration license: MIT
 

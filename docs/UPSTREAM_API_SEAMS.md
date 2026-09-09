@@ -4,7 +4,7 @@ Exact integration facts verified against the pinned vendor baselines. Use this d
 
 ## 1. Baselines
 
-- Bootstrap5WinFormUI: `95077df0c8bad8593143c2190606d2f444bfc653`
+- Bootstrap5WinFormUI: `cceba3c969e28726935793a1c6ca3772bed60a35`
 - SourceGrid: `f4e457b43582bf01892f50bdc74aa480531e5944`
 
 ## 2. Bootstrap theme seams
@@ -29,6 +29,8 @@ Relevant semantic tokens include `Surface`, `SurfaceSecondary`, `Text`, `MutedTe
 Bootstrap-owned integration metrics currently map from `SpacingXS`, `BorderWidth`, and `FocusBorderWidth`. Do not rescale SourceGrid/application-owned row heights, column widths, or scrollbars.
 
 The pinned `BootstrapDataGridView` remains the reference pattern for theme-owned Font lifetime: construct theme font, replace only owned fonts on theme change, opt out on consumer Font assignment, unsubscribe/dispose owned resources.
+
+`BootstrapTextBox.ApplyThemeFont()` and the lookup popup's `BootstrapDataGridView` preserve their existing owned `Font` when the next theme has an equivalent requested body typography token. They compare the immutable requested token rather than `Font.Name`, because `System.Drawing` can resolve an unavailable family to a different installed font name. WinForms may retain the same resolved `Font` reference on composite child labels when an equality-based property assignment is ignored; disposing it would leave popup and placeholder labels holding a disposed GDI object. Pinned regression tests cover both the default Light-to-Dark switch and an unavailable requested family while the popup is open.
 
 ## 3. SourceGrid control and cell/View seams
 
@@ -250,6 +252,8 @@ validation/events
 ```
 
 Useful selection/edit APIs include `SelectItem`, `SelectValue`, `ClearSelection`, and `CancelPendingEdit`.
+
+`SelectionCommitted` distinguishes `Keyboard`, `Mouse`, `ExactMatch`, `CommitAndAdd`, `Programmatic`, and `Clear`. The public `ClearSelection()` path emits `Clear`, including programmatic clearing, so the SourceGrid adapter must not treat either `Programmatic` or `Clear` as a user selection that automatically ends the cell edit.
 
 Adapter value contract:
 
