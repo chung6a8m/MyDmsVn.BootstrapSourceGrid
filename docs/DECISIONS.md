@@ -123,7 +123,7 @@ and product/test projects use project references to the appropriate vendor proje
 
 Pinned commits:
 
-- Bootstrap5WinFormUI: `aba102e33c48937fd92468791c287afda0a59e77` (Stage 0 upgrade accepted 2026-09-21; see `verification/20260921-bootstrap-baseline-upgrade.md`)
+- Bootstrap5WinFormUI: `aba102e33c48937fd92468791c287afda0a59e77` (upgraded from `cceba3c969e28726935793a1c6ca3772bed60a35` on 2026-09-21; dual-TFM compatibility accepted in `verification/20260921-bootstrap-baseline-upgrade.md`)
 - SourceGrid: `f4e457b43582bf01892f50bdc74aa480531e5944`
 
 **Rationale:** This combines direct project-reference development with exact commit reproducibility and avoids copying vendor code.

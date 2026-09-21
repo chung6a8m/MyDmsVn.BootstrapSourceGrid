@@ -6,7 +6,7 @@ Development and source validation use pinned vendor submodules plus `ProjectRefe
 
 The current integration inspection package version is `0.1.0-preview.1`. It belongs to this repository's own version line and is not derived from the Bootstrap vendor's `1.0.0-rc.1` metadata. A later release version must still pass every gate in this document.
 
-As verified on 2026-09-09, public publication is **BLOCKED**: no exact Bootstrap package is available, NuGet.org exposes only legacy SourceGrid `4.4.0`, the configured internal feed contains neither required package, source/package correspondence cannot be established, and the Bootstrap vendor license/notice obligation is unresolved. See [UPSTREAM.md](UPSTREAM.md#11-public-package-verification-status-2026-09-09) for evidence and unblock requirements.
+Public publication remains **BLOCKED**. On 2026-09-21, NuGet.org still had no `MyDmsVn.Bootstrap5WinFormUI` package and exposed only legacy SourceGrid `4.4.0`; neither can be tied to the accepted source baselines. The configured internal feed result is from 2026-09-09 and was not rechecked in this stage. Bootstrap vendor license/notice obligations also remain unresolved. See [UPSTREAM.md](UPSTREAM.md#11-public-package-verification-status-rechecked-2026-09-21) for evidence and unblock requirements.
 
 ## Pre-release checklist
 

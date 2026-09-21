@@ -18,6 +18,8 @@ internal static class DemoGridContent
     {
         const int rows = 40;
         const int columns = 10;
+        // A same-size Redim keeps existing rows and spans, including their sorted positions.
+        grid.Redim(0, 0);
         grid.Redim(rows, columns);
         grid.FixedRows = 1;
         grid.FixedColumns = 1;
@@ -127,6 +129,18 @@ internal static class DemoGridContent
         if (grid.Rows[0].Height != headerHeight)
         {
             grid.Rows[0].Height = headerHeight;
+        }
+
+        for (var column = 1; column < grid.ColumnsCount; column++)
+        {
+            var position = new SourceGrid.Position(0, column);
+            var header = grid[0, column];
+            var requiredWidth = header.View.Measure(
+                new SourceGrid.CellContext(grid, position, header), Size.Empty).Width;
+            if (grid.Columns[column].Width < requiredWidth)
+            {
+                grid.Columns[column].Width = requiredWidth;
+            }
         }
 
         for (var row = 1; row < grid.RowsCount; row++)

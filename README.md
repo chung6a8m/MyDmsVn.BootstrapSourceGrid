@@ -30,6 +30,8 @@ For historical context, see [Archive](./docs/archive/).
 - SourceGrid: `chung6a8m/sourcegrid@f4e457b43582bf01892f50bdc74aa480531e5944`
 - Integration license: MIT
 
+The Bootstrap pin advanced from `cceba3c969e28726935793a1c6ca3772bed60a35` on 2026-09-21. Restore, Release build, and the full integration suite passed on both TFMs. See the [baseline verification](./docs/verification/20260921-bootstrap-baseline-upgrade.md) and [regression record](./docs/verification/20260921-regression-validation-and-doc-sync.md). The final manual DPI and Designer matrix remains open.
+
 Dependency direction remains:
 
 ```text
@@ -126,6 +128,9 @@ closed-popup Enter/Escape, and runtime theme switching scenarios. Its Base font 
 Default, Base 14px, and Base 16px typography profiles; Light/Dark and Reduced motion can be
 changed independently. The selector changes only the demo theme and preserves custom typography
 until a profile is explicitly chosen.
+
+The demo adjusts its own row heights and expands a column when its header requires more room at the selected typography; the product grid does not auto-resize application columns.
+Reset clears the demo's previous rows and spans before repopulating the same grid with the existing shared editor adapters, including after sorting.
 
 ## Documentation
 

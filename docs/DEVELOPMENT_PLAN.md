@@ -26,7 +26,7 @@ Planning snapshot:
 
 Stage 0 re-resolved `origin/main` to `aba102e33c48937fd92468791c287afda0a59e77` and accepted that pin on 2026-09-21. The verification record is [`verification/20260921-bootstrap-baseline-upgrade.md`](./verification/20260921-bootstrap-baseline-upgrade.md).
 
-Stage 1 added demo-only Default, Base 14px, and Base 16px typography profiles with independent Light/Dark and Reduced motion settings. Its verification record is [`verification/20260921-demo-typography-profiles.md`](./verification/20260921-demo-typography-profiles.md). Stage 2 remains active for the final regression and documentation gate.
+Stage 1 added demo-only Default, Base 14px, and Base 16px typography profiles with independent Light/Dark and Reduced motion settings. Its verification record is [`verification/20260921-demo-typography-profiles.md`](./verification/20260921-demo-typography-profiles.md). Stage 2 found and fixed Base 16px demo header clipping and a Reset-after-sort span overlap. Its [verification record](./verification/20260921-regression-validation-and-doc-sync.md) tracks the remaining manual DPI/Designer cells; the initiative is not yet complete.
 
 Stages:
 

@@ -44,6 +44,8 @@ Do not change without explicit user approval:
 - Public NuGet model: exact verified vendor packages; publication remains gated
 - Scrollbars: retain SourceGrid/native subsystem unless separately approved
 
+The Bootstrap pin was upgraded from `cceba3c969e28726935793a1c6ca3772bed60a35` and accepted after dual-TFM validation on 2026-09-21. The SourceGrid pin did not move. The remaining manual DPI/Designer validation is tracked in `docs/verification/20260921-regression-validation-and-doc-sync.md`.
+
 Dependency direction:
 
 ```text

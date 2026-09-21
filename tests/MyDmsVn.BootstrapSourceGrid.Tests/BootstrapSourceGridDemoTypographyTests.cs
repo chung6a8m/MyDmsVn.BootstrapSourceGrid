@@ -392,6 +392,14 @@ public sealed class BootstrapSourceGridDemoTypographyTests
             Assert.That(grid.Rows[1].Height,
                 Is.GreaterThanOrEqualTo(((BootstrapLookupBoxEditor)grid[1, 6].Editor!).Control.PreferredSize.Height));
             Assert.That(grid.Columns[3].Width, Is.GreaterThanOrEqualTo(headerTextWidth + 2 * padding));
+            for (var column = 1; column < grid.ColumnsCount; column++)
+            {
+                var position = new SourceGrid.Position(0, column);
+                var headerRequiredWidth = grid[0, column].View.Measure(
+                    new SourceGrid.CellContext(grid, position, grid[0, column]), Size.Empty).Width;
+                Assert.That(grid.Columns[column].Width, Is.GreaterThanOrEqualTo(headerRequiredWidth),
+                    $"Header {column} is clipped at {width}x{height}, profile {presetIndex}");
+            }
             Assert.That(grid.Columns[1].Width, Is.GreaterThanOrEqualTo(rowTextWidth + 2 * padding));
             Assert.That(grid.Columns[2].Width, Is.EqualTo(150));
         }));

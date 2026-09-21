@@ -38,8 +38,8 @@ Canonical decision: `DECISIONS.md` D-016.
 Development and pre-release continue to use exact Git submodules plus `ProjectReference`:
 
 ```text
-vendor/Bootstrap5WinFormUI @ 95077df...
-vendor/sourcegrid          @ f4e457b...
+vendor/Bootstrap5WinFormUI @ aba102e33c48937fd92468791c287afda0a59e77
+vendor/sourcegrid          @ f4e457b43582bf01892f50bdc74aa480531e5944
 ```
 
 Public NuGet publication must use strategy **2A**: the `MyDmsVn.BootstrapSourceGrid` package depends on resolvable exact-version vendor NuGet packages that are verified as equivalent to the tested source baselines, or to explicitly approved upgraded baselines.
