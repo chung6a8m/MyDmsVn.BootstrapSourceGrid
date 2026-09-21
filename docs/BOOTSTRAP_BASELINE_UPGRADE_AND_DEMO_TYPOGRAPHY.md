@@ -199,5 +199,7 @@ The initiative is complete only when:
 - custom typography and consumer grid font precedence are preserved;
 - demo UI has no proven clipping/containment regression at the required profile/DPI matrix;
 - canonical baseline/seam docs match the accepted commit;
+- `docs/README.md` no longer advertises this initiative as active once the plans are archived;
+- this scoped spec is explicitly transitioned from `Active` to a completed/historical status before it leaves the normal agent read order;
 - both vendor worktrees are clean;
 - active plans are ready to archive after completion.

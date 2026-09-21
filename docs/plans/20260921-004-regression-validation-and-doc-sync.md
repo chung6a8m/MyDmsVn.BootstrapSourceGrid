@@ -81,9 +81,11 @@ After the accepted gitlink and tests exist, update:
 - `README.md`;
 - `AGENTS.md`;
 - `AI_CONTEXT.md`;
+- `docs/README.md`;
 - `docs/DECISIONS.md` D-011;
 - `docs/UPSTREAM.md`;
-- `docs/UPSTREAM_API_SEAMS.md`.
+- `docs/UPSTREAM_API_SEAMS.md`;
+- `docs/BOOTSTRAP_BASELINE_UPGRADE_AND_DEMO_TYPOGRAPHY.md` status/lifecycle metadata.
 
 Review and update only when materially affected:
 
@@ -121,7 +123,9 @@ When all acceptance criteria pass:
 
 1. update `docs/DEVELOPMENT_PLAN.md` to mark the initiative complete;
 2. promote durable behavior into canonical docs;
-3. move this dated plan set under a new `docs/archive/20260921-bootstrap-baseline-demo-typography/` directory;
-4. reset `docs/plans/README.md` to no active plan.
+3. change `docs/BOOTSTRAP_BASELINE_UPGRADE_AND_DEMO_TYPOGRAPHY.md` from `Active` to an explicit completed/historical status;
+4. update `docs/README.md` so its **Active initiative** section no longer points to this scoped spec/master roadmap as active work and contains no link to a plan path that is about to move;
+5. reset `docs/plans/README.md` to no active plan;
+6. move this dated plan set under a new `docs/archive/20260921-bootstrap-baseline-demo-typography/` directory and update any intentionally retained historical links to the archive path.
 
-Do not archive while a compatibility or manual-matrix blocker remains.
+Do not archive while a compatibility/manual-matrix blocker remains or while a normal-read-order document still advertises this initiative as active.

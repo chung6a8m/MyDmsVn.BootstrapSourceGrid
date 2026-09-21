@@ -68,6 +68,8 @@ Acceptance:
 - [ ] no new modal/hanging GUI test path exists;
 - [ ] the accepted Bootstrap SHA is synchronized across canonical docs;
 - [ ] `docs/UPSTREAM_API_SEAMS.md` is re-verified against the accepted baseline;
+- [ ] `docs/README.md` is cleared/retargeted so it no longer links to active-plan paths that will be archived;
+- [ ] the scoped spec is transitioned from active to completed/historical status before leaving the normal read order;
 - [ ] release/package-gate documentation is updated only if the new baseline changes its evidence;
 - [ ] both vendor worktrees are clean;
 - [ ] active plan set is ready to move under `docs/archive/` after completion.

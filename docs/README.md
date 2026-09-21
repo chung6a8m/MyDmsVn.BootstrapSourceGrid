@@ -58,7 +58,7 @@ YYYYMMDD-00#-plan-name.md
 
 Each stage plan must be independently reviewable, testable, and end with a build/test/documentation gate.
 
-When a roadmap is complete, move the entire dated plan set under `archive/` and remove it from the normal agent read order.
+When a roadmap is complete, move the entire dated plan set under `archive/` and remove it from the normal agent read order. Before moving the plans, clear or replace the corresponding **Active initiative** section in this file and transition the scoped spec from active to completed/historical status so no normal-read-order link points at an archived plan.
 
 ## Source-of-truth precedence
 
