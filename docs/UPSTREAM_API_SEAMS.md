@@ -34,6 +34,8 @@ The pinned `BootstrapDataGridView` remains the reference pattern for theme-owned
 
 `BootstrapTextBox.ApplyThemeFont()` and the lookup popup's `BootstrapDataGridView` preserve their existing owned `Font` when the next theme has an equivalent requested body typography token. They compare the immutable requested token rather than `Font.Name`, because `System.Drawing` can resolve an unavailable family to a different installed font name. WinForms may retain the same resolved `Font` reference on composite child labels when an equality-based property assignment is ignored; disposing it would leave popup and placeholder labels holding a disposed GDI object. Pinned regression tests cover both the default Light-to-Dark switch and an unavailable requested family while the popup is open.
 
+`BootstrapSourceGrid` follows that requested-token comparison for its own theme font. SourceGrid's native scrollbar can retain the resolved `Font` reference when WinForms ignores an equivalent assignment; disposing that reference during a theme switch makes its GDI handle invalid. This integration-side behavior is covered by a dual-TFM demo regression using an unavailable requested font family.
+
 ## 3. SourceGrid control and cell/View seams
 
 Verified concrete inheritance:

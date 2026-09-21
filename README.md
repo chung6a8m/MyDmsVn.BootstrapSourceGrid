@@ -122,7 +122,10 @@ dotnet run --project samples/MyDmsVn.BootstrapSourceGrid.Demo/MyDmsVn.BootstrapS
 
 The demo covers the completed MVP plus shared Bootstrap text, formatted, and lookup editor
 columns, including a read-only lookup DisplayMember companion column, lookup search/navigation,
-closed-popup Enter/Escape, and runtime theme switching scenarios.
+closed-popup Enter/Escape, and runtime theme switching scenarios. Its Base font selector offers
+Default, Base 14px, and Base 16px typography profiles; Light/Dark and Reduced motion can be
+changed independently. The selector changes only the demo theme and preserves custom typography
+until a profile is explicitly chosen.
 
 ## Documentation
 
