@@ -2,7 +2,47 @@
 
 `docs/plans/` contains active implementation plans only.
 
-The initial BootstrapSourceGrid MVP roadmap is complete and archived. For historical context, see [Archive](./archive/).
+## Active initiative — Bootstrap baseline upgrade and demo typography profiles
+
+Goal:
+
+1. advance `vendor/Bootstrap5WinFormUI` from the current pinned baseline to the latest approved vendor `main` HEAD;
+2. prove compatibility across both TFMs and the existing grid/theme/editor contracts;
+3. add SourceGrid Demo typography profiles equivalent to Bootstrap5WinFormUI PR #63: `Default`, `Base 14px`, and `Base 16px`, without changing framework defaults.
+
+Canonical scoped spec:
+
+[`BOOTSTRAP_BASELINE_UPGRADE_AND_DEMO_TYPOGRAPHY.md`](./BOOTSTRAP_BASELINE_UPGRADE_AND_DEMO_TYPOGRAPHY.md)
+
+Master roadmap:
+
+[`plans/20260921-001-bootstrap-baseline-upgrade-and-demo-typography-master-roadmap.md`](./plans/20260921-001-bootstrap-baseline-upgrade-and-demo-typography-master-roadmap.md)
+
+Planning snapshot:
+
+- current Bootstrap pin: `cceba3c969e28726935793a1c6ca3772bed60a35`;
+- Bootstrap `main` at roadmap creation: `aba102e33c48937fd92468791c287afda0a59e77`;
+- current SourceGrid pin remains `f4e457b43582bf01892f50bdc74aa480531e5944`.
+
+The Stage 0 implementation must re-resolve Bootstrap `origin/main` before moving the submodule because the owner's requirement is the latest HEAD, not permanently this planning snapshot.
+
+Stages:
+
+1. Bootstrap baseline upgrade and compatibility proof.
+2. SourceGrid Demo typography profiles.
+3. Full regression/manual validation and canonical documentation sync.
+
+Cross-stage rules:
+
+- keep `BootstrapSourceGrid : SourceGrid.Grid`;
+- keep `net48;net8.0-windows`;
+- do not modify vendor source from this repository;
+- preserve SourceGrid public behavior and consumer customizations;
+- preserve grid-owned shared Bootstrap editor adapters;
+- keep profile implementation demo-only;
+- keep framework `BootstrapThemeTypography.Default` unchanged;
+- keep GUI tests bounded/non-modal;
+- do not proceed through a failing stage gate.
 
 ## Completed initiative — Bootstrap editor replacement
 
@@ -12,33 +52,26 @@ Canonical design: [`EDITOR_REPLACEMENT.md`](./EDITOR_REPLACEMENT.md)
 
 Archived roadmap: [`archive/20260909-bootstrap-editor-replacement/`](./archive/20260909-bootstrap-editor-replacement/)
 
-Stages:
+Delivered:
 
-1. Architecture and ownership — lifecycle, sharing, sizing, disposal, and grid ownership verified.
-2. `BootstrapTextBox` — reference adapter implemented.
-3. `BootstrapFormattedTextBox` — `RawValue` adaptation and SourceGrid conversion contract implemented.
-4. `BootstrapLookupBox` — `SelectedValue`, popup/focus, and keyboard interaction contract implemented.
-5. Registry and hardening — public grid-owned registry, allocation/disposal proofs, demo, docs, and future editor pattern implemented.
+1. architecture and ownership model;
+2. `BootstrapTextBox` editor adapter;
+3. `BootstrapFormattedTextBox` RawValue adapter;
+4. `BootstrapLookupBox` SelectedValue/popup interaction adapter;
+5. grid-owned editor registry, hardening, demo, docs, and expansion pattern.
 
-## Cross-stage invariants
+## Stable cross-project invariants
 
-Every stage must preserve:
+Every active stage must preserve:
 
-- `BootstrapSourceGrid : SourceGrid.Grid` and the existing SourceGrid public programming model;
-- SourceGrid ownership of start/commit/cancel, final validation/conversion, placement, and grid navigation;
-- Bootstrap control ownership of editor theme/font/background/border/focus visuals;
-- `UseCellViewProperties = false` for Bootstrap-native adapters;
-- shared grid-scoped editor lifetime rather than per-cell composite controls;
-- no cross-grid adapter sharing;
-- consumer custom editors unchanged;
-- no SourceGrid global editor-factory patch;
-- `net48;net8.0-windows` support;
+- SourceGrid ownership of grid behavior, edit lifecycle, final validation/conversion, selection/navigation, and scrolling;
+- Bootstrap ownership of theme/visual semantics;
+- consumer View/font precedence;
+- `net48;net8.0-windows`;
 - bounded non-modal STA GUI tests;
 - clean vendor worktrees.
 
-## Stage gate
-
-Before moving to the next stage:
+## Standard stage gate
 
 ```powershell
 dotnet restore MyDmsVn.BootstrapSourceGrid.sln
@@ -48,6 +81,4 @@ git -C vendor/Bootstrap5WinFormUI status --short
 git -C vendor/sourcegrid status --short
 ```
 
-Expected: all commands exit `0` and both vendor status commands produce no output.
-
-Do not start a later stage while the current stage's acceptance gate is failing.
+Expected: build/tests exit 0 and both vendor status commands produce no worktree output.
