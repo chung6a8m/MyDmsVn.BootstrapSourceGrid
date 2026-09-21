@@ -16,17 +16,9 @@ Keep context narrow. Read only:
 
 ## Active initiative
 
-Scoped spec:
+No active implementation initiative. `plans/` contains no active stage plans.
 
-[`BOOTSTRAP_BASELINE_UPGRADE_AND_DEMO_TYPOGRAPHY.md`](./BOOTSTRAP_BASELINE_UPGRADE_AND_DEMO_TYPOGRAPHY.md)
-
-Master roadmap:
-
-[`plans/20260921-001-bootstrap-baseline-upgrade-and-demo-typography-master-roadmap.md`](./plans/20260921-001-bootstrap-baseline-upgrade-and-demo-typography-master-roadmap.md)
-
-The roadmap first upgrades and verifies the Bootstrap5WinFormUI vendor baseline, then adds PR #63-equivalent demo typography profiles, then closes with a full regression/manual/documentation gate.
-
-The accepted Bootstrap pin and demo profiles are implemented. The final stage remains active while manual DPI and Designer cells are outstanding; see [`verification/20260921-regression-validation-and-doc-sync.md`](./verification/20260921-regression-validation-and-doc-sync.md). Keep the scoped spec and plans in the active read order until those cells are resolved.
+The completed Bootstrap baseline and demo typography scoped spec is [`BOOTSTRAP_BASELINE_UPGRADE_AND_DEMO_TYPOGRAPHY.md`](./BOOTSTRAP_BASELINE_UPGRADE_AND_DEMO_TYPOGRAPHY.md). Its roadmap is archived under [`archive/20260921-bootstrap-baseline-demo-typography/`](./archive/20260921-bootstrap-baseline-demo-typography/), and the final evidence is in [`verification/20260921-regression-validation-and-doc-sync.md`](./verification/20260921-regression-validation-and-doc-sync.md).
 
 Current implemented Bootstrap editor architecture remains documented in [`EDITOR_REPLACEMENT.md`](./EDITOR_REPLACEMENT.md). Its completed roadmap is archived under [`archive/20260909-bootstrap-editor-replacement/`](./archive/20260909-bootstrap-editor-replacement/).
 
@@ -75,7 +67,7 @@ When a roadmap is complete, move the entire dated plan set under `archive/` and 
 9. Exact vendor source/tests.
 10. Archived material.
 
-The current active spec explicitly authorized the Bootstrap vendor-baseline upgrade. Stage 0 accepted `aba102e33c48937fd92468791c287afda0a59e77`; Stage 1 delivered the demo profiles; Stage 2 remains active for the manual validation gate.
+The completed scoped spec authorized the Bootstrap vendor-baseline upgrade. Stage 0 accepted `aba102e33c48937fd92468791c287afda0a59e77`; Stage 1 delivered the demo profiles; Stage 2 completed the regression, manual validation, and documentation gate.
 
 ## Documentation maintenance
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-Active scoped specification. Stage 0 accepted the Bootstrap pin and Stage 1 implemented the demo profiles on 2026-09-21. Stage 2 automated regression and documentation synchronization are underway; manual 150%/200% DPI and Designer cells remain open. See `verification/20260921-regression-validation-and-doc-sync.md`. This specification stays active until the manual gate passes.
+Completed scoped specification (historical). Stage 0 accepted the Bootstrap pin, Stage 1 implemented the demo profiles, and Stage 2 passed automated regression and documentation synchronization on 2026-09-21. The owner confirmed the remaining manual profile, DPI, and Designer checks as OK. See `verification/20260921-regression-validation-and-doc-sync.md` for the separate agent-run and owner-reported evidence.
 
 Owner intent:
 
