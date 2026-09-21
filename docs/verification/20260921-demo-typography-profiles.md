@@ -27,3 +27,10 @@ Scope: `docs/plans/20260921-003-sourcegrid-demo-typography-profiles.md`. Stage 2
 - Enabled consumer font, opened the lookup popup in Dark mode, and selected Base 16px. The form remained responsive and diagnostics continued to report consumer font ownership.
 
 Final gate: `git submodule update --init --recursive`, restore, build, and full tests passed after all implementation edits. `git diff --check` passed. Both `git -C vendor/Bootstrap5WinFormUI status --short` and `git -C vendor/sourcegrid status --short` produced no output. No vendor source or tests were modified.
+
+## PR #15 review follow-up
+
+- Reproduced font reuse failure when two different unavailable family names resolve to the same installed font. The grid now keeps that existing owned `Font`, updates the requested token, and verifies actual assignment before disposing the prior font.
+- Reproduced stale demo row heights after a grid DPI event. The demo schedules row layout after the grid's DPI metrics refresh, and also recalculates when the form first appears. The queued callback checks disposal state.
+- Added focused dual-TFM regressions for both cases. The review fixes remain demo/integration-owned; vendor source and tests are unchanged.
+- Final review-fix gate: restore and Release build passed with zero warnings/errors; full test project passed 239/239 on `net48` and 239/239 on `net8.0-windows` with bounded hang diagnostics.

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
@@ -394,6 +395,38 @@ public sealed class BootstrapSourceGridDemoTypographyTests
             Assert.That(grid.Columns[1].Width, Is.GreaterThanOrEqualTo(rowTextWidth + 2 * padding));
             Assert.That(grid.Columns[2].Width, Is.EqualTo(150));
         }));
+    }
+
+    [Test]
+    public void DpiEventRecomputesDemoRowsAfterGridMetricsRefresh()
+    {
+        using var form = new MainForm();
+        ShowForm(form);
+        Find<ComboBox>(form, "baseFontComboBox").SelectedIndex = 2;
+        var grid = Find<BootstrapSourceGridControl>(form, "BootstrapSourceGrid");
+        var text = (BootstrapTextBoxEditor)grid[1, 2].Editor!;
+        var formatted = (BootstrapFormattedTextBoxEditor)grid[1, 3].Editor!;
+        var lookup = (BootstrapLookupBoxEditor)grid[1, 6].Editor!;
+        var actualDpi = grid.CurrentDpi;
+        grid.RefreshDpiMetrics(actualDpi * 2);
+        DemoGridContent.ApplyTypographyLayout(grid, text, formatted, lookup);
+        var previousHeight = grid.Rows[1].Height;
+
+        var dpiCallback = typeof(BootstrapSourceGridControl).GetMethod(
+            "OnDpiChangedAfterParent", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(dpiCallback, Is.Not.Null);
+        dpiCallback!.Invoke(grid, new object[] { EventArgs.Empty });
+        Application.DoEvents();
+
+        var padding = grid.CurrentDpiMetrics.CellPadding;
+        var rowTextHeight = TextRenderer.MeasureText("Item 01", grid.Font).Height;
+        var expectedHeight = Math.Max(rowTextHeight + 2 * padding,
+            Math.Max(text.Control.PreferredSize.Height,
+                Math.Max(formatted.Control.PreferredSize.Height, lookup.Control.PreferredSize.Height)));
+        Assert.That(previousHeight, Is.GreaterThan(expectedHeight));
+        Assert.That(grid.Rows[1].Height, Is.EqualTo(expectedHeight));
+        Assert.That(grid.Rows[0].Height,
+            Is.EqualTo(Math.Max(32, TextRenderer.MeasureText("Bootstrap formatted", grid.Font).Height + 2 * padding)));
     }
 
     [Test]

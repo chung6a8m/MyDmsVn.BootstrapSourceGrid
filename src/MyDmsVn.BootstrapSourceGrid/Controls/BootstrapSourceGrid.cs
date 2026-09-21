@@ -326,18 +326,38 @@ public class BootstrapSourceGrid : SourceGrid.Grid
 
         var nextFont = new Font(token.FontFamilyName, token.SizeInPoints, token.Style);
         var previous = _themeFont;
-        _themeFont = nextFont;
-        _themeFontToken = token;
+        // Different requested families can resolve to the same installed fallback font.
+        if (previous is not null && previous.Equals(nextFont))
+        {
+            nextFont.Dispose();
+            _themeFontToken = token;
+            return;
+        }
+
         _settingThemeFont = true;
         try
         {
             Font = nextFont;
+        }
+        catch
+        {
+            nextFont.Dispose();
+            throw;
         }
         finally
         {
             _settingThemeFont = false;
         }
 
+        if (!ReferenceEquals(Font, nextFont))
+        {
+            nextFont.Dispose();
+            _themeFontToken = token;
+            return;
+        }
+
+        _themeFont = nextFont;
+        _themeFontToken = token;
         previous?.Dispose();
     }
 

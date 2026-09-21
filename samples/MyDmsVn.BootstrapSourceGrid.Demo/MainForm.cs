@@ -57,6 +57,8 @@ public sealed partial class MainForm : Form
     protected override void OnShown(EventArgs e)
     {
         base.OnShown(e);
+        ApplyDemoRowLayout();
+        UpdateDiagnostics();
         _grid.Selection.Focus(new SourceGrid.Position(1, 1), true);
     }
 
@@ -234,6 +236,23 @@ public sealed partial class MainForm : Form
 
     private void OnGridDpiChangedAfterParent(object? sender, EventArgs e)
     {
+        if (IsDisposed || Disposing || !IsHandleCreated)
+        {
+            return;
+        }
+
+        // The grid refreshes its DPI metrics after raising DpiChangedAfterParent.
+        BeginInvoke((MethodInvoker)ApplyDemoDpiLayout);
+    }
+
+    private void ApplyDemoDpiLayout()
+    {
+        if (IsDisposed || Disposing || _grid.IsDisposed)
+        {
+            return;
+        }
+
+        ApplyDemoRowLayout();
         UpdateDiagnostics();
     }
 
