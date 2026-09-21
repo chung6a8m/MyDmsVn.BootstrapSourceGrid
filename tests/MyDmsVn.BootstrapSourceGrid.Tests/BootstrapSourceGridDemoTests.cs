@@ -140,6 +140,30 @@ public sealed class BootstrapSourceGridDemoTests
     }
 
     [Test]
+    public void ResetAfterSortingSpannedRowsRepopulatesWithoutAnOverlap()
+    {
+        using var form = new MyDmsVn.BootstrapSourceGrid.Demo.MainForm();
+        ShowForm(form);
+        var grid = FindControl<BootstrapSourceGridControl>(form, "BootstrapSourceGrid");
+        var text = grid[1, 2].Editor;
+        var formatted = grid[1, 3].Editor;
+        var lookup = grid[1, 6].Editor;
+
+        ((SourceGrid.Cells.ColumnHeader)grid[0, 6]).Sort(true);
+        FindControl<Button>(form, "resetGridButton").PerformClick();
+
+        Assert.Multiple((Action)(() =>
+        {
+            Assert.That(FindControl<BootstrapSourceGridControl>(form, "BootstrapSourceGrid"), Is.SameAs(grid));
+            Assert.That(grid[1, 1].Value, Is.EqualTo("Item 01"));
+            Assert.That(grid[3, 8].ColumnSpan, Is.EqualTo(2));
+            Assert.That(grid[1, 2].Editor, Is.SameAs(text));
+            Assert.That(grid[1, 3].Editor, Is.SameAs(formatted));
+            Assert.That(grid[1, 6].Editor, Is.SameAs(lookup));
+        }));
+    }
+
+    [Test]
     public void LookupDisplayColumnTracksOnlyTheCommittedLogicalValue()
     {
         using (var form = new MyDmsVn.BootstrapSourceGrid.Demo.MainForm())

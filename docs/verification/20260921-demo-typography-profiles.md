@@ -2,7 +2,7 @@
 
 Date: 2026-09-21
 
-Scope: `docs/plans/20260921-003-sourcegrid-demo-typography-profiles.md`. Stage 2 remains open.
+Scope: `docs/archive/20260921-bootstrap-baseline-demo-typography/20260921-003-sourcegrid-demo-typography-profiles.md`. Stage 2 completed on 2026-09-21; see `20260921-regression-validation-and-doc-sync.md`.
 
 ## Implementation
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-Active scoped specification for the next BootstrapSourceGrid maintenance initiative.
+Completed scoped specification (historical). Stage 0 accepted the Bootstrap pin, Stage 1 implemented the demo profiles, and Stage 2 passed automated regression and documentation synchronization on 2026-09-21. The owner confirmed the remaining manual profile, DPI, and Designer checks as OK. See `verification/20260921-regression-validation-and-doc-sync.md` for the separate agent-run and owner-reported evidence.
 
 Owner intent:
 

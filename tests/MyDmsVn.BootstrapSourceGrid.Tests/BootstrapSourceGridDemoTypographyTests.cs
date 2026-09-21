@@ -392,9 +392,52 @@ public sealed class BootstrapSourceGridDemoTypographyTests
             Assert.That(grid.Rows[1].Height,
                 Is.GreaterThanOrEqualTo(((BootstrapLookupBoxEditor)grid[1, 6].Editor!).Control.PreferredSize.Height));
             Assert.That(grid.Columns[3].Width, Is.GreaterThanOrEqualTo(headerTextWidth + 2 * padding));
+            for (var column = 1; column < grid.ColumnsCount; column++)
+            {
+                var position = new SourceGrid.Position(0, column);
+                var headerRequiredWidth = grid[0, column].View.Measure(
+                    new SourceGrid.CellContext(grid, position, grid[0, column]), Size.Empty).Width;
+                Assert.That(grid.Columns[column].Width, Is.GreaterThanOrEqualTo(headerRequiredWidth),
+                    $"Header {column} is clipped at {width}x{height}, profile {presetIndex}");
+            }
             Assert.That(grid.Columns[1].Width, Is.GreaterThanOrEqualTo(rowTextWidth + 2 * padding));
             Assert.That(grid.Columns[2].Width, Is.EqualTo(150));
         }));
+    }
+
+    [Test]
+    public void DemoOwnedHeaderWidthReturnsToBaselineAfterLargerProfileAndDpi()
+    {
+        using var normalDpiFont = new Font(FontFamily.GenericSansSerif, 9f);
+        using var highDpiFont = new Font(FontFamily.GenericSansSerif, 18f);
+        using var form = new MainForm();
+        ShowForm(form);
+        var grid = Find<BootstrapSourceGridControl>(form, "BootstrapSourceGrid");
+        var profile = Find<ComboBox>(form, "baseFontComboBox");
+        var baselineWidth = grid.Columns[3].Width;
+
+        profile.SelectedIndex = 2;
+        Assert.That(grid.Columns[3].Width, Is.GreaterThan(baselineWidth));
+        profile.SelectedIndex = 0;
+        Assert.That(grid.Columns[3].Width, Is.EqualTo(baselineWidth));
+
+        var actualDpi = grid.CurrentDpi;
+        grid.Font = normalDpiFont;
+        form.ApplyDemoRowLayout();
+        var normalDpiWidth = grid.Columns[3].Width;
+        grid.Font = highDpiFont;
+        grid.RefreshDpiMetrics(actualDpi * 2);
+        form.ApplyDemoRowLayout();
+        Assert.That(grid.Columns[3].Width, Is.GreaterThan(normalDpiWidth));
+        grid.Font = normalDpiFont;
+        grid.RefreshDpiMetrics(actualDpi);
+        form.ApplyDemoRowLayout();
+        Assert.That(grid.Columns[3].Width, Is.EqualTo(normalDpiWidth));
+
+        grid.Columns[3].Width = baselineWidth + 80;
+        profile.SelectedIndex = 2;
+        profile.SelectedIndex = 0;
+        Assert.That(grid.Columns[3].Width, Is.EqualTo(baselineWidth + 80));
     }
 
     [Test]
@@ -409,7 +452,7 @@ public sealed class BootstrapSourceGridDemoTypographyTests
         var lookup = (BootstrapLookupBoxEditor)grid[1, 6].Editor!;
         var actualDpi = grid.CurrentDpi;
         grid.RefreshDpiMetrics(actualDpi * 2);
-        DemoGridContent.ApplyTypographyLayout(grid, text, formatted, lookup);
+        form.ApplyDemoRowLayout();
         var previousHeight = grid.Rows[1].Height;
 
         var dpiCallback = typeof(BootstrapSourceGridControl).GetMethod(

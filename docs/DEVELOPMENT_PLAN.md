@@ -2,7 +2,7 @@
 
 `docs/plans/` contains active implementation plans only.
 
-## Active initiative — Bootstrap baseline upgrade and demo typography profiles
+## Completed initiative — Bootstrap baseline upgrade and demo typography profiles
 
 Goal:
 
@@ -16,7 +16,7 @@ Canonical scoped spec:
 
 Master roadmap:
 
-[`plans/20260921-001-bootstrap-baseline-upgrade-and-demo-typography-master-roadmap.md`](./plans/20260921-001-bootstrap-baseline-upgrade-and-demo-typography-master-roadmap.md)
+[`archive/20260921-bootstrap-baseline-demo-typography/20260921-001-bootstrap-baseline-upgrade-and-demo-typography-master-roadmap.md`](./archive/20260921-bootstrap-baseline-demo-typography/20260921-001-bootstrap-baseline-upgrade-and-demo-typography-master-roadmap.md)
 
 Planning snapshot:
 
@@ -26,7 +26,7 @@ Planning snapshot:
 
 Stage 0 re-resolved `origin/main` to `aba102e33c48937fd92468791c287afda0a59e77` and accepted that pin on 2026-09-21. The verification record is [`verification/20260921-bootstrap-baseline-upgrade.md`](./verification/20260921-bootstrap-baseline-upgrade.md).
 
-Stage 1 added demo-only Default, Base 14px, and Base 16px typography profiles with independent Light/Dark and Reduced motion settings. Its verification record is [`verification/20260921-demo-typography-profiles.md`](./verification/20260921-demo-typography-profiles.md). Stage 2 remains active for the final regression and documentation gate.
+Stage 1 added demo-only Default, Base 14px, and Base 16px typography profiles with independent Light/Dark and Reduced motion settings. Its verification record is [`verification/20260921-demo-typography-profiles.md`](./verification/20260921-demo-typography-profiles.md). Stage 2 found and fixed Base 16px demo header clipping and a Reset-after-sort span overlap. The automated gate passed on both TFMs, and the owner confirmed the remaining manual profile, DPI, and Designer checks as OK. Its [verification record](./verification/20260921-regression-validation-and-doc-sync.md) separates these evidence sources. The initiative completed on 2026-09-21.
 
 Stages:
 

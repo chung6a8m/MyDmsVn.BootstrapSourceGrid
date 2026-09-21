@@ -124,6 +124,7 @@ Use the demo application for behaviors that are expensive or brittle to assert p
 - lookup mouse selection, outside click, and application deactivation;
 - the read-only lookup DisplayMember companion column after committed value changes;
 - runtime theme changes while an editor or lookup popup is active.
+- Reset after sorting rows that include the demo's two-column span; the same grid and shared editors must remain usable without a modal overlap exception.
 
 ## 4. Unattended WinForms safety
 

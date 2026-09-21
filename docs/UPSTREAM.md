@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-This repository integrates two independently maintained vendors. This document pins the initial baselines and defines how they are consumed, patched, upgraded, and distributed.
+This repository integrates two independently maintained vendors. This document pins the accepted baselines and defines how they are consumed, patched, upgraded, and distributed.
 
 ## 2. Pinned baselines
 
@@ -10,6 +10,7 @@ This repository integrates two independently maintained vendors. This document p
 
 - Repository: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI`
 - Baseline commit: `aba102e33c48937fd92468791c287afda0a59e77`
+- Upgrade: `cceba3c969e28726935793a1c6ca3772bed60a35` -> `aba102e33c48937fd92468791c287afda0a59e77` on 2026-09-21. Both TFMs built and the integration suite passed at the accepted pin; see [`verification/20260921-bootstrap-baseline-upgrade.md`](./verification/20260921-bootstrap-baseline-upgrade.md) and the final regression record.
 - Role: theme, colors, metrics, typography, rendering helpers, DPI helpers, design conventions
 - Required TFM compatibility: `net48;net8.0-windows`
 
@@ -75,7 +76,7 @@ Development/pre-release product builds reference vendor projects directly so com
 </ItemGroup>
 ```
 
-Paths must be verified during Stage 0 after submodules are initialized. Do not copy vendor source files into `src/MyDmsVn.BootstrapSourceGrid`.
+These paths were verified after submodule initialization on 2026-09-21. Do not copy vendor source files into `src/MyDmsVn.BootstrapSourceGrid`.
 
 This ProjectReference/submodule mode is the approved temporary development strategy (decision 2B / D-017). It is not the final public NuGet dependency graph.
 
@@ -184,7 +185,7 @@ Do not copy vendor license text into this repository unless the packaging/legal 
 
 The release is blocked if vendor license/notice obligations for the approved package dependency graph have not been verified.
 
-## 11. Public package verification status (2026-09-09)
+## 11. Public package verification status (rechecked 2026-09-21)
 
 Public publication is currently **blocked**. Verification against the configured feeds and the official repository state produced this evidence:
 
@@ -199,6 +200,8 @@ Official feed evidence:
 - `https://api.nuget.org/v3-flatcontainer/sourcegrid/index.json` listed only `4.4.0`.
 - `https://www.nuget.org/packages/SourceGrid/` identifies `4.4.0` as the sole gallery version and as a .NET Framework 3.5 asset, not the dual-target pinned fork.
 - `https://github.com/chung6a8m/MyDmsVn.Bootstrap5WinFormUI/releases` and `https://github.com/chung6a8m/sourcegrid/releases` contained no releases.
+
+On 2026-09-21 the official NuGet flat-container endpoints were queried again: `mydmsvn.bootstrap5winformui/index.json` returned 404 and `sourcegrid/index.json` still listed only `4.4.0`. The accepted Bootstrap source pin has no root license file. No package candidate tied to either accepted source commit was identified, so source/package equivalence and package-level license obligations remain unverified. The internal feed and GitHub releases were not rechecked in this stage; their 2026-09-09 observations above remain historical evidence, not a fresh availability claim.
 
 The SourceGrid source baseline declares `Microsoft.Data.SqlClient`, `Microsoft.Windows.Compatibility`, and `System.Text.Json`, plus `System.Resources.Extensions` for `net48`. Bootstrap5WinFormUI declares no package dependency at its pinned project file. These source-graph observations do not substitute for review of an actual release package's transitive graph.
 

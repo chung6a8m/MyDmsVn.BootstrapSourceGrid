@@ -1,10 +1,12 @@
 # Bootstrap baseline upgrade and demo typography master roadmap
 
+**Completed 2026-09-21.** See `docs/verification/20260921-regression-validation-and-doc-sync.md` for the final automated gate and owner-reported manual completion. The checklist below preserves the original execution plan.
+
 > **For agentic workers:** execute one stage at a time. Do not skip a failing gate or opportunistically implement a later stage.
 
 **Goal:** upgrade the Bootstrap5WinFormUI submodule to the latest approved `main` HEAD, prove BootstrapSourceGrid compatibility, then add PR #63-equivalent demo typography profiles without changing framework defaults or SourceGrid's programming model.
 
-**Active spec:** `docs/BOOTSTRAP_BASELINE_UPGRADE_AND_DEMO_TYPOGRAPHY.md`.
+**Completed spec:** `docs/BOOTSTRAP_BASELINE_UPGRADE_AND_DEMO_TYPOGRAPHY.md`.
 
 **Current planning snapshot:** Bootstrap pin `cceba3c969e28726935793a1c6ca3772bed60a35`; Bootstrap `main` was `aba102e33c48937fd92468791c287afda0a59e77` when this roadmap was written. Re-resolve `main` immediately before Stage 0 moves the submodule.
 
@@ -24,7 +26,7 @@
 
 ## Stage 0 — Upgrade Bootstrap baseline and prove compatibility
 
-Plan: `docs/plans/20260921-002-bootstrap-baseline-upgrade-and-compatibility.md`
+Plan: `docs/archive/20260921-bootstrap-baseline-demo-typography/20260921-002-bootstrap-baseline-upgrade-and-compatibility.md`
 
 Acceptance:
 
@@ -41,7 +43,7 @@ Acceptance:
 
 ## Stage 1 — SourceGrid Demo typography profiles
 
-Plan: `docs/plans/20260921-003-sourcegrid-demo-typography-profiles.md`
+Plan: `docs/archive/20260921-bootstrap-baseline-demo-typography/20260921-003-sourcegrid-demo-typography-profiles.md`
 
 Acceptance:
 
@@ -59,7 +61,7 @@ Acceptance:
 
 ## Stage 2 — Regression matrix and canonical documentation sync
 
-Plan: `docs/plans/20260921-004-regression-validation-and-doc-sync.md`
+Plan: `docs/archive/20260921-bootstrap-baseline-demo-typography/20260921-004-regression-validation-and-doc-sync.md`
 
 Acceptance:
 
