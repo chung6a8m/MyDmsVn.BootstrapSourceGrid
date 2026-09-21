@@ -73,7 +73,7 @@ When a roadmap is complete, move the entire dated plan set under `archive/` and 
 9. Exact vendor source/tests.
 10. Archived material.
 
-The current active spec explicitly authorizes a Bootstrap vendor-baseline upgrade. Until Stage 0 completes, canonical docs that state the old accepted baseline remain factually correct; the active spec records the approved target transition.
+The current active spec explicitly authorized the Bootstrap vendor-baseline upgrade. Stage 0 accepted `aba102e33c48937fd92468791c287afda0a59e77`; the remaining demo typography stages are still active.
 
 ## Documentation maintenance
 

@@ -4,8 +4,10 @@ Exact integration facts verified against the pinned vendor baselines. Use this d
 
 ## 1. Baselines
 
-- Bootstrap5WinFormUI: `cceba3c969e28726935793a1c6ca3772bed60a35`
+- Bootstrap5WinFormUI: `aba102e33c48937fd92468791c287afda0a59e77`
 - SourceGrid: `f4e457b43582bf01892f50bdc74aa480531e5944`
+
+The Bootstrap source implementing the theme, DPI, text, formatted-text, and lookup seams below is byte-for-byte unchanged from the previous pin (`cceba3c969e28726935793a1c6ca3772bed60a35`). Stage 0 compatibility evidence is in `verification/20260921-bootstrap-baseline-upgrade.md`.
 
 ## 2. Bootstrap theme seams
 
