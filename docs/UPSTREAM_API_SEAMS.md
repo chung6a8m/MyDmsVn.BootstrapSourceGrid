@@ -9,7 +9,7 @@ Exact integration facts verified against the pinned vendor baselines. Use this d
 
 The Bootstrap source implementing the theme, DPI, text, formatted-text, and lookup seams below is byte-for-byte unchanged from the previous pin (`cceba3c969e28726935793a1c6ca3772bed60a35`). Stage 0 compatibility evidence is in `verification/20260921-bootstrap-baseline-upgrade.md`.
 
-The 2026-09-21 clean-worktree dual-TFM regression gate exercised these accepted seams with 240 tests per TFM. The demo typography work did not add an upstream API seam. Manual DPI/Designer coverage is tracked separately in `verification/20260921-regression-validation-and-doc-sync.md`.
+The 2026-09-21 clean-worktree dual-TFM regression gate exercised these accepted seams with 241 tests per TFM after PR review. The demo typography work did not add an upstream API seam. Manual DPI/Designer coverage is tracked separately in `verification/20260921-regression-validation-and-doc-sync.md`.
 
 ## 2. Bootstrap theme seams
 

@@ -19,6 +19,7 @@ public sealed partial class MainForm : Form
     private readonly BootstrapLookupBoxEditor _lookupEditor;
     private readonly DemoLookupItem[] _lookupItems;
     private readonly SourceGrid.Cells.Controllers.CustomEvents _lookupValueEvents = new();
+    private readonly DemoGridContent _demoGridContent = new();
 
     public MainForm()
     {
@@ -37,7 +38,7 @@ public sealed partial class MainForm : Form
         _lookupEditor = _grid.BootstrapEditors.CreateLookupBox(typeof(int));
         ConfigureLookup(_lookupEditor.BootstrapControl, _lookupItems);
 
-        DemoGridContent.Populate(
+        _demoGridContent.Populate(
             _grid,
             _textEditor,
             _formattedEditor,
@@ -89,7 +90,7 @@ public sealed partial class MainForm : Form
 
     private void OnResetGridClick(object? sender, EventArgs e)
     {
-        DemoGridContent.Populate(
+        _demoGridContent.Populate(
             _grid,
             _textEditor,
             _formattedEditor,
@@ -195,7 +196,7 @@ public sealed partial class MainForm : Form
         UpdateDiagnostics();
     }
 
-    private void ApplyDemoRowLayout() => DemoGridContent.ApplyTypographyLayout(
+    internal void ApplyDemoRowLayout() => _demoGridContent.ApplyTypographyLayout(
         _grid, _textEditor, _formattedEditor, _lookupEditor);
 
     private void ApplyBodyTypography(BootstrapFontToken token)

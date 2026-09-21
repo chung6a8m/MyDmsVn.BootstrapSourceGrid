@@ -12,10 +12,10 @@ Run from the linked worktree after `git submodule update --init --recursive` che
 | --- | --- |
 | `dotnet restore MyDmsVn.BootstrapSourceGrid.sln` | Exit 0; all five solution projects restored |
 | `dotnet build MyDmsVn.BootstrapSourceGrid.sln -c Release` | Exit 0; both TFMs; 0 warnings, 0 errors |
-| `dotnet test tests/MyDmsVn.BootstrapSourceGrid.Tests/MyDmsVn.BootstrapSourceGrid.Tests.csproj -c Release --no-build --blame-hang --blame-hang-timeout 5m` | Initial checkout: exit 0, 239/239 on each TFM. After both demo fixes: exit 0, 240/240 on each TFM; 0 skipped. |
+| `dotnet test tests/MyDmsVn.BootstrapSourceGrid.Tests/MyDmsVn.BootstrapSourceGrid.Tests.csproj -c Release --no-build --blame-hang --blame-hang-timeout 5m` | Initial checkout: exit 0, 239/239 on each TFM. After the first two demo fixes: 240/240. After the PR review width-transition fix: exit 0, 241/241 on each TFM; 0 skipped. |
 | `dotnet build MyDmsVn.BootstrapSourceGrid.sln -c Debug` | Exit 0; both TFMs; 0 warnings, 0 errors; required before Visual Studio Designer could load the custom control |
 
-The final restore, Release build, and full dual-TFM test command exited 0 after both demo fixes. The final build reported 0 warnings and 0 errors; each TFM passed 240 tests without skips.
+The final restore, Release build, and full dual-TFM test command exited 0 after the PR review fix. The final build reported 0 warnings and 0 errors; each TFM passed 241 tests without skips.
 
 ## Regression matrix
 
@@ -34,7 +34,7 @@ The final restore, Release build, and full dual-TFM test command exited 0 after 
 
 ## Demo header clipping found and corrected
 
-At 96 DPI, the Base 16px profile visibly truncated the `Bootstrap formatted` column header in Light and Dark at the default 960x640 demo size. An observable-behavior assertion using the pinned SourceGrid View's `Measure` method failed before the fix: required width 164px, actual column width 160px, on the net8.0-windows test target at both 960x640 and 760x520. `DemoGridContent.ApplyTypographyLayout` now expands demo-owned columns only when a header requires more space. Product-level row/column sizing is unchanged. The focused six-case profile/window-size test then passed. A new net48 demo run at 96 DPI visibly showed the full header in Base 16px Light and Dark.
+At 96 DPI, the Base 16px profile visibly truncated the `Bootstrap formatted` column header in Light and Dark at the default 960x640 demo size. An observable-behavior assertion using the pinned SourceGrid View's `Measure` method failed before the fix: required width 164px, actual column width 160px, on the net8.0-windows test target at both 960x640 and 760x520. `DemoGridContent.ApplyTypographyLayout` sizes demo-owned columns to the greater of their baseline and current header requirement. A PR review then exposed that the initial implementation only grew columns; a new regression reproduced 164px remaining after returning to the 160px Default baseline. The final layout recalculates in both directions while retaining a width manually changed by the user. Product-level row/column sizing is unchanged. The focused profile/window-size and large-to-small profile/font-DPI transition tests passed on both TFMs. A net48 demo run at 96 DPI visibly showed the full header in Base 16px Light and Dark.
 
 ## Sorted-span Reset failure found and corrected
 

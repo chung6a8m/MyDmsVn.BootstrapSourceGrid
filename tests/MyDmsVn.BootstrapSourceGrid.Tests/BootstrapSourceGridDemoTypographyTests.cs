@@ -406,6 +406,41 @@ public sealed class BootstrapSourceGridDemoTypographyTests
     }
 
     [Test]
+    public void DemoOwnedHeaderWidthReturnsToBaselineAfterLargerProfileAndDpi()
+    {
+        using var normalDpiFont = new Font(FontFamily.GenericSansSerif, 9f);
+        using var highDpiFont = new Font(FontFamily.GenericSansSerif, 18f);
+        using var form = new MainForm();
+        ShowForm(form);
+        var grid = Find<BootstrapSourceGridControl>(form, "BootstrapSourceGrid");
+        var profile = Find<ComboBox>(form, "baseFontComboBox");
+        var baselineWidth = grid.Columns[3].Width;
+
+        profile.SelectedIndex = 2;
+        Assert.That(grid.Columns[3].Width, Is.GreaterThan(baselineWidth));
+        profile.SelectedIndex = 0;
+        Assert.That(grid.Columns[3].Width, Is.EqualTo(baselineWidth));
+
+        var actualDpi = grid.CurrentDpi;
+        grid.Font = normalDpiFont;
+        form.ApplyDemoRowLayout();
+        var normalDpiWidth = grid.Columns[3].Width;
+        grid.Font = highDpiFont;
+        grid.RefreshDpiMetrics(actualDpi * 2);
+        form.ApplyDemoRowLayout();
+        Assert.That(grid.Columns[3].Width, Is.GreaterThan(normalDpiWidth));
+        grid.Font = normalDpiFont;
+        grid.RefreshDpiMetrics(actualDpi);
+        form.ApplyDemoRowLayout();
+        Assert.That(grid.Columns[3].Width, Is.EqualTo(normalDpiWidth));
+
+        grid.Columns[3].Width = baselineWidth + 80;
+        profile.SelectedIndex = 2;
+        profile.SelectedIndex = 0;
+        Assert.That(grid.Columns[3].Width, Is.EqualTo(baselineWidth + 80));
+    }
+
+    [Test]
     public void DpiEventRecomputesDemoRowsAfterGridMetricsRefresh()
     {
         using var form = new MainForm();
@@ -417,7 +452,7 @@ public sealed class BootstrapSourceGridDemoTypographyTests
         var lookup = (BootstrapLookupBoxEditor)grid[1, 6].Editor!;
         var actualDpi = grid.CurrentDpi;
         grid.RefreshDpiMetrics(actualDpi * 2);
-        DemoGridContent.ApplyTypographyLayout(grid, text, formatted, lookup);
+        form.ApplyDemoRowLayout();
         var previousHeight = grid.Rows[1].Height;
 
         var dpiCallback = typeof(BootstrapSourceGridControl).GetMethod(

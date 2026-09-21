@@ -6,9 +6,14 @@ using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.Bootstra
 
 namespace MyDmsVn.BootstrapSourceGrid.Demo;
 
-internal static class DemoGridContent
+internal sealed class DemoGridContent
 {
-    internal static void Populate(
+    private static readonly int[] BaselineColumnWidths =
+        { 54, 140, 150, 160, 150, 130, 170, 170, 150, 250 };
+
+    private readonly int[] _lastAppliedColumnWidths = new int[BaselineColumnWidths.Length];
+
+    internal void Populate(
         BootstrapSourceGridControl grid,
         BootstrapTextBoxEditor textEditor,
         BootstrapFormattedTextBoxEditor formattedEditor,
@@ -99,19 +104,15 @@ internal static class DemoGridContent
         grid[2, 9].View = customView;
 
         grid.Rows[0].Height = 32;
-        grid.Columns[0].Width = 54;
-        grid.Columns[1].Width = 140;
-        grid.Columns[2].Width = 150;
-        grid.Columns[3].Width = 160;
-        grid.Columns[4].Width = 150;
-        grid.Columns[5].Width = 130;
-        grid.Columns[6].Width = 170;
-        grid.Columns[7].Width = 170;
-        grid.Columns[8].Width = 150;
-        grid.Columns[9].Width = 250;
+        for (var column = 0; column < BaselineColumnWidths.Length; column++)
+        {
+            var width = BaselineColumnWidths[column];
+            grid.Columns[column].Width = width;
+            _lastAppliedColumnWidths[column] = width;
+        }
     }
 
-    internal static void ApplyTypographyLayout(
+    internal void ApplyTypographyLayout(
         BootstrapSourceGridControl grid,
         BootstrapTextBoxEditor textEditor,
         BootstrapFormattedTextBoxEditor formattedEditor,
@@ -137,10 +138,19 @@ internal static class DemoGridContent
             var header = grid[0, column];
             var requiredWidth = header.View.Measure(
                 new SourceGrid.CellContext(grid, position, header), Size.Empty).Width;
-            if (grid.Columns[column].Width < requiredWidth)
+            var targetWidth = Math.Max(BaselineColumnWidths[column], requiredWidth);
+            // A different current width indicates that the user resized this demo column.
+            if (grid.Columns[column].Width != _lastAppliedColumnWidths[column])
             {
-                grid.Columns[column].Width = requiredWidth;
+                continue;
             }
+
+            if (grid.Columns[column].Width != targetWidth)
+            {
+                grid.Columns[column].Width = targetWidth;
+            }
+
+            _lastAppliedColumnWidths[column] = targetWidth;
         }
 
         for (var row = 1; row < grid.RowsCount; row++)

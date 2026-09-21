@@ -129,7 +129,7 @@ Default, Base 14px, and Base 16px typography profiles; Light/Dark and Reduced mo
 changed independently. The selector changes only the demo theme and preserves custom typography
 until a profile is explicitly chosen.
 
-The demo adjusts its own row heights and expands a column when its header requires more room at the selected typography; the product grid does not auto-resize application columns.
+The demo adjusts its own row heights and derives demo-owned column widths from their baseline and current header size, so widths grow or shrink when typography or DPI changes. Manually resized demo columns retain their chosen width. The product grid does not auto-resize application columns.
 Reset clears the demo's previous rows and spans before repopulating the same grid with the existing shared editor adapters, including after sorting.
 
 ## Documentation
