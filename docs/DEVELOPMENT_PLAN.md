@@ -20,11 +20,13 @@ Master roadmap:
 
 Planning snapshot:
 
-- current Bootstrap pin: `cceba3c969e28726935793a1c6ca3772bed60a35`;
+- previous Bootstrap pin: `cceba3c969e28726935793a1c6ca3772bed60a35`;
 - Bootstrap `main` at roadmap creation: `aba102e33c48937fd92468791c287afda0a59e77`;
 - current SourceGrid pin remains `f4e457b43582bf01892f50bdc74aa480531e5944`.
 
-The Stage 0 implementation must re-resolve Bootstrap `origin/main` before moving the submodule because the owner's requirement is the latest HEAD, not permanently this planning snapshot.
+Stage 0 re-resolved `origin/main` to `aba102e33c48937fd92468791c287afda0a59e77` and accepted that pin on 2026-09-21. The verification record is [`verification/20260921-bootstrap-baseline-upgrade.md`](./verification/20260921-bootstrap-baseline-upgrade.md).
+
+Stage 1 added demo-only Default, Base 14px, and Base 16px typography profiles with independent Light/Dark and Reduced motion settings. Its verification record is [`verification/20260921-demo-typography-profiles.md`](./verification/20260921-demo-typography-profiles.md). Stage 2 remains active for the final regression and documentation gate.
 
 Stages:
 

@@ -26,7 +26,7 @@ For historical context, see [Archive](./docs/archive/).
 
 ## Fixed baselines
 
-- Bootstrap framework: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@cceba3c969e28726935793a1c6ca3772bed60a35`
+- Bootstrap framework: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@aba102e33c48937fd92468791c287afda0a59e77`
 - SourceGrid: `chung6a8m/sourcegrid@f4e457b43582bf01892f50bdc74aa480531e5944`
 - Integration license: MIT
 
@@ -122,7 +122,10 @@ dotnet run --project samples/MyDmsVn.BootstrapSourceGrid.Demo/MyDmsVn.BootstrapS
 
 The demo covers the completed MVP plus shared Bootstrap text, formatted, and lookup editor
 columns, including a read-only lookup DisplayMember companion column, lookup search/navigation,
-closed-popup Enter/Escape, and runtime theme switching scenarios.
+closed-popup Enter/Escape, and runtime theme switching scenarios. Its Base font selector offers
+Default, Base 14px, and Base 16px typography profiles; Light/Dark and Reduced motion can be
+changed independently. The selector changes only the demo theme and preserves custom typography
+until a profile is explicitly chosen.
 
 ## Documentation
 

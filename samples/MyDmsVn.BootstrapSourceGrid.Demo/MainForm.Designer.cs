@@ -12,6 +12,9 @@ partial class MainForm
     private Button _darkButton = null!;
     private Button _resetButton = null!;
     private Button _consumerFontButton = null!;
+    private Label _baseFontLabel = null!;
+    private ComboBox _baseFontComboBox = null!;
+    private CheckBox _reducedMotionCheckBox = null!;
     private FlowLayoutPanel _toolbar = null!;
     private Label _diagnostics = null!;
     private Label _interactionHelp = null!;
@@ -25,6 +28,9 @@ partial class MainForm
         _darkButton = new Button();
         _resetButton = new Button();
         _consumerFontButton = new Button();
+        _baseFontLabel = new Label();
+        _baseFontComboBox = new ComboBox();
+        _reducedMotionCheckBox = new CheckBox();
         _toolbar = new FlowLayoutPanel();
         _diagnostics = new Label();
         _interactionHelp = new Label();
@@ -46,6 +52,25 @@ partial class MainForm
         _darkButton.UseVisualStyleBackColor = true;
         _darkButton.Click += OnDarkThemeClick;
 
+        _baseFontLabel.AutoSize = true;
+        _baseFontLabel.Name = "baseFontLabel";
+        _baseFontLabel.Text = "Base font";
+        _baseFontLabel.TextAlign = ContentAlignment.MiddleLeft;
+        _baseFontLabel.Margin = new Padding(8, 5, 3, 3);
+
+        _baseFontComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        _baseFontComboBox.Name = "baseFontComboBox";
+        _baseFontComboBox.AccessibleName = "SourceGrid demo base font profile";
+        _baseFontComboBox.Width = 112;
+        _baseFontComboBox.Items.AddRange(new object[] { "Default", "Base 14px", "Base 16px" });
+        _baseFontComboBox.SelectedIndexChanged += OnBaseFontSelectedIndexChanged;
+
+        _reducedMotionCheckBox.AutoSize = true;
+        _reducedMotionCheckBox.Name = "reducedMotionCheckBox";
+        _reducedMotionCheckBox.Text = "Reduced motion";
+        _reducedMotionCheckBox.Margin = new Padding(8, 4, 3, 3);
+        _reducedMotionCheckBox.CheckedChanged += OnReducedMotionCheckedChanged;
+
         _resetButton.AutoSize = true;
         _resetButton.Name = "resetGridButton";
         _resetButton.Text = "Reset / repopulate";
@@ -61,12 +86,15 @@ partial class MainForm
         _toolbar.AutoSize = true;
         _toolbar.Controls.Add(_lightButton);
         _toolbar.Controls.Add(_darkButton);
+        _toolbar.Controls.Add(_baseFontLabel);
+        _toolbar.Controls.Add(_baseFontComboBox);
+        _toolbar.Controls.Add(_reducedMotionCheckBox);
         _toolbar.Controls.Add(_resetButton);
         _toolbar.Controls.Add(_consumerFontButton);
         _toolbar.Dock = DockStyle.Fill;
         _toolbar.Name = "themeToolbar";
         _toolbar.Padding = new Padding(8, 8, 8, 4);
-        _toolbar.WrapContents = false;
+        _toolbar.WrapContents = true;
 
         _diagnostics.AutoSize = true;
         _diagnostics.Dock = DockStyle.Fill;

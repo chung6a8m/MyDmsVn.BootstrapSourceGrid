@@ -76,6 +76,38 @@ public sealed class BootstrapSourceGridFontTests
     }
 
     [Test]
+    public void DifferentUnavailableFamiliesReuseResolvedGridFont()
+    {
+        var original = BootstrapThemeManager.CurrentTheme;
+        var first = CreateThemeWithBodyFont(
+            BootstrapThemeMode.Light,
+            new BootstrapFontToken("MissingSourceGridFontFamilyOne", 11f));
+        var second = CreateThemeWithBodyFont(
+            BootstrapThemeMode.Dark,
+            new BootstrapFontToken("MissingSourceGridFontFamilyTwo", 11f));
+
+        try
+        {
+            BootstrapThemeManager.CurrentTheme = first;
+            using (var grid = new BootstrapSourceGridControl())
+            {
+                var fallbackFont = grid.Font;
+                Assert.That(fallbackFont.Name, Is.Not.EqualTo(first.Typography.Body.FontFamilyName));
+
+                BootstrapThemeManager.CurrentTheme = second;
+
+                Assert.That(grid.Font, Is.SameAs(fallbackFont));
+                Assert.That(grid.OwnedThemeFont, Is.SameAs(fallbackFont));
+                Assert.DoesNotThrow((Action)(() => fallbackFont.GetHeight()));
+            }
+        }
+        finally
+        {
+            BootstrapThemeManager.CurrentTheme = original;
+        }
+    }
+
+    [Test]
     public void ConsumerAssignedFontSurvivesThemeSwitch()
     {
         var original = BootstrapThemeManager.CurrentTheme;

@@ -23,6 +23,7 @@ public class BootstrapSourceGrid : SourceGrid.Grid
     private readonly int _owningThreadId;
     private bool _useThemeFont = true;
     private Font? _themeFont;
+    private BootstrapFontToken? _themeFontToken;
     private BootstrapSourceGridThemeSnapshot _themeSnapshot;
     private BootstrapSourceGridDpiMetrics _dpiMetrics;
     private readonly BootstrapSourceGridStyleApplicator _styleApplicator;
@@ -325,32 +326,55 @@ public class BootstrapSourceGrid : SourceGrid.Grid
 
         var nextFont = new Font(token.FontFamilyName, token.SizeInPoints, token.Style);
         var previous = _themeFont;
-        _themeFont = nextFont;
+        // Different requested families can resolve to the same installed fallback font.
+        if (previous is not null && previous.Equals(nextFont))
+        {
+            nextFont.Dispose();
+            _themeFontToken = token;
+            return;
+        }
+
         _settingThemeFont = true;
         try
         {
             Font = nextFont;
+        }
+        catch
+        {
+            nextFont.Dispose();
+            throw;
         }
         finally
         {
             _settingThemeFont = false;
         }
 
+        if (!ReferenceEquals(Font, nextFont))
+        {
+            nextFont.Dispose();
+            _themeFontToken = token;
+            return;
+        }
+
+        _themeFont = nextFont;
+        _themeFontToken = token;
         previous?.Dispose();
     }
 
     private bool ThemeFontMatches(BootstrapFontToken token)
     {
         return _themeFont is not null &&
-            string.Equals(_themeFont.Name, token.FontFamilyName, StringComparison.OrdinalIgnoreCase) &&
-            Math.Abs(_themeFont.SizeInPoints - token.SizeInPoints) < 0.01f &&
-            _themeFont.Style == token.Style;
+            _themeFontToken is not null &&
+            string.Equals(_themeFontToken.FontFamilyName, token.FontFamilyName, StringComparison.OrdinalIgnoreCase) &&
+            Math.Abs(_themeFontToken.SizeInPoints - token.SizeInPoints) < 0.01f &&
+            _themeFontToken.Style == token.Style;
     }
 
     private void DisposeThemeFont()
     {
         var font = _themeFont;
         _themeFont = null;
+        _themeFontToken = null;
         font?.Dispose();
     }
 

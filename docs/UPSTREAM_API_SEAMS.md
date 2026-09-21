@@ -4,8 +4,10 @@ Exact integration facts verified against the pinned vendor baselines. Use this d
 
 ## 1. Baselines
 
-- Bootstrap5WinFormUI: `cceba3c969e28726935793a1c6ca3772bed60a35`
+- Bootstrap5WinFormUI: `aba102e33c48937fd92468791c287afda0a59e77`
 - SourceGrid: `f4e457b43582bf01892f50bdc74aa480531e5944`
+
+The Bootstrap source implementing the theme, DPI, text, formatted-text, and lookup seams below is byte-for-byte unchanged from the previous pin (`cceba3c969e28726935793a1c6ca3772bed60a35`). Stage 0 compatibility evidence is in `verification/20260921-bootstrap-baseline-upgrade.md`.
 
 ## 2. Bootstrap theme seams
 
@@ -31,6 +33,8 @@ Bootstrap-owned integration metrics currently map from `SpacingXS`, `BorderWidth
 The pinned `BootstrapDataGridView` remains the reference pattern for theme-owned Font lifetime: construct theme font, replace only owned fonts on theme change, opt out on consumer Font assignment, unsubscribe/dispose owned resources.
 
 `BootstrapTextBox.ApplyThemeFont()` and the lookup popup's `BootstrapDataGridView` preserve their existing owned `Font` when the next theme has an equivalent requested body typography token. They compare the immutable requested token rather than `Font.Name`, because `System.Drawing` can resolve an unavailable family to a different installed font name. WinForms may retain the same resolved `Font` reference on composite child labels when an equality-based property assignment is ignored; disposing it would leave popup and placeholder labels holding a disposed GDI object. Pinned regression tests cover both the default Light-to-Dark switch and an unavailable requested family while the popup is open.
+
+`BootstrapSourceGrid` follows that requested-token comparison for its own theme font. It also reuses the existing font when different requested tokens resolve to equivalent installed fonts. SourceGrid's native scrollbar can retain the resolved `Font` reference when WinForms ignores an equivalent assignment; disposing that reference during a theme switch makes its GDI handle invalid. Dual-TFM regressions cover identical and different unavailable requested font families.
 
 ## 3. SourceGrid control and cell/View seams
 

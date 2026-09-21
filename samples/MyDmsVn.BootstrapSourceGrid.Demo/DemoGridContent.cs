@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Windows.Forms;
 using MyDmsVn.BootstrapSourceGrid.Editors;
 using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
 
@@ -108,6 +109,34 @@ internal static class DemoGridContent
         grid.Columns[9].Width = 250;
     }
 
+    internal static void ApplyTypographyLayout(
+        BootstrapSourceGridControl grid,
+        BootstrapTextBoxEditor textEditor,
+        BootstrapFormattedTextBoxEditor formattedEditor,
+        BootstrapLookupBoxEditor lookupEditor)
+    {
+        var padding = grid.CurrentDpiMetrics.CellPadding;
+        var headerTextHeight = TextRenderer.MeasureText("Bootstrap formatted", grid.Font).Height;
+        var rowTextHeight = TextRenderer.MeasureText("Item 01", grid.Font).Height;
+        var headerHeight = Math.Max(32, headerTextHeight + 2 * padding);
+        var rowHeight = Math.Max(rowTextHeight + 2 * padding,
+            Math.Max(textEditor.Control.PreferredSize.Height,
+                Math.Max(formattedEditor.Control.PreferredSize.Height,
+                    lookupEditor.Control.PreferredSize.Height)));
+
+        if (grid.Rows[0].Height != headerHeight)
+        {
+            grid.Rows[0].Height = headerHeight;
+        }
+
+        for (var row = 1; row < grid.RowsCount; row++)
+        {
+            if (grid.Rows[row].Height != rowHeight)
+            {
+                grid.Rows[row].Height = rowHeight;
+            }
+        }
+    }
 }
 
 internal sealed class DemoLookupItem
