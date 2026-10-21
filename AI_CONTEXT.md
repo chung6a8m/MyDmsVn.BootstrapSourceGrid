@@ -17,7 +17,7 @@ License:        MIT
 
 Pinned vendors:
 
-- Bootstrap5WinFormUI `aba102e33c48937fd92468791c287afda0a59e77`
+- Bootstrap5WinFormUI candidate `2be9a4d778fda7016207b75470020be6126f2f3f` ([narrow BCF paint repair and dual-TFM evidence](docs/verification/20261021-lookup-affordance-pin.md)); prior accepted pin `aba102e33c48937fd92468791c287afda0a59e77`
 - SourceGrid `f4e457b43582bf01892f50bdc74aa480531e5944`
 
 The Bootstrap pin advanced from `cceba3c969e28726935793a1c6ca3772bed60a35` on 2026-09-21. Dual-TFM compatibility and the manual DPI/Designer matrix are complete, with evidence provenance in `docs/verification/20260921-regression-validation-and-doc-sync.md`. SourceGrid did not move.

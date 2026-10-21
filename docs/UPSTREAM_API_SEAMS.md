@@ -4,12 +4,14 @@ Exact integration facts verified against the pinned vendor baselines. Use this d
 
 ## 1. Baselines
 
-- Bootstrap5WinFormUI: `aba102e33c48937fd92468791c287afda0a59e77`
+- Bootstrap5WinFormUI candidate: `2be9a4d778fda7016207b75470020be6126f2f3f`
 - SourceGrid: `f4e457b43582bf01892f50bdc74aa480531e5944`
 
-The Bootstrap source implementing the theme, DPI, text, formatted-text, and lookup seams below is byte-for-byte unchanged from the previous pin (`cceba3c969e28726935793a1c6ca3772bed60a35`). Stage 0 compatibility evidence is in `verification/20260921-bootstrap-baseline-upgrade.md`.
+At the earlier accepted `aba102e` baseline, the Bootstrap source implementing the theme, DPI, text, formatted-text, and lookup seams below was byte-for-byte unchanged from its previous pin (`cceba3c969e28726935793a1c6ca3772bed60a35`). Stage 0 compatibility evidence is in `verification/20260921-bootstrap-baseline-upgrade.md`.
 
 The 2026-09-21 clean-worktree dual-TFM regression gate exercised these accepted seams with 241 tests per TFM after PR review. The demo typography work did not add an upstream API seam. Manual DPI/Designer coverage is tracked separately in `verification/20260921-regression-validation-and-doc-sync.md`.
+
+The BCF-T03 candidate only corrects internal lookup chevron painting and propagation of the existing textbox palette/invalidation to its framework-owned accessory. Public/protected editor and adapter seams below are unchanged; the new active-cell rendering/cancel test and full243-row-per-target results are in [pin evidence](verification/20261021-lookup-affordance-pin.md). Native125/manual Designer and consumer acceptance remain separate.
 
 ## 2. Bootstrap theme seams
 

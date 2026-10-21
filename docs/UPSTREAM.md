@@ -9,7 +9,7 @@ This repository integrates two independently maintained vendors. This document p
 ### Bootstrap framework
 
 - Repository: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI`
-- Baseline commit: `aba102e33c48937fd92468791c287afda0a59e77`
+- BCF-T03 candidate commit: `2be9a4d778fda7016207b75470020be6126f2f3f`; previous accepted baseline `aba102e33c48937fd92468791c287afda0a59e77`. Only the proven lookup accessory paint/palette seam changes; [upstream PR72](https://github.com/chung6a8m/MyDmsVn.Bootstrap5WinFormUI/pull/72) and [candidate evidence](verification/20261021-lookup-affordance-pin.md) record provenance and243/243 per-target integration passes. No adapter/public API or SourceGrid change.
 - Upgrade: `cceba3c969e28726935793a1c6ca3772bed60a35` -> `aba102e33c48937fd92468791c287afda0a59e77` on 2026-09-21. Both TFMs built and the integration suite passed at the accepted pin; see [`verification/20260921-bootstrap-baseline-upgrade.md`](./verification/20260921-bootstrap-baseline-upgrade.md) and the final regression record.
 - Role: theme, colors, metrics, typography, rendering helpers, DPI helpers, design conventions
 - Required TFM compatibility: `net48;net8.0-windows`
