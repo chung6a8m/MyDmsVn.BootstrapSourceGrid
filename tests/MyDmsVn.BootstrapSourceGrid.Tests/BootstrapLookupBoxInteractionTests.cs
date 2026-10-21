@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
@@ -25,6 +25,50 @@ public sealed class BootstrapLookupBoxInteractionTests
         WinFormsTestGuard.Configure();
     }
 
+    [TestCase(BootstrapThemeMode.Light)]
+    [TestCase(BootstrapThemeMode.Dark)]
+    public void ActiveLookupAccessoryPaintsChevronAcrossThemeWithoutEndingCellEdit(BootstrapThemeMode mode)
+    {
+        var previous = BootstrapThemeManager.CurrentTheme;
+        try
+        {
+            BootstrapThemeManager.CurrentTheme = BootstrapTheme.CreateDefault(mode);
+            using var fixture = new LookupInteractionFixture();
+            using var errors = WinFormsTestGuard.CaptureUserExceptions(fixture.Grid);
+            fixture.Editor.BootstrapControl.ResultsGrid.DataError += (_, args) => throw args.Exception ?? new InvalidOperationException("Unexpected lookup DataError.");
+            var context = fixture.StartEdit();
+            var lookup = fixture.Editor.BootstrapControl;
+            var native = lookup.Controls.OfType<TextBoxBase>().Single();
+            var handle = native.Handle;
+            var accessory = lookup.Controls.Cast<Control>().Single(control => control.AccessibleName == "Open lookup results");
+            AssertPainted();
+            BootstrapThemeManager.CurrentTheme = BootstrapTheme.CreateDefault(mode == BootstrapThemeMode.Light ? BootstrapThemeMode.Dark : BootstrapThemeMode.Light);
+            Application.DoEvents();
+            AssertPainted();
+            Assert.That(fixture.Editor.IsEditing, Is.True);
+            Assert.That(native.Handle, Is.EqualTo(handle));
+            Assert.That(native.Focused, Is.True);
+            Assert.That(fixture.Cell.Value, Is.EqualTo(42));
+            Assert.That(fixture.ValueChangedCount, Is.Zero);
+            Assert.That(errors.Count, Is.Zero);
+            Assert.That(context.EndEdit(true), Is.True);
+            Assert.That(fixture.Cell.Value, Is.EqualTo(42));
+
+            void AssertPainted()
+            {
+                using var bitmap = new Bitmap(accessory.Width, accessory.Height);
+                accessory.DrawToBitmap(bitmap, new Rectangle(Point.Empty, bitmap.Size));
+                var surface = BootstrapThemeManager.CurrentTheme.Colors.Surface.ToArgb();
+                Assert.That(bitmap.GetPixel(1, 1).ToArgb(), Is.EqualTo(surface));
+                var pixels = 0;
+                for (var y = 2; y < bitmap.Height - 2; y++)
+                    for (var x = 2; x < bitmap.Width - 2; x++)
+                        if (bitmap.GetPixel(x, y).ToArgb() != surface) pixels++;
+                Assert.That(pixels, Is.GreaterThan(5), "The active grid lookup accessory must render its chevron.");
+            }
+        }
+        finally { BootstrapThemeManager.CurrentTheme = previous; }
+    }
     [Test]
     public void OpeningPopupDoesNotEndSourceGridEdit()
     {
