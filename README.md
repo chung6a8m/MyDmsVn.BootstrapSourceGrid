@@ -19,6 +19,7 @@ Bootstrap-native SourceGrid editor integration is implemented for:
 - `BootstrapTextBox`
 - `BootstrapFormattedTextBox`
 - `BootstrapLookupBox`
+- `BootstrapDecimalInput` (UI-NEXT T05, opt-in decimal adapter)
 
 The integration preserves SourceGrid's edit lifecycle and uses grid-owned shared adapters rather than one composite Bootstrap control per cell. See [`docs/EDITOR_REPLACEMENT.md`](./docs/EDITOR_REPLACEMENT.md).
 
@@ -26,7 +27,7 @@ For historical context, see [Archive](./docs/archive/).
 
 ## Fixed baselines
 
-- Bootstrap framework: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@aba102e33c48937fd92468791c287afda0a59e77`
+- Bootstrap framework UI-NEXT T05 candidate: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@d36febd3270cfba01bec545e7cb92fce2be1e0b5`
 - SourceGrid: `chung6a8m/sourcegrid@f4e457b43582bf01892f50bdc74aa480531e5944`
 - Integration license: MIT
 

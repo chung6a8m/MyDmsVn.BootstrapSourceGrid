@@ -38,13 +38,13 @@ Do not change without explicit user approval:
 - TFMs: `net48;net8.0-windows`
 - UI: native Windows Forms
 - License: MIT
-- Bootstrap candidate baseline (BCF-T03 narrow paint repair): `2be9a4d778fda7016207b75470020be6126f2f3f`
+- Bootstrap UI-NEXT T05 decimal-input candidate: `d36febd3270cfba01bec545e7cb92fce2be1e0b5` (T04 pure-core predecessor `59ec6b3a7c741f716c05c9f2f4166e48706f0273`; BCF-T03 paint baseline `2be9a4d778fda7016207b75470020be6126f2f3f`)
 - SourceGrid baseline: `f4e457b43582bf01892f50bdc74aa480531e5944`
 - Development dependency model: pinned Git submodules + `ProjectReference`
 - Public NuGet model: exact verified vendor packages; publication remains gated
 - Scrollbars: retain SourceGrid/native subsystem unless separately approved
 
-The current narrow candidate is documented in [BCF pin evidence](docs/verification/20261021-lookup-affordance-pin.md); it is not a new manual DPI/Designer or release acceptance.
+The current decimal adapter candidate is documented in [T05 pin evidence](docs/verification/20261023-uin-t05-decimal-adapter-pin.md); it is not package, Owner or release acceptance.
 
 The earlier accepted Bootstrap pin was upgraded from `cceba3c969e28726935793a1c6ca3772bed60a35` and accepted after dual-TFM validation on 2026-09-21. The SourceGrid pin did not move. The completed manual DPI/Designer validation is tracked in `docs/verification/20260921-regression-validation-and-doc-sync.md`.
 
@@ -114,6 +114,7 @@ Logical values:
 BootstrapTextBox          -> Text
 BootstrapFormattedTextBox -> RawValue
 BootstrapLookupBox        -> SelectedValue
+BootstrapDecimalInput     -> parsed decimal/null pending candidate
 ```
 
 SourceGrid performs final conversion/validation after those values leave the adapter.

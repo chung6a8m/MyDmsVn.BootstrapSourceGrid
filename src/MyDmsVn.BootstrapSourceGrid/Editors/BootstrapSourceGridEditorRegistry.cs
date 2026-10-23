@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MyDmsVn.Bootstrap5WinFormUI.Formatting;
 using BootstrapSourceGridControl = MyDmsVn.Bootstrap5WinFormUI.Controls.BootstrapSourceGrid;
 
 namespace MyDmsVn.BootstrapSourceGrid.Editors;
@@ -58,6 +59,15 @@ public sealed class BootstrapSourceGridEditorRegistry : IDisposable
         }
 
         return Register(new BootstrapFormattedTextBoxEditor(_owner, valueType));
+    }
+
+    /// <summary>Creates a grid-owned decimal input editor for one field configuration.</summary>
+    public BootstrapDecimalInputEditor CreateDecimalInput(Type valueType, DecimalInputProfile profile)
+    {
+        ThrowIfDisposed();
+        if (valueType == null) throw new ArgumentNullException(nameof(valueType));
+        if (profile == null) throw new ArgumentNullException(nameof(profile));
+        return Register(new BootstrapDecimalInputEditor(_owner, valueType, profile));
     }
 
     /// <summary>

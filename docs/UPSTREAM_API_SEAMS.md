@@ -4,7 +4,7 @@ Exact integration facts verified against the pinned vendor baselines. Use this d
 
 ## 1. Baselines
 
-- Bootstrap5WinFormUI candidate: `2be9a4d778fda7016207b75470020be6126f2f3f`
+- Bootstrap5WinFormUI UI-NEXT T05 candidate: `d36febd3270cfba01bec545e7cb92fce2be1e0b5`
 - SourceGrid: `f4e457b43582bf01892f50bdc74aa480531e5944`
 
 At the earlier accepted `aba102e` baseline, the Bootstrap source implementing the theme, DPI, text, formatted-text, and lookup seams below was byte-for-byte unchanged from its previous pin (`cceba3c969e28726935793a1c6ca3772bed60a35`). Stage 0 compatibility evidence is in `verification/20260921-bootstrap-baseline-upgrade.md`.
@@ -12,6 +12,12 @@ At the earlier accepted `aba102e` baseline, the Bootstrap source implementing th
 The 2026-09-21 clean-worktree dual-TFM regression gate exercised these accepted seams with 241 tests per TFM after PR review. The demo typography work did not add an upstream API seam. Manual DPI/Designer coverage is tracked separately in `verification/20260921-regression-validation-and-doc-sync.md`.
 
 The BCF-T03 candidate only corrects internal lookup chevron painting and propagation of the existing textbox palette/invalidation to its framework-owned accessory. Public/protected editor and adapter seams below are unchanged; the new active-cell rendering/cancel test and full243-row-per-target results are in [pin evidence](verification/20261021-lookup-affordance-pin.md). Native125/manual Designer and consumer acceptance remain separate.
+
+The UI-NEXT T05 pin adds `BootstrapDecimalInput` with `Profile`, lossless `PendingText`,
+read-only accepted `Value`, `BeginEditSession(decimal?, DecimalInputProfile)`,
+`TryParsePending()`, `ProjectAcceptedValue(decimal?)`, and `PendingTextChanged`.
+The protected native `Editor` seam remains inherited from `BootstrapTextBox`; no public
+native child accessor or SourceGrid vendor change is needed.
 
 ## 2. Bootstrap theme seams
 
@@ -309,6 +315,7 @@ BootstrapSourceGridEditorRegistry BootstrapSourceGrid.BootstrapEditors { get; }
 BootstrapTextBoxEditor CreateTextBox(Type valueType);
 BootstrapFormattedTextBoxEditor CreateFormattedTextBox(Type valueType);
 BootstrapLookupBoxEditor CreateLookupBox(Type valueType);
+BootstrapDecimalInputEditor CreateDecimalInput(Type valueType, DecimalInputProfile profile);
 ```
 
 Adapter constructors are internal and receive the creating grid. The constructor argument is
@@ -316,6 +323,13 @@ validated before eager `EditorControlBase` control creation. Registry creators r
 `valueType` before constructing an adapter.
 
 The registry/grid must dispose adapters/controls that were created but never attached, because SourceGrid cannot own a control it never received through its linked-control path.
+
+For the UI-NEXT T05 decimal adapter, the verified SourceGrid sequence remains
+`SetEditValue(current model)` at start, `GetEditedValue()` then `SetCellValue(...)` at commit,
+and `UndoEditValue()` reading the current model before `SetEditValue(...)` on cancel. The adapter
+uses the UI control's atomic `BeginEditSession(value, profile)` for both start and cancel. A
+failed parse in `GetEditedValue()` enters `ApplyEdit`'s existing `EditException` catch path and
+keeps the editor active. No SourceGrid vendor change is needed.
 
 Cross-grid adapter reuse is explicitly unsupported. The supported grid-owned registry creation flow will avoid encouraging it, but this baseline does not promise a deterministic fail-before-attach exception: the only callback available to an integration adapter runs after SourceGrid has already changed `mGrid`/`LinkedControls`. A post-attach guard would leave partially mutated SourceGrid state and must not be added. Deterministic fail-before-attach enforcement requires a separately approved SourceGrid pre-attach seam.
 

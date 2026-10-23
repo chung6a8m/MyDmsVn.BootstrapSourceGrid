@@ -9,7 +9,8 @@ This repository integrates two independently maintained vendors. This document p
 ### Bootstrap framework
 
 - Repository: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI`
-- UI-NEXT T04 candidate: `59ec6b3a7c741f716c05c9f2f4166e48706f0273`, advancing the BCF-T03 pin `2be9a4d778fda7016207b75470020be6126f2f3f` through separately committed pure decimal parser and reversible projection additions. [T04 pin evidence](verification/20261023-uin-t04-decimal-core-pin.md) records the two-target integration validation. The integration adapter and SourceGrid pin do not change; native editor integration belongs to T05.
+- UI-NEXT T05 native decimal input candidate: `d36febd3270cfba01bec545e7cb92fce2be1e0b5`, advancing the T04 pure-core pin `59ec6b3a7c741f716c05c9f2f4166e48706f0273`. The [T05 pin evidence](verification/20261023-uin-t05-decimal-adapter-pin.md) records the exact adapter and dual-target integration checks. The SourceGrid pin does not change.
+- UI-NEXT T04 pure-core candidate: `59ec6b3a7c741f716c05c9f2f4166e48706f0273`, advancing the BCF-T03 pin `2be9a4d778fda7016207b75470020be6126f2f3f` through separately committed pure decimal parser and reversible projection additions. [T04 pin evidence](verification/20261023-uin-t04-decimal-core-pin.md) records the two-target integration validation. The integration adapter and SourceGrid pin did not change at T04.
 - BCF-T03 candidate commit: `2be9a4d778fda7016207b75470020be6126f2f3f`; previous accepted baseline `aba102e33c48937fd92468791c287afda0a59e77`. Only the proven lookup accessory paint/palette seam changes; [upstream PR72](https://github.com/chung6a8m/MyDmsVn.Bootstrap5WinFormUI/pull/72) and [candidate evidence](verification/20261021-lookup-affordance-pin.md) record provenance and 243/243 per-target integration passes. No adapter/public API or SourceGrid change.
 - Upgrade: `cceba3c969e28726935793a1c6ca3772bed60a35` -> `aba102e33c48937fd92468791c287afda0a59e77` on 2026-09-21. Both TFMs built and the integration suite passed at the accepted pin; see [`verification/20260921-bootstrap-baseline-upgrade.md`](./verification/20260921-bootstrap-baseline-upgrade.md) and the final regression record.
 - Role: theme, colors, metrics, typography, rendering helpers, DPI helpers, design conventions
@@ -52,7 +53,7 @@ Expected setup:
 
 ```powershell
 git submodule add https://github.com/chung6a8m/MyDmsVn.Bootstrap5WinFormUI.git vendor/Bootstrap5WinFormUI
-git -C vendor/Bootstrap5WinFormUI checkout aba102e33c48937fd92468791c287afda0a59e77
+git -C vendor/Bootstrap5WinFormUI checkout d36febd3270cfba01bec545e7cb92fce2be1e0b5
 
 git submodule add https://github.com/chung6a8m/sourcegrid.git vendor/sourcegrid
 git -C vendor/sourcegrid checkout f4e457b43582bf01892f50bdc74aa480531e5944

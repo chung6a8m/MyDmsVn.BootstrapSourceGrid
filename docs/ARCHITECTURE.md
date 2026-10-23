@@ -168,6 +168,7 @@ BootstrapSourceGridEditorRegistry BootstrapSourceGrid.BootstrapEditors { get; }
 BootstrapTextBoxEditor CreateTextBox(Type valueType);
 BootstrapFormattedTextBoxEditor CreateFormattedTextBox(Type valueType);
 BootstrapLookupBoxEditor CreateLookupBox(Type valueType);
+BootstrapDecimalInputEditor CreateDecimalInput(Type valueType, DecimalInputProfile profile);
 ```
 
 Never:
@@ -188,16 +189,18 @@ does not add an unsafe post-attach guard or promise a fail-before-attach excepti
 BootstrapTextBox          -> Text
 BootstrapFormattedTextBox -> RawValue
 BootstrapLookupBox        -> SelectedValue
+BootstrapDecimalInput     -> parsed decimal/null pending candidate
 ```
 
 These are edit-layer logical values only. SourceGrid remains responsible for converting/validating them into the declared cell type.
 
 Formatted display text and lookup display text are presentation, not substitutes for the logical value.
 
-Future Bootstrap editor integrations such as combo-box, date/time, or numeric inputs follow this
+The opt-in decimal adapter added in UI-NEXT T05 follows this sequence and keeps SourceGrid's
+single typed model application. Future Bootstrap editor integrations such as combo-box or date/time follow this
 sequence: prove the logical value contract; prove SourceGrid lifecycle and first-key behavior;
 use grid-owned shared lifetime; lock popup/focus semantics when applicable; then add the registry
-creator. Future controls are not implied by the initial three adapters.
+creator. Future controls are not implied by the current adapters.
 
 ## 11. Lookup focus/popup boundary
 
