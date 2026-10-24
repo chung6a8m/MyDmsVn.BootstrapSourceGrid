@@ -4,7 +4,7 @@ Exact integration facts verified against the pinned vendor baselines. Use this d
 
 ## 1. Baselines
 
-- Bootstrap5WinFormUI UI-NEXT T05 candidate: `d36febd3270cfba01bec545e7cb92fce2be1e0b5`
+- Bootstrap5WinFormUI UI-NEXT T13 date-height candidate: `1a1d1dd5b9f07763c11c06d75775e2217cd1f183`
 - SourceGrid: `f4e457b43582bf01892f50bdc74aa480531e5944`
 
 At the earlier accepted `aba102e` baseline, the Bootstrap source implementing the theme, DPI, text, formatted-text, and lookup seams below was byte-for-byte unchanged from its previous pin (`cceba3c969e28726935793a1c6ca3772bed60a35`). Stage 0 compatibility evidence is in `verification/20260921-bootstrap-baseline-upgrade.md`.
@@ -18,6 +18,8 @@ read-only accepted `Value`, `BeginEditSession(decimal?, DecimalInputProfile)`,
 `TryParsePending()`, `ProjectAcceptedValue(decimal?)`, and `PendingTextChanged`.
 The protected native `Editor` seam remains inherited from `BootstrapTextBox`; no public
 native child accessor or SourceGrid vendor change is needed.
+
+The UI-NEXT T13 pin `1a1d1dd5b9f07763c11c06d75775e2217cd1f183` corrects the initial height of `BootstrapDateInput` before docking its private children. It changes no public editor or SourceGrid seam; the focused bounds and dual-target evidence is in [date height pin](verification/20261024-uin-t13-date-height-pin.md).
 
 ## 2. Bootstrap theme seams
 
