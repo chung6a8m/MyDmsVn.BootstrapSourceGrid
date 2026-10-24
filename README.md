@@ -25,9 +25,9 @@ The integration preserves SourceGrid's edit lifecycle and uses grid-owned shared
 
 For historical context, see [Archive](./docs/archive/).
 
-## Fixed baselines
+## Current source pins
 
-- Bootstrap framework UI-NEXT T05 candidate: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@d36febd3270cfba01bec545e7cb92fce2be1e0b5`
+- Bootstrap framework DateInput Unified Compact candidate: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@26880237f94ce76a82e93d624afc6b2112f668a6` (UIN-D01/D02; prior T05 candidate `d36febd3270cfba01bec545e7cb92fce2be1e0b5`)
 - SourceGrid: `chung6a8m/sourcegrid@f4e457b43582bf01892f50bdc74aa480531e5944`
 - Integration license: MIT
 
