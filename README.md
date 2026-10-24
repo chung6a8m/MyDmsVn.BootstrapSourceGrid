@@ -27,7 +27,7 @@ For historical context, see [Archive](./docs/archive/).
 
 ## Current source pins
 
-- Bootstrap framework DateInput Unified Compact candidate: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@3ed8b4afb4206dfddd2c3dadf4c9cd0932309729` (UIN-D01/D02 and calendar dismissal follow-up; prior T05 candidate `d36febd3270cfba01bec545e7cb92fce2be1e0b5`)
+- Bootstrap framework DateInput Unified Compact candidate: `chung6a8m/MyDmsVn.Bootstrap5WinFormUI@8ae217ea8aa9a938ebd558f7071dc737f909e6a5` (UIN-D01/D02, calendar dismissal and keyboard-highlight follow-ups; prior T05 candidate `d36febd3270cfba01bec545e7cb92fce2be1e0b5`)
 - SourceGrid: `chung6a8m/sourcegrid@f4e457b43582bf01892f50bdc74aa480531e5944`
 - Integration license: MIT
 

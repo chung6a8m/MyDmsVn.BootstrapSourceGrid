@@ -4,7 +4,7 @@ Exact integration facts verified against the pinned vendor baselines. Use this d
 
 ## 1. Baselines
 
-- Bootstrap5WinFormUI DateInput Unified Compact candidate: `3ed8b4afb4206dfddd2c3dadf4c9cd0932309729` (prior T13 date-height candidate `1a1d1dd5b9f07763c11c06d75775e2217cd1f183`)
+- Bootstrap5WinFormUI DateInput Unified Compact candidate: `8ae217ea8aa9a938ebd558f7071dc737f909e6a5` (prior T13 date-height candidate `1a1d1dd5b9f07763c11c06d75775e2217cd1f183`)
 - SourceGrid: `f4e457b43582bf01892f50bdc74aa480531e5944`
 
 At the earlier accepted `aba102e` baseline, the Bootstrap source implementing the theme, DPI, text, formatted-text, and lookup seams below was byte-for-byte unchanged from its previous pin (`cceba3c969e28726935793a1c6ca3772bed60a35`). Stage 0 compatibility evidence is in `verification/20260921-bootstrap-baseline-upgrade.md`.
@@ -21,7 +21,7 @@ native child accessor or SourceGrid vendor change is needed.
 
 The UI-NEXT T13 pin `1a1d1dd5b9f07763c11c06d75775e2217cd1f183` corrects the initial height of `BootstrapDateInput` before docking its private children. It changes no public editor or SourceGrid seam; the focused bounds and dual-target evidence is in [date height pin](verification/20261024-uin-t13-date-height-pin.md).
 
-The DateInput correction pin `3ed8b4afb4206dfddd2c3dadf4c9cd0932309729` preserves segment caret/selection after native arrows and popup cancellation, restores native editor focus after internal pointer dismissal, and embeds an icon-only calendar trigger within one text surface. The internal trailing-accessory sizing seam changes only the DateInput composition; the standalone picker and public/protected API remain unchanged. SourceGrid stays at its pin above.
+The DateInput correction pin `8ae217ea8aa9a938ebd558f7071dc737f909e6a5` preserves segment caret/selection after native arrows and popup cancellation, restores native editor focus after internal pointer dismissal, makes the active day follow keyboard focus in its calendar, and embeds an icon-only calendar trigger within one text surface. The internal trailing-accessory sizing and calendar focus-preview seams change only the DateInput composition; the standalone picker and public/protected API remain unchanged. SourceGrid stays at its pin above.
 
 ## 2. Bootstrap theme seams
 
