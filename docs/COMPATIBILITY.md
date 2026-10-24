@@ -88,6 +88,13 @@ attachment on the pinned baseline.
 The adapters return `Text`, `RawValue`, and `SelectedValue` for text, formatted, and lookup
 controls respectively. SourceGrid retains final declared-type conversion and validation.
 
+The opt-in decimal adapter returns only the T04 parser's typed `decimal` or allowed `null`.
+It keeps invalid pending text in the Bootstrap control and lets SourceGrid reject the edit.
+The editor accepts `decimal` cell types, freezes its `DecimalInputProfile` during each edit,
+and may be reused for another cell/profile only after the prior edit ends. SourceGrid still
+owns the single model write and native navigation; the adapter projects the accepted model
+value only after that write succeeds. Existing formatted-input behavior is unchanged.
+
 ## 6. Theme compatibility
 
 The integration follows `BootstrapThemeManager.CurrentTheme` and `ThemeChanged`.

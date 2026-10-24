@@ -1,0 +1,5 @@
+# UI-NEXT T13 date input height pin
+
+The application Owner observed unreadable date text and an oversized input/calendar button at native 100% and 125% on 2026-10-24. `BootstrapDateInput` initialized its height after docking its children, so it inherited the default 150-pixel `UserControl` height. The UI upstream change `1a1d1dd5b9f07763c11c06d75775e2217cd1f183` captures the children's themed preferred height before docking. This integration only advances the Bootstrap submodule pin; SourceGrid remains `f4e457b43582bf01892f50bdc74aa480531e5944` and no public adapter API changes.
+
+The upstream focused date/calendar tests passed 67/67 on both `net48` x86 and `net8.0-windows`; its complete solution built both targets with zero warnings/errors. The consuming app's compact Goods layout test failed 4/4 before the fix (150-pixel input inside a 60-pixel field) and passed 4/4 afterward at native 125%. Its Sales date/filter layout and keyboard cases passed 4/4 at native 125%. These are automated bounds and interaction checks, not the attended Owner re-review. The app's final package pin and remaining validation are recorded in its UI-NEXT T13 evidence.

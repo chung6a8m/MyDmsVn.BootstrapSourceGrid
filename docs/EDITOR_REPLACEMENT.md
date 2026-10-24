@@ -113,6 +113,7 @@ The registry creates owned/shared adapter instances explicitly:
 BootstrapTextBoxEditor CreateTextBox(Type valueType);
 BootstrapFormattedTextBoxEditor CreateFormattedTextBox(Type valueType);
 BootstrapLookupBoxEditor CreateLookupBox(Type valueType);
+BootstrapDecimalInputEditor CreateDecimalInput(Type valueType, DecimalInputProfile profile);
 ```
 
 Each returned editor is intended to be configured once and then assigned to many cells in that grid. The adapter exposes its strongly typed Bootstrap control through a read-only property named `BootstrapControl` so existing Bootstrap control APIs remain available without wrapper duplication.
@@ -298,3 +299,27 @@ This initiative is complete when:
 - consumer custom editors remain untouched;
 - demo/docs show the explicit shared-editor usage model;
 - both vendor worktrees remain clean.
+
+## 17. UI-NEXT T05 decimal adapter
+
+`BootstrapDecimalInputEditor` is an opt-in, grid-owned editor for `decimal` cells. Its registry
+factory requires an immutable `DecimalInputProfile`. The adapter exposes `Profile` for an admitted
+change between edit sessions and rejects a change during an active SourceGrid edit. The control
+itself freezes the profile while the candidate is pending.
+
+On every SourceGrid `SetEditValue`, including cancel, the adapter calls
+`BeginEditSession(currentModelValue, Profile)` and selects the display. SourceGrid's cancel path
+reads the **current** value model; the adapter does not keep an edit-start snapshot. Each session
+reset clears the previous cell's candidate and undo history. A first typed character replaces the
+selected display through the protected native editor seam.
+
+The native textbox remains right-aligned and vertically centered within SourceGrid editor
+bounds, matching the prior receipt numeric editor without changing SourceGrid row height.
+
+`GetEditedValue()` parses the exact pending candidate and returns a typed `decimal` or allowed
+`null`. A rejected candidate throws before SourceGrid applies the model, so the edit and raw
+candidate remain active. SourceGrid's existing `EditException` is raised once. On successful
+`ApplyEdit`, SourceGrid validates and writes the model once, after which the adapter projects the
+model's accepted value without recording another user edit. Native Enter/Escape/Tab handling and
+editor placement remain SourceGrid-owned. The registry disposes the adapter and its eager control,
+including when no edit was ever started.
